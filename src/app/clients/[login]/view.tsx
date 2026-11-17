@@ -20,7 +20,7 @@ export function ClientView({ c }: { c: Client }) {
 
   return (
     <>
-      <NavBar title={c.name} large={false} back={{ href: "/clients/", label: "Clients" }} />
+      <NavBar title={c.name} large={false} back={{ href: "/clients/", label: "Clients" }} tone="purple" />
 
       {/* Contacts-style header */}
       <header className="contact">

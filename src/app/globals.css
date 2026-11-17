@@ -205,3 +205,128 @@ a.row:active, button.row:active { background: var(--fill2); }
 /* On a desktop screen, center the app at phone width so reviewers see it as on a phone */
 @media (min-width: 700px) { .screen, .sheet { max-width: 420px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ================= Liquid Glass (iOS 26) =================
+   Glass is for the control layer only (bars, buttons, sheet). Content stays solid, as in Apple's apps.
+   Chromium bends the backdrop through each element's own lens filter (--lens). Other browsers get blur, rim, sheen. */
+:root {
+  --glass: rgba(255,255,255,.32); --glass-strong: rgba(255,255,255,.5);
+  --rim-hi: rgba(255,255,255,.95); --rim-lo: rgba(255,255,255,.18);
+  --glass-shadow: 0 10px 34px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+  --r-cell: 26px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --glass: rgba(44,44,48,.42); --glass-strong: rgba(44,44,48,.62); --rim-hi: rgba(255,255,255,.55); --rim-lo: rgba(255,255,255,.06);
+    --glass-shadow: 0 10px 34px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.4); }
+}
+.lg { position: relative; isolation: isolate; background: var(--glass);
+  -webkit-backdrop-filter: blur(10px) saturate(1.9) brightness(1.05); backdrop-filter: blur(10px) saturate(1.9) brightness(1.05);
+  box-shadow: var(--glass-shadow), inset 0 0 0 .5px rgba(0,0,0,.05); }
+html.lg-refract .lg { backdrop-filter: var(--lens) brightness(1.05); }
+.lg::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.2px; pointer-events: none; z-index: 2;
+  background: linear-gradient(var(--lang, 120deg), var(--rim-hi), var(--rim-lo) 32%, transparent 52%, var(--rim-lo) 72%, var(--rim-hi));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.lg-sheen { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1; mix-blend-mode: soft-light;
+  background: radial-gradient(120% 140% at calc(var(--lx, .3) * 100%) calc(var(--ly, .1) * 100% - 60%), rgba(255,255,255,.75), transparent 60%); }
+.lg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.lg > :not(.lg-sheen):not(.lg-defs) { position: relative; z-index: 3; }
+
+/* Ambient light under each screen, so the glass has color to bend */
+.screen { position: relative; z-index: 1; }
+.ambient { position: fixed; inset: 0 0 auto 0; height: 520px; z-index: 0; pointer-events: none; overflow: hidden;
+  -webkit-mask: linear-gradient(#000 30%, transparent); mask: linear-gradient(#000 30%, transparent); }
+.ambient i { position: absolute; width: 340px; height: 340px; border-radius: 50%; filter: blur(70px); opacity: .55; }
+.ambient i:nth-child(1) { left: -90px; top: -120px; } .ambient i:nth-child(2) { right: -110px; top: -60px; } .ambient i:nth-child(3) { left: 30%; top: 120px; width: 260px; height: 260px; opacity: .35; }
+.ambient-blue i:nth-child(1) { background: #5ac8fa; } .ambient-blue i:nth-child(2) { background: #5856d6; } .ambient-blue i:nth-child(3) { background: #34c759; }
+.ambient-orange i:nth-child(1) { background: #ff9500; } .ambient-orange i:nth-child(2) { background: #ff2d55; } .ambient-orange i:nth-child(3) { background: #ffcc00; }
+.ambient-red i:nth-child(1) { background: #ff3b30; } .ambient-red i:nth-child(2) { background: #af52de; } .ambient-red i:nth-child(3) { background: #ff9500; }
+.ambient-teal i:nth-child(1) { background: #30b0c7; } .ambient-teal i:nth-child(2) { background: #34c759; } .ambient-teal i:nth-child(3) { background: #007aff; }
+.ambient-purple i:nth-child(1) { background: #af52de; } .ambient-purple i:nth-child(2) { background: #5856d6; } .ambient-purple i:nth-child(3) { background: #ff2d55; }
+@media (prefers-color-scheme: dark) { .ambient i { opacity: .38; } }
+
+/* Scroll edge: no bar, the content softly blurs and fades under the status area */
+.scroll-edge { position: fixed; inset: 0 0 auto 0; height: calc(env(safe-area-inset-top) + 64px); z-index: 14; pointer-events: none;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  background: linear-gradient(color-mix(in srgb, var(--bg) 70%, transparent), transparent);
+  -webkit-mask: linear-gradient(#000 45%, transparent); mask: linear-gradient(#000 45%, transparent); }
+.navbar, .navbar-on { background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.navbar { z-index: 16; padding-top: calc(env(safe-area-inset-top) + 4px); }
+.navbar-row { height: 48px; }
+
+/* Glass bar buttons */
+.glassbtn-link { display: inline-flex; border-radius: 999px; }
+.glassbtn { display: inline-flex; align-items: center; justify-content: center; color: var(--label); border-radius: 999px; transition: transform .35s var(--spring); }
+.glassbtn.round { width: 44px; height: 44px; }
+.glassbtn.capsule { height: 40px; padding: 0 16px; font-size: 15px; font-weight: 600; }
+.glassbtn-link:active .glassbtn { transform: scale(1.12); }
+.xmark { position: relative; width: 14px; height: 14px; }
+.xmark::before, .xmark::after { content: ""; position: absolute; left: 6px; top: -1px; width: 2.4px; height: 16px; border-radius: 2px; background: currentColor; transform: rotate(45deg); }
+.xmark::after { transform: rotate(-45deg); }
+
+/* Tab bar: glass capsule, a liquid drop for the selection */
+.tabbar { pointer-events: auto; padding: 0; border-radius: 34px; width: 100%; max-width: 380px; background: var(--glass);
+  transition: max-width .55s var(--spring); }
+.tabtrack { position: relative; display: flex; padding: 4px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.tabdrop { position: absolute; left: 0; top: 4px; bottom: 4px; width: 80px; border-radius: 30px; background: var(--fill); z-index: 0;
+  transform-origin: center; will-change: transform, width; transition: top .3s var(--spring), bottom .3s var(--spring), background-color .2s, box-shadow .2s; }
+.tabdrop-lift { top: -7px; bottom: -7px; background: rgba(255,255,255,.16);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 1px rgba(255,255,255,.35), inset 0 0 0 .5px rgba(255,255,255,.6), 0 8px 26px rgba(0,0,0,.2);
+  -webkit-backdrop-filter: blur(2px) saturate(1.6) brightness(1.08); backdrop-filter: blur(2px) saturate(1.6) brightness(1.08); }
+.tab { position: relative; z-index: 1; min-height: 56px; background: none !important; transition: min-height .45s var(--spring); }
+.tab-label { display: block; overflow: hidden; max-height: 14px; transition: max-height .35s var(--spring), opacity .2s; }
+.tab-mini .tabbar { max-width: 300px; }
+.tab-mini .tab { min-height: 46px; }
+.tab-mini .tab-label { max-height: 0; opacity: 0; }
+.tabnav { transition: padding .4s var(--spring); }
+@media (prefers-color-scheme: dark) { .tabdrop-lift { background: rgba(255,255,255,.08); } }
+
+/* Segmented control with a liquid thumb */
+.segmented { height: 36px; border-radius: 18px; padding: 2px; }
+.segmented button { border-radius: 16px; }
+.seg-thumb { left: 2px; width: 0; transform: none; transition: none; border-radius: 16px; will-change: transform;
+  box-shadow: 0 3px 10px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.9), inset 0 0 0 .5px rgba(0,0,0,.04); }
+
+/* Floating glass sheet, moved by springs in JS */
+.sheet-wrap { align-items: flex-end; }
+.sheet-scrim { opacity: 0; transition: none; background: rgba(0,0,0,.32); }
+.sheet { margin: 0 8px calc(env(safe-area-inset-bottom) + 8px); width: calc(100% - 16px); max-width: 424px; border-radius: 38px; transition: none; padding-bottom: 6px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent); -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8);
+  box-shadow: 0 20px 60px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 .5px rgba(255,255,255,.4); will-change: transform; }
+.sheet-grip { touch-action: none; cursor: grab; }
+.sheet-bar { height: 56px; padding: 0 10px; }
+.sheet-body .grp-body { border-radius: 22px; }
+
+/* Liquid controls: buttons swell on press, the switch knob stretches like a drop */
+.btn { border-radius: 999px; min-height: 52px; position: relative; transition: transform .4s var(--spring), box-shadow .3s; }
+.btn:active { transform: scale(1.05); }
+.btn-blue { background: linear-gradient(180deg, color-mix(in srgb, var(--blue) 82%, #fff), var(--blue));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 4px rgba(0,0,0,.12), 0 8px 22px color-mix(in srgb, var(--blue) 40%, transparent); }
+.btn-gray { background: var(--glass-strong); -webkit-backdrop-filter: blur(12px) saturate(1.8); backdrop-filter: blur(12px) saturate(1.8);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 .5px rgba(0,0,0,.06), 0 6px 18px rgba(0,0,0,.08); }
+.switch { width: 63px; height: 28px; border-radius: 14px; }
+.switch i { top: 2px; left: 2px; width: 37px; height: 24px; border-radius: 12px; transition: transform .45s var(--spring), width .3s var(--spring); }
+.switch:active i { width: 44px; }
+.switch-on i { transform: translateX(22px); }
+.switch-on:active i { transform: translateX(15px); }
+
+/* iOS 26 geometry: bigger, concentric corners */
+.grp-body, .digest, .hcard, .metrics, .chartcard { border-radius: var(--r-cell); }
+.hcard { padding: 14px 16px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.action { border-radius: 22px; transition: transform .4s var(--spring); }
+.action:active { transform: scale(1.06); opacity: 1; }
+.searchfield { height: 44px; border-radius: 22px; padding: 0 14px; background: var(--glass-strong); margin-top: -10px;
+  -webkit-backdrop-filter: blur(12px) saturate(1.8); backdrop-filter: blur(12px) saturate(1.8);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 0 .5px rgba(0,0,0,.05); }
+.segmented { background: var(--glass-strong); -webkit-backdrop-filter: blur(12px) saturate(1.8); backdrop-filter: blur(12px) saturate(1.8);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 0 0 .5px rgba(0,0,0,.05); }
+@media (prefers-reduced-motion: reduce) { .tabdrop, .tab, .tab-label, .tabbar, .btn, .switch i { transition: none !important; } }
+
+/* Fixes: the track fills the glass bar. The screen makes no stacking context, so the sheet sits above the tab bar.
+   The ambient light paints behind everything. */
+.tabbar { display: flex; }
+.tabtrack { flex: 1; width: 100%; }
+.screen { z-index: auto; }
+.ambient { z-index: -1; }
+body { background: transparent; }

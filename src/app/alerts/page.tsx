@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 import { useApp } from "@/components/app-state";
-import { Group, NavBar, Row, Segmented } from "@/components/ios";
+import { BarButton, Group, NavBar, Row, Segmented } from "@/components/ios";
 import { ALERTS, ago, findClient } from "@/lib/data";
 
 type F = "all" | "critical" | "warn" | "info";
@@ -18,8 +18,8 @@ export default function Alerts() {
 
   return (
     <>
-      <NavBar title="Alerts" eyebrow={`${unread.size} unread`}
-        trailing={unread.size > 0 ? <button className="textbtn" onClick={() => markRead()}>Read All</button> : null} />
+      <NavBar title="Alerts" eyebrow={`${unread.size} unread`} tone="red"
+        trailing={unread.size > 0 ? <BarButton onClick={() => markRead()}>Read All</BarButton> : null} />
 
       <Segmented label="Severity" value={f} options={OPTS} onChange={setF} />
 

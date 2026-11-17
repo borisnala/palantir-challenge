@@ -23,13 +23,17 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 
-## Design rule (owner 2026-11-17: "not apple enough, be mindful of that")
-Every screen must read as a native iOS app. Use Apple's own patterns: large titles that collapse, inset grouped
+## Design rule (owner 2026-11-17: "not apple enough, be mindful of that", then "today's Apple, liquid glass, liquid physics")
+Every screen must read as a native iOS 26 app with Liquid Glass. Glass is for the control layer only (tab bar, bar
+buttons, sheet, search, segmented), content stays solid. Anything that moves runs on springs (`src/components/liquid.tsx`:
+Spring, useSpringLoop, stretch, Glass, LightSource). Chromium bends the backdrop through each Glass element's own SVG
+lens; Safari falls back to blur, rim and sheen, so check both looks. Use Apple's own patterns: large titles that collapse, inset grouped
 lists, sheets, segmented controls, switches, system colors, 44 pt touch targets. When unsure, copy how Health,
 Stocks, Mail or Contacts solve it. Check light and dark mode at 393 px before calling a change done.
 
 ## Commands
 - `npm run dev`: local server. `npm run check`: lint, typecheck and build. Run it before every commit.
+- CSS change not showing in the build? Turbopack kept a stale stylesheet once (2026-11-17). `rm -rf .next out`, then build.
 - `npm run build` writes `out/`, plain static files. On the lab it lives at lab.borisnala.com/risk-desk/, so build
   with `BASE_PATH=/risk-desk npm run build` and copy `out/` into the lab's `risk-desk/` folder before the lab deploy.
   Never deploy `out/` on its own to the borisnala-lab project: that replaces the lab hub.

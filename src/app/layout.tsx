@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppState } from "@/components/app-state";
 import { TabBar } from "@/components/tab-bar";
+import { LightSource } from "@/components/liquid";
 
 export const metadata: Metadata = {
   title: "Risk Desk",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
+        <LightSource />
         <AppState>
           <main className="screen">{children}</main>
           <TabBar />
