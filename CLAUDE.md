@@ -16,9 +16,17 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 ## Where things are
 - `src/lib/data.ts`: all dummy data and the number formatters. One file, so the demo tells one story.
 - `src/components/app-state.tsx`: in-memory state (approve or reject, read alerts, watchlist). Nothing is saved.
-- `src/components/tab-bar.tsx`, `src/components/ui.tsx`: the glass tab bar and small shared parts.
+- `src/components/ios.tsx`: the iOS building blocks. NavBar (collapsing large title), Group and Row (inset grouped
+  lists), Sheet, Switch, Segmented. Build every screen from these, never from ad hoc cards.
+- `src/components/tab-bar.tsx`, `src/components/ui.tsx`: the floating glass tab bar, Stocks-style sparkline and
+  change pill, Contacts-style monogram.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
-- `src/app/globals.css`: the whole look, from the owner's Autoply phone app (iOS large titles, light mode, glass bar).
+- `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
+
+## Design rule (owner 2026-11-17: "not apple enough, be mindful of that")
+Every screen must read as a native iOS app. Use Apple's own patterns: large titles that collapse, inset grouped
+lists, sheets, segmented controls, switches, system colors, 44 pt touch targets. When unsure, copy how Health,
+Stocks, Mail or Contacts solve it. Check light and dark mode at 393 px before calling a change done.
 
 ## Commands
 - `npm run dev`: local server. `npm run check`: lint, typecheck and build. Run it before every commit.

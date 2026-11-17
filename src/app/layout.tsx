@@ -7,16 +7,19 @@ export const metadata: Metadata = {
   title: "Risk Desk",
   description: "The Global Risk Portal, rebuilt for a phone. Dummy data.",
   robots: { index: false, follow: false },
+  appleWebApp: { capable: true, title: "Risk Desk", statusBarStyle: "default" },
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#f2f2f7" };
+export const viewport: Viewport = {
+  width: "device-width", initialScale: 1, viewportFit: "cover",
+  themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f2f2f7" }, { media: "(prefers-color-scheme: dark)", color: "#000000" }],
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body>
         <AppState>
-          <div className="demo-banner">Dummy data demo</div>
           <main className="screen">{children}</main>
           <TabBar />
         </AppState>

@@ -1,9 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowDownUp, ArrowUpRight, Bell, ChevronRight, Newspaper, TrendingUp, Wallet } from "lucide-react";
 import { useApp } from "@/components/app-state";
-import { Pnl, SecHead, Sparkline, StatusTag } from "@/components/ui";
+import { Group, NavBar, Row } from "@/components/ios";
+import { ChangePill, Sparkline } from "@/components/ui";
 import { CLIENTS, DIGEST, NEWS, compact, findClient } from "@/lib/data";
+
+// Health app "Summary" card: tinted label row on top, big rounded value below.
+function SummaryCard({ href, Icon, color, label, time, value, unit, children }: {
+  href: string; Icon: typeof Bell; color: string; label: string; time?: string; value: string; unit?: string; children?: React.ReactNode;
+}) {
+  return (
+    <Link href={href} className="hcard">
+      <span className="hcard-top" style={{ color }}>
+        <Icon size={17} strokeWidth={2.4} />
+        <span className="hcard-label">{label}</span>
+        <span className="hcard-time">{time}</span>
+        <ChevronRight size={16} strokeWidth={2.6} className="hcard-chev" />
+      </span>
+      <span className="hcard-bottom">
+        <span><b className="hcard-value">{value}</b>{unit && <span className="hcard-unit"> {unit}</span>}</span>
+        {children}
+      </span>
+    </Link>
+  );
+}
 
 export default function Today() {
   const { pending, unread } = useApp();
@@ -12,76 +34,68 @@ export default function Today() {
 
   return (
     <>
-      <header className="titlebar">
-        <div>
-          <p className="eyebrow">Morning digest · since {DIGEST.since}</p>
-          <h1>Today</h1>
+      <NavBar title="Today" eyebrow="Morning digest" />
+
+      <p className="digest">{DIGEST.headline}</p>
+
+      <section className="hcards" aria-label="Needs you">
+        <h2 className="sub-head">Needs you</h2>
+        <SummaryCard href="/approvals/" Icon={Wallet} color="var(--orange)" label="Withdrawals" time="15:58"
+          value={String(pending.length)} unit="to decide">
+          <span className="hcard-note">{compact(wdTotal)} in total</span>
+        </SummaryCard>
+        <SummaryCard href="/alerts/" Icon={Bell} color="var(--red)" label="Alerts" time="4 min ago"
+          value={String(unread.size)} unit="unread">
+          <span className="hcard-note">2 critical</span>
+        </SummaryCard>
+      </section>
+
+      <section className="hcards" aria-label="Book">
+        <h2 className="sub-head">Flagged book</h2>
+        <div className="hgrid">
+          <SummaryCard href="/clients/" Icon={TrendingUp} color="var(--green)" label="Client P&L" value={compact(DIGEST.clientPnl30)} unit="30 days">
+            <span className="hcard-note">{compact(DIGEST.clientPnl30Change, true)} since 12 Nov</span>
+          </SummaryCard>
+          <SummaryCard href="/clients/" Icon={ArrowUpRight} color="var(--blue)" label="Floating" value={compact(DIGEST.floating)}>
+            <span className="hcard-note">{compact(DIGEST.floatingChange, true)} since 12 Nov</span>
+          </SummaryCard>
         </div>
-        <span className="mark-gr" aria-hidden="true">GR</span>
-      </header>
+      </section>
 
-      <p className="lead card">{DIGEST.headline}</p>
-
-      <section className="section" aria-label="Needs you">
-        <SecHead title="Needs you" />
-        <div className="group">
-          <Link href="/approvals/" className="row">
-            <span className="stack"><span className="strong">Withdrawals to decide</span><span className="muted">{pending.length ? `${compact(wdTotal)} across ${pending.length} requests` : "Nothing waiting"}</span></span>
-            <span className={`count ${pending.length ? "count-hot" : ""}`}>{pending.length}</span>
+      <Group header={<>Watchlist hits <Link href="/clients/" className="grp-link">Show All</Link></>}>
+        {hits.map((c) => (
+          <Link key={c.login} href={`/clients/${c.login}/`} className="row stock">
+            <span className="row-main">
+              <span className="row-text">
+                <span className="row-title">{c.name}</span>
+                <span className="row-sub">{c.why}</span>
+              </span>
+              <span className="stock-chart"><Sparkline values={c.pnl30} id={`h${c.login}`} /></span>
+              <span className="stock-right"><span className="stock-val">{compact(c.balance)}</span><ChangePill v={c.t30} /></span>
+            </span>
           </Link>
-          <Link href="/alerts/" className="row">
-            <span className="stack"><span className="strong">Unread alerts</span><span className="muted">2 critical news profits</span></span>
-            <span className={`count ${unread.size ? "count-hot" : ""}`}>{unread.size}</span>
-          </Link>
-        </div>
-      </section>
+        ))}
+      </Group>
 
-      <section className="stats3" aria-label="Book">
-        <div className="stat"><span className="eyebrow">Flagged</span><strong>{DIGEST.flagged}</strong><span className="small">{DIGEST.flaggedChange} since prior</span></div>
-        <div className="stat"><span className="eyebrow">Client P&amp;L 30d</span><strong className="pos">{compact(DIGEST.clientPnl30)}</strong><span className="small">{compact(DIGEST.clientPnl30Change, true)} since prior</span></div>
-        <div className="stat"><span className="eyebrow">Floating</span><strong className="pos">{compact(DIGEST.floating)}</strong><span className="small">{compact(DIGEST.floatingChange, true)} since prior</span></div>
-      </section>
+      <Group header="Tier moves" footer="A worse tier means wider spreads for that client.">
+        {DIGEST.moves.map((m) => {
+          const c = findClient(m.login)!;
+          return (
+            <Row key={m.login} href={`/clients/${m.login}/`} icon={<ArrowDownUp size={17} strokeWidth={2.4} />} tint={m.worse ? "var(--red)" : "var(--green)"}
+              title={c.name} subtitle={`${m.from} to ${m.to}`} detail={m.worse ? "Worse" : "Better"} />
+          );
+        })}
+      </Group>
 
-      <section className="section">
-        <SecHead title="Watchlist hits" count={hits.length} href="/clients/" />
-        <div className="rail">
-          {hits.map((c) => (
-            <Link key={c.login} href={`/clients/${c.login}/`} className="tile">
-              <span className="top"><span className="strong">{c.name}</span>{c.status && <StatusTag s={c.status} />}</span>
-              <span className="small">#{c.login} · {c.why}</span>
-              <Sparkline values={c.pnl30} />
-              <span className="top foot"><span className="small">T30</span><Pnl v={c.t30} short /></span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <Group header="News coming up">
+        {NEWS.map((n) => (
+          <Row key={n.title} icon={<Newspaper size={17} strokeWidth={2.4} />} tint={n.impact === "high" ? "var(--orange)" : "var(--gray)"}
+            title={n.title} subtitle={`${n.currency} · ${n.exposed} flagged ${n.exposed === 1 ? "account holds" : "accounts hold"} ${n.currency}`}
+            detail={n.inMinutes < 60 ? `${n.inMinutes} min` : `${Math.round(n.inMinutes / 60)} h`} />
+        ))}
+      </Group>
 
-      <section className="section">
-        <SecHead title="Tier moves" count={DIGEST.moves.length} />
-        <div className="group">
-          {DIGEST.moves.map((m) => {
-            const c = findClient(m.login)!;
-            return (
-              <Link key={m.login} href={`/clients/${m.login}/`} className="row">
-                <span className="stack"><span className="strong">{c.name}</span><span className="muted">#{c.login}</span></span>
-                <span className="move"><b>{m.from}</b><i className="arrow" /><b>{m.to}</b><span className={`tag ${m.worse ? "tag-escalated" : "tag-cleared"}`}>{m.worse ? "Worse" : "Better"}</span></span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="section">
-        <SecHead title="News coming up" />
-        <div className="group">
-          {NEWS.map((n) => (
-            <div key={n.title} className="row">
-              <span className="stack"><span className="strong">{n.title}</span><span className="muted">{n.currency} · {n.exposed} flagged {n.exposed === 1 ? "account holds" : "accounts hold"} {n.currency}</span></span>
-              <span className={`when ${n.impact === "high" && n.inMinutes < 60 ? "when-soon" : ""}`}>{n.inMinutes < 60 ? `${n.inMinutes} min` : `${Math.round(n.inMinutes / 60)} h`}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <p className="fine">Dummy data. Snapshot since {DIGEST.since}.</p>
     </>
   );
 }

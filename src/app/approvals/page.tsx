@@ -1,85 +1,77 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import { CircleAlert, Info, Wallet } from "lucide-react";
 import { useApp } from "@/components/app-state";
-import { SecHead } from "@/components/ui";
-import { DECISIONS_TODAY, money } from "@/lib/data";
+import { Group, NavBar, Row, Sheet } from "@/components/ios";
+import { DECISIONS_TODAY, WITHDRAWALS, money } from "@/lib/data";
 
 export default function Approvals() {
   const { pending, decided, decide, undo } = useApp();
-  const [open, setOpen] = useState<string | null>(pending[0]?.id ?? null);
+  // selId stays set while the sheet slides out, so its content does not vanish mid-animation.
+  const [selId, setSelId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const w = WITHDRAWALS.find((p) => p.id === selId) ?? null;
+  const show = (id: string) => { setSelId(id); setOpen(true); };
+  const act = (d: "approved" | "rejected") => { if (w) decide(w.id, d); setOpen(false); };
 
   return (
     <>
-      <header className="titlebar">
-        <div>
-          <p className="eyebrow">Withdrawal screening</p>
-          <h1>Approvals</h1>
-        </div>
-        <span className="shadow-pill"><i />Shadow mode</span>
-      </header>
+      <NavBar title="Approvals" eyebrow="Withdrawal screening" />
 
-      <section className="stats4" aria-label="Decisions today">
-        <div className="stat"><span className="eyebrow">Auto</span><strong>{DECISIONS_TODAY.auto}</strong></div>
-        <div className="stat"><span className="eyebrow">Manual</span><strong>{DECISIONS_TODAY.manual + decided.length}</strong></div>
-        <div className="stat"><span className="eyebrow">Fail safe</span><strong>{DECISIONS_TODAY.failSafe}</strong></div>
-        <div className="stat"><span className="eyebrow">Median</span><strong>{DECISIONS_TODAY.medianSeconds}s</strong></div>
-      </section>
+      <div className="metrics" aria-label="Decisions today">
+        <div><span>Auto</span><b>{DECISIONS_TODAY.auto}</b></div>
+        <div><span>Manual</span><b>{DECISIONS_TODAY.manual + decided.length}</b></div>
+        <div><span>Fail safe</span><b>{DECISIONS_TODAY.failSafe}</b></div>
+        <div><span>Median</span><b>{DECISIONS_TODAY.medianSeconds}<small>s</small></b></div>
+      </div>
 
-      <section className="section">
-        <SecHead title="Waiting for you" count={pending.length} />
-        {pending.length === 0 && <p className="clear">All withdrawals are decided. New requests show up here.</p>}
-        {pending.map((w) => {
-          const isOpen = open === w.id;
-          const flags = w.reasons.filter((r) => r.level === "flag").length;
+      <Group header={`Waiting for you · ${pending.length}`} footer="Shadow mode is on. Decisions are logged and nothing is paid out.">
+        {pending.length === 0 && <Row title="All decided" subtitle="New requests show up here." chevron={false} />}
+        {pending.map((p) => {
+          const flags = p.reasons.filter((r) => r.level === "flag").length;
           return (
-            <article key={w.id} className={`wd card ${isOpen ? "wd-open" : ""}`}>
-              <button className="wd-head" onClick={() => setOpen(isOpen ? null : w.id)} aria-expanded={isOpen}>
-                <span className="stack">
-                  <span className="wd-amount">{money(w.amount)}</span>
-                  <span className="muted">#{w.login} · {w.headline}</span>
-                </span>
-                <span className="stack right">
-                  <span className="tag tag-escalated">{flags} {flags === 1 ? "flag" : "flags"}</span>
-                  <span className="small">{w.requested}</span>
-                </span>
-              </button>
-              {isOpen && (
-                <>
-                  <ul className="reasons">
-                    {w.reasons.map((r) => (
-                      <li key={r.code} className={r.level}>
-                        <span className="code">{r.code}</span>
-                        <span>{r.text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href={`/clients/`} className="plainbtn">Open the client profile</Link>
-                  <div className="pair">
-                    <button className="soft danger" onClick={() => decide(w.id, "rejected")}>Reject</button>
-                    <button className="fill" onClick={() => { decide(w.id, "approved"); setOpen(pending.find((p) => p.id !== w.id)?.id ?? null); }}>Approve</button>
-                  </div>
-                </>
-              )}
-            </article>
+            <Row key={p.id} onClick={() => show(p.id)} icon={<Wallet size={17} strokeWidth={2.4} />} tint="var(--orange)"
+              title={<span className="num">{money(p.amount)}</span>} subtitle={`#${p.login} · ${p.headline}`}
+              detail={<span className="stack-r"><span>{p.requested}</span><span className="flagcount">{flags} {flags === 1 ? "flag" : "flags"}</span></span>} />
           );
         })}
-      </section>
+      </Group>
 
       {decided.length > 0 && (
-        <section className="section">
-          <SecHead title="Decided by you" count={decided.length} />
-          <div className="group">
-            {decided.map((w) => (
-              <div key={w.id} className="row">
-                <span className="stack"><span className="strong">{money(w.amount)} · #{w.login}</span><span className={`small ${w.decision === "approved" ? "pos" : "neg"}`}>{w.decision === "approved" ? "Approved" : "Rejected"}</span></span>
-                <button className="plainbtn" onClick={() => undo(w.id)}>Undo</button>
-              </div>
-            ))}
-          </div>
-        </section>
+        <Group header="Decided by you">
+          {decided.map((d) => (
+            <Row key={d.id} title={<span className="num">{money(d.amount)}</span>} subtitle={`#${d.login}`} chevron={false}
+              detail={<span className="decided"><span className={d.decision === "approved" ? "pos" : "neg"}>{d.decision === "approved" ? "Approved" : "Rejected"}</span><button className="textbtn" onClick={() => undo(d.id)}>Undo</button></span>} />
+          ))}
+        </Group>
       )}
+
+      <Sheet open={open} onClose={() => setOpen(false)} title="Withdrawal">
+        {w && (
+          <>
+            <div className="sheet-hero">
+              <span className="eyebrow">#{w.login} · requested {w.requested}</span>
+              <b className="hero-amount num">{money(w.amount)}</b>
+              <span className="row-sub">{w.headline}</span>
+            </div>
+            <Group header="Why it was flagged">
+              {w.reasons.map((r) => (
+                <Row key={r.code} chevron={false}
+                  icon={r.level === "flag" ? <CircleAlert size={17} strokeWidth={2.4} /> : <Info size={17} strokeWidth={2.4} />}
+                  tint={r.level === "flag" ? "var(--red)" : "var(--gray)"} title={r.code} subtitle={r.text} />
+              ))}
+            </Group>
+            <Group>
+              <Row href="/clients/" title={<span className="link">Open client profile</span>} />
+            </Group>
+            <div className="sheet-actions">
+              <button className="btn btn-gray" onClick={() => act("rejected")}><span className="neg">Reject</span></button>
+              <button className="btn btn-blue" onClick={() => act("approved")}>Approve</button>
+            </div>
+          </>
+        )}
+      </Sheet>
     </>
   );
 }

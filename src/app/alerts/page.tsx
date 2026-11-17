@@ -1,50 +1,39 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 import { useApp } from "@/components/app-state";
+import { Group, NavBar, Row, Segmented } from "@/components/ios";
 import { ALERTS, ago, findClient } from "@/lib/data";
 
-const FILTERS = ["all", "critical", "warn", "info"] as const;
-const LABEL = { all: "All", critical: "Critical", warn: "Warning", info: "Info" };
+type F = "all" | "critical" | "warn" | "info";
+const OPTS: { v: F; label: string }[] = [{ v: "all", label: "All" }, { v: "critical", label: "Critical" }, { v: "warn", label: "Warning" }, { v: "info", label: "Info" }];
+const TINT = { critical: "var(--red)", warn: "var(--orange)", info: "var(--gray)" };
+const ICON = { critical: CircleAlert, warn: TriangleAlert, info: Info };
 
 export default function Alerts() {
   const { unread, markRead } = useApp();
-  const [f, setF] = useState<(typeof FILTERS)[number]>("all");
+  const [f, setF] = useState<F>("all");
   const list = ALERTS.filter((a) => f === "all" || a.severity === f);
 
   return (
     <>
-      <header className="titlebar">
-        <div>
-          <p className="eyebrow">{unread.size} unread</p>
-          <h1>Alerts</h1>
-        </div>
-        {unread.size > 0 && <button className="plainbtn" onClick={() => markRead()}>Mark all read</button>}
-      </header>
+      <NavBar title="Alerts" eyebrow={`${unread.size} unread`}
+        trailing={unread.size > 0 ? <button className="textbtn" onClick={() => markRead()}>Read All</button> : null} />
 
-      <div className="chips" role="tablist" aria-label="Severity">
-        {FILTERS.map((x) => (
-          <button key={x} role="tab" aria-selected={f === x} className={`chip ${f === x ? "chip-on" : ""}`} onClick={() => setF(x)}>{LABEL[x]}</button>
-        ))}
-      </div>
+      <Segmented label="Severity" value={f} options={OPTS} onChange={setF} />
 
-      <div className="group">
+      <Group className="mail">
         {list.map((a) => {
           const c = findClient(a.login);
-          const isNew = unread.has(a.id);
           return (
-            <Link key={a.id} href={c ? `/clients/${a.login}/` : "/clients/"} className="row alert" onClick={() => markRead(a.id)}>
-              <span className={`sev sev-${a.severity}`} aria-label={LABEL[a.severity]} />
-              <span className="stack">
-                <span className={isNew ? "strong" : ""}>{a.title}</span>
-                <span className="muted">{c?.name ?? "Account"} #{a.login} · {a.detail}</span>
-              </span>
-              <span className="stack right"><span className="small">{ago(a.minutesAgo)}</span>{isNew && <i className="dot" aria-label="Unread" />}</span>
-            </Link>
+            <Row key={a.id} href={c ? `/clients/${a.login}/` : "/clients/"} onClick={() => markRead(a.id)} unread={unread.has(a.id)}
+              icon={(() => { const I = ICON[a.severity]; return <I size={17} strokeWidth={2.4} aria-label={a.severity} />; })()} tint={TINT[a.severity]}
+              title={<span className="mail-top"><span className={unread.has(a.id) ? "strong" : ""}>{a.title}</span><span className="mail-time">{ago(a.minutesAgo)}</span></span>}
+              subtitle={`${c?.name ?? "Account"} #${a.login} · ${a.detail}`} />
           );
         })}
-      </div>
+      </Group>
     </>
   );
 }

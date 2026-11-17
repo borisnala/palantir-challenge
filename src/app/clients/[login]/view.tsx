@@ -2,74 +2,76 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Bell, Copy, Eye } from "lucide-react";
 import { useApp } from "@/components/app-state";
-import { Initials, Pnl, RiskDot, SecHead, Sparkline, StatusTag } from "@/components/ui";
+import { Group, NavBar, Row, Segmented, Switch } from "@/components/ios";
+import { Monogram, Pnl, Sparkline, StatusTag } from "@/components/ui";
 import { compact, money, type Client } from "@/lib/data";
 
-const POV = { client: "Client view", broker: "Broker view" };
+type Pov = "client" | "broker";
 
 export function ClientView({ c }: { c: Client }) {
   const { watched, toggleWatch } = useApp();
-  const [pov, setPov] = useState<keyof typeof POV>("client");
-  const k = pov === "client" ? 1 : -1; // broker P&L is the mirror of client P&L
+  const [pov, setPov] = useState<Pov>("client");
+  const [copied, setCopied] = useState(false);
+  const k = pov === "client" ? 1 : -1; // broker P&L mirrors client P&L
   const on = watched.has(c.login);
+  const copy = () => { navigator.clipboard?.writeText(String(c.login)).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 1400); };
 
   return (
     <>
-      <Link href="/clients/" className="back glass"><i className="chev" />Clients</Link>
+      <NavBar title={c.name} large={false} back={{ href: "/clients/", label: "Clients" }} />
 
-      <header className="profile card">
-        <div className="top">
-          <Initials name={c.name} />
-          <div className="stack grow">
-            <h1 className="h2">{c.name}</h1>
-            <span className="muted">#{c.login} · {c.country}</span>
-          </div>
-          {c.status && <StatusTag s={c.status} />}
+      {/* Contacts-style header */}
+      <header className="contact">
+        <Monogram name={c.name} size={88} />
+        <h1 className="contact-name">{c.name}</h1>
+        <p className="row-sub">#{c.login} · {c.country}</p>
+        {c.status && <StatusTag s={c.status} />}
+        <div className="actions">
+          <button className={`action ${on ? "action-on" : ""}`} onClick={() => toggleWatch(c.login)}><Eye size={20} strokeWidth={2.2} /><span>{on ? "Watching" : "Watch"}</span></button>
+          <Link className="action" href="/alerts/"><Bell size={20} strokeWidth={2.2} /><span>Alerts</span></Link>
+          <button className="action" onClick={copy}><Copy size={20} strokeWidth={2.2} /><span>{copied ? "Copied" : "Copy Login"}</span></button>
         </div>
-        <div className="tags">
-          <span className="tag">{c.style}</span>
-          <span className="tag">Tier {c.tier}</span>
-          <span className="tag">{c.group.replace("DUMMY\\", "")}</span>
-          <RiskDot r={c.risk} />
-        </div>
-        {c.note && <p className="note">{c.note}</p>}
-        <button className={on ? "soft" : "fill"} onClick={() => toggleWatch(c.login)}>{on ? "On your watchlist" : "Add to watchlist"}</button>
       </header>
 
-      <div className="seg" role="tablist" aria-label="Point of view">
-        {(Object.keys(POV) as (keyof typeof POV)[]).map((p) => (
-          <button key={p} role="tab" aria-selected={pov === p} className={pov === p ? "seg-on" : ""} onClick={() => setPov(p)}>{POV[p]}</button>
+      {c.note && <Group header="Note"><Row title={c.note} chevron={false} /></Group>}
+
+      <Segmented label="Point of view" value={pov} onChange={setPov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} />
+
+      {/* Stocks-style chart card */}
+      <section className="chartcard">
+        <span className="eyebrow">Last 30 days</span>
+        <b className="chart-value"><Pnl v={c.t30 * k} /></b>
+        <Sparkline values={c.pnl30.map((v) => v * k)} height={120} fill id={`c${c.login}${pov}`} />
+        <div className="chart-stats">
+          <div><span>T180</span><Pnl v={c.t180 * k} short /></div>
+          <div><span>Floating</span><Pnl v={c.fpl * k} short /></div>
+          <div><span>Win rate</span><b>{c.winRate}%</b></div>
+          <div><span>Profit factor</span><b>{c.profitFactor ?? "No losses"}</b></div>
+        </div>
+      </section>
+
+      <Group header="Account">
+        <Row title="Balance" detail={money(c.balance)} />
+        <Row title="Equity" detail={money(c.equity)} />
+        <Row title="Trading style" detail={c.style} />
+        <Row title="Price tier" detail={c.tier} />
+        <Row title="Group" detail={c.group.replace("DUMMY\\", "")} />
+        <Row title="Risk" detail={<span className={`riskval risk-${c.risk}`}>{c.risk[0].toUpperCase() + c.risk.slice(1)}</span>} />
+      </Group>
+
+      <Group header={`Open positions · ${c.exposure.length}`}>
+        {c.exposure.map((p) => (
+          <Row key={p.symbol} title={p.symbol} subtitle={`${p.side} ${p.lots} lots · net ${compact(p.net)}`} detail={<Pnl v={p.fpl * k} />} />
         ))}
-      </div>
+      </Group>
 
-      <section className="card">
-        <div className="top"><span className="eyebrow">P&amp;L last 30 days</span><Pnl v={c.t30 * k} /></div>
-        <Sparkline values={c.pnl30.map((v) => v * k)} height={64} />
-        <div className="stats3 inner">
-          <div><span className="small">T180</span><Pnl v={c.t180 * k} short /></div>
-          <div><span className="small">Floating</span><Pnl v={c.fpl * k} short /></div>
-          <div><span className="small">Win rate</span><span>{c.winRate}%</span></div>
-        </div>
-      </section>
+      <Group footer="Alerts from this client show up in Alerts and on Today.">
+        <Row title="On watchlist" chevron={false}><Switch on={on} onChange={() => toggleWatch(c.login)} label="On watchlist" /></Row>
+      </Group>
 
-      <section className="stats">
-        <div className="stat"><span className="eyebrow">Balance</span><strong className="num">{compact(c.balance)}</strong><span className="small">{money(c.balance)}</span></div>
-        <div className="stat"><span className="eyebrow">Equity</span><strong className="num">{compact(c.equity)}</strong><span className="small">Profit factor {c.profitFactor ?? "no losses"}</span></div>
-      </section>
-
-      <section className="section">
-        <SecHead title="Open positions" count={c.exposure.length} />
-        <div className="group">
-          {c.exposure.map((p) => (
-            <div key={p.symbol} className="row">
-              <span className="stack"><span className="strong">{p.symbol}</span><span className="muted">{p.side} {p.lots} lots · net {compact(p.net)}</span></span>
-              <Pnl v={p.fpl * k} />
-            </div>
-          ))}
-        </div>
-      </section>
-      <p className="small center">Last trade {c.lastTrade}. Dummy data.</p>
+      <p className="fine">Last trade {c.lastTrade}. Dummy data.</p>
     </>
   );
 }

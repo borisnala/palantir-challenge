@@ -1,41 +1,45 @@
-import Link from "next/link";
 import { compact } from "@/lib/data";
 
-export function Sparkline({ values, height = 36 }: { values: number[]; height?: number }) {
-  // Cumulative client P&L: rising line = client winning = broker losing.
+// Stocks-style line. Cumulative client P&L, so a rising line means the client is winning.
+export function Sparkline({ values, height = 32, fill = false, id }: { values: number[]; height?: number; fill?: boolean; id?: string }) {
   const cum: number[] = [];
   values.reduce((a, v) => { const n = a + v; cum.push(n); return n; }, 0);
   const min = Math.min(0, ...cum), max = Math.max(0, ...cum), w = 100, span = max - min || 1;
-  const y = (v: number) => height - ((v - min) / span) * height;
-  const d = cum.map((v, i) => `${i ? "L" : "M"}${((i / (cum.length - 1)) * w).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const y = (v: number) => 2 + (height - 4) - ((v - min) / span) * (height - 4);
+  const pts = cum.map((v, i) => `${((i / (cum.length - 1)) * w).toFixed(2)},${y(v).toFixed(2)}`);
   const up = cum[cum.length - 1] >= 0;
+  const gid = `g-${id ?? "x"}-${up ? "u" : "d"}`;
   return (
-    <svg className="spark" viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" height={height} aria-hidden="true">
+    <svg className={`spark ${up ? "spark-up" : "spark-down"}`} viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" height={height} aria-hidden="true">
+      {fill && (
+        <>
+          <defs><linearGradient id={gid} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".28" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient></defs>
+          <path d={`M0,${height} L${pts.join(" L")} L${w},${height} Z`} fill={`url(#${gid})`} stroke="none" />
+        </>
+      )}
       <line x1="0" x2={w} y1={y(0)} y2={y(0)} className="spark-zero" />
-      <path d={d} className={up ? "spark-up" : "spark-down"} vectorEffect="non-scaling-stroke" />
+      <polyline points={pts.join(" ")} vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
 
-export function Pnl({ v, short = false }: { v: number; short?: boolean }) {
-  return <span className={v >= 0 ? "pos" : "neg"}>{short ? compact(v, true) : (v < 0 ? "-$" : "+$") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>;
+// The Stocks app's change capsule.
+export function ChangePill({ v }: { v: number }) {
+  return <span className={`pill-chg ${v >= 0 ? "pill-up" : "pill-down"}`}>{compact(v, true)}</span>;
 }
 
-export function SecHead({ title, count, href }: { title: string; count?: number; href?: string }) {
-  const inner = <>{title}{count !== undefined && <span className="seccount">{count}</span>}{href && <i className="chev" />}</>;
-  return href ? <Link href={href} className="sechead">{inner}</Link> : <h2 className="sechead">{inner}</h2>;
+export function Pnl({ v, short = false }: { v: number; short?: boolean }) {
+  const txt = short ? compact(v, true) : (v < 0 ? "-$" : "+$") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return <span className={v >= 0 ? "pos" : "neg"}>{txt}</span>;
+}
+
+// Contacts-style monogram.
+export function Monogram({ name, size = 40 }: { name: string; size?: number }) {
+  const n = name.replace("Demo Client ", "");
+  return <span className="monogram" style={{ width: size, height: size, fontSize: size * 0.4 }} aria-hidden="true">{/^\d+$/.test(n) ? `C${n}` : name.slice(0, 2).toUpperCase()}</span>;
 }
 
 const STATUS_LABEL = { watch: "Watch", escalated: "Escalated", cleared: "Cleared" } as const;
 export function StatusTag({ s }: { s: keyof typeof STATUS_LABEL }) {
   return <span className={`tag tag-${s}`}>{STATUS_LABEL[s]}</span>;
-}
-
-export function RiskDot({ r }: { r: "low" | "medium" | "high" }) {
-  return <span className={`risk risk-${r}`}><i />{r[0].toUpperCase() + r.slice(1)} risk</span>;
-}
-
-export function Initials({ name }: { name: string }) {
-  const n = name.replace("Demo Client ", "");
-  return <span className="avatar" aria-hidden="true">{/^\d+$/.test(n) ? `C${n}` : name.slice(0, 2)}</span>;
 }
