@@ -318,3 +318,80 @@ html.lg-refract .lg { backdrop-filter: var(--lens) brightness(1.05); }
 .tabtrack { flex: 1; width: 100%; }
 .screen { z-index: auto; }
 body { background: transparent; }
+
+/* ===== 2026-11-18, the owner's phone: no color bleeding through the glass, no empty band on top, a bar that stays put.
+   The glass matches the Safari controls on his iPhone: milky white (dark gray in dark mode), soft blur, no saturation. */
+:root { --glass: rgba(255,255,255,.82); --glass-strong: rgba(255,255,255,.86); --rim-hi: rgba(255,255,255,1); --rim-lo: rgba(255,255,255,.4);
+  --glass-shadow: 0 6px 24px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06); }
+@media (prefers-color-scheme: dark) { :root { --glass: rgba(38,38,40,.84); --glass-strong: rgba(44,44,46,.88); --rim-hi: rgba(255,255,255,.35); --rim-lo: rgba(255,255,255,.06);
+  --glass-shadow: 0 6px 24px rgba(0,0,0,.5), 0 1px 4px rgba(0,0,0,.4); } }
+.lg { -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); }
+html.lg-refract .lg { backdrop-filter: var(--lens) blur(14px); }
+.lg-sheen { opacity: .45; }
+.btn-gray, .searchfield, .segmented { -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); }
+
+/* Top: the bell and account sit on the first row, the large title directly under it */
+.navbar { padding-top: calc(env(safe-area-inset-top) + 2px); }
+.navbar-row { height: 50px; grid-template-columns: auto 1fr auto; gap: 8px; }
+.nav-title { justify-self: center; }
+.largetitle { margin-top: -18px; }
+.screen { gap: 22px; }
+.nav-actions { display: inline-flex; gap: 10px; }
+.glassbtn.round { position: relative; }
+.navbadge { position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--red); color: #fff;
+  font-size: 11px; line-height: 18px; font-weight: 700; text-align: center; z-index: 4; }
+
+/* Tab bar: four tabs and a search circle, nothing moves on scroll */
+.tabnav { gap: 10px; align-items: center; padding: 0 16px calc(max(8px, env(safe-area-inset-bottom)) + 4px); transition: none; }
+.tabbar { flex: 1; max-width: 340px; transition: none; }
+.tab { min-height: 58px; transition: none; padding: 0 2px; }
+.tab-label { max-height: none; font-size: 10px; white-space: nowrap; transition: none; }
+.tabdrop-off { opacity: 0; }
+.searchorb-link { flex: none; }
+.searchorb { width: 62px; height: 62px; border-radius: 31px; display: grid; place-items: center; color: var(--label); }
+.searchorb-on { color: var(--blue); }
+
+/* Stepper, chips, toast, red button */
+.stepper-wrap { display: inline-flex; align-items: center; gap: 10px; }
+.stepper-val { min-width: 44px; text-align: right; font-size: 17px; font-weight: 600; }
+.stepper { display: inline-flex; align-items: center; height: 32px; border-radius: 16px; background: var(--fill); }
+.stepper button { width: 44px; height: 32px; display: grid; place-items: center; color: var(--label); }
+.stepper button:disabled { opacity: .3; }
+.stepper i { width: .5px; height: 18px; background: var(--sep); }
+.chip { display: inline-flex; align-items: center; font-size: 12px; line-height: 16px; font-weight: 600; padding: 3px 8px; border-radius: 8px; white-space: nowrap; }
+.chip-gray { background: var(--fill); color: var(--label2); }
+.chip-green { background: color-mix(in srgb, var(--green) 18%, transparent); color: var(--pos); }
+.chip-orange { background: color-mix(in srgb, var(--orange) 18%, transparent); color: var(--orange); }
+.chip-red { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); }
+.chip-blue { background: color-mix(in srgb, var(--blue) 15%, transparent); color: var(--blue); }
+.chip-purple { background: color-mix(in srgb, var(--purple) 16%, transparent); color: var(--purple); }
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 96px); z-index: 30; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+  background: var(--glass); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); box-shadow: var(--glass-shadow); color: var(--label);
+  padding: 12px 20px; border-radius: 24px; font-size: 15px; font-weight: 600; white-space: nowrap; transition: opacity .2s, transform .4s var(--spring); }
+.toast-on { opacity: 1; transform: translate(-50%, 0); }
+.btn-red { background: var(--red); color: #fff; }
+.metrics b.pos { color: var(--pos); } .metrics b.neg { color: var(--neg); } .metrics b.warn { color: var(--orange); }
+.metrics { padding: 12px 4px; }
+.metrics b { font-size: 20px; }
+
+/* Bars for small charts */
+.bars { display: flex; align-items: flex-end; gap: 3px; height: 72px; }
+.bars span { flex: 1; border-radius: 3px 3px 1px 1px; background: var(--blue); min-height: 2px; }
+.hbar { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; margin-top: 6px; }
+.hbar i { display: block; height: 100%; border-radius: 3px; background: var(--blue); }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; }
+.wrap { white-space: normal; overflow-wrap: anywhere; }
+.row-detail .chip { vertical-align: middle; }
+.barchart { display: flex; flex-direction: column; gap: 6px; }
+.bar-axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--label2); }
+.row-text .hbar { display: block; }
+.chartpad { padding: 14px 16px 10px; }
+.heat { padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 3px; }
+.heat-row { display: grid; grid-template-columns: 30px repeat(24, 1fr); gap: 2px; align-items: center; }
+.heat-row span { font-size: 11px; color: var(--label2); }
+.heat-row i { height: 14px; border-radius: 3px; }
+.heat-axis { grid-template-columns: 30px repeat(4, 1fr) auto; font-size: 11px; color: var(--label2); }
+.heat-axis b { font-weight: 400; }
+.inline-flow { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sheet-actions.inset { padding: 4px 16px 14px; }
+.checkform { display: flex; flex-direction: column; gap: 10px; }

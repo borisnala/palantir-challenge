@@ -1,19 +1,30 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
-import { ALERTS, CLIENTS, WITHDRAWALS, type Withdrawal } from "@/lib/data";
+// In-memory state for the demo. Decisions, reads, watchlist changes and control edits live here for the session, so
+// every screen agrees. Nothing is saved or sent anywhere.
 
-type Decision = "approved" | "rejected";
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import wd from "@/data/withdrawals.json";
+import { ALERTS, WATCHLIST } from "@/lib/data";
+
+export type Decision = "approved" | "rejected";
+export type WdRow = (typeof wd.rows)[number];
 
 interface State {
-  pending: Withdrawal[];
-  decided: (Withdrawal & { decision: Decision })[];
+  wdRows: WdRow[];
+  pending: WdRow[];
   decide: (id: string, d: Decision) => void;
   undo: (id: string) => void;
+  decisionOf: (id: string) => Decision | undefined;
   unread: Set<number>;
   markRead: (id?: number) => void;
   watched: Set<number>;
   toggleWatch: (login: number) => void;
+  /** A small key value store for control screens (markups, levels, model weights, devices). */
+  get: <T>(key: string, fallback: T) => T;
+  set: <T>(key: string, value: T) => void;
+  toast: string | null;
+  say: (msg: string) => void;
 }
 
 const Ctx = createContext<State | null>(null);
@@ -21,18 +32,35 @@ const Ctx = createContext<State | null>(null);
 export function AppState({ children }: { children: React.ReactNode }) {
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [unread, setUnread] = useState(() => new Set(ALERTS.filter((a) => a.unread).map((a) => a.id)));
-  const [watched, setWatched] = useState(() => new Set(CLIENTS.filter((c) => c.status && c.status !== "cleared").map((c) => c.login)));
+  const [watched, setWatched] = useState(() => new Set(WATCHLIST.map((w) => w.login)));
+  const [kv, setKv] = useState<Record<string, unknown>>({});
+  const [toast, setToast] = useState<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const value = useMemo<State>(() => ({
-    pending: WITHDRAWALS.filter((w) => !decisions[w.id]),
-    decided: WITHDRAWALS.filter((w) => decisions[w.id]).map((w) => ({ ...w, decision: decisions[w.id] })),
-    decide: (id, d) => setDecisions((s) => ({ ...s, [id]: d })),
-    undo: (id) => setDecisions((s) => { const n = { ...s }; delete n[id]; return n; }),
-    unread,
-    markRead: (id) => setUnread((s) => { if (id === undefined) return new Set(); const n = new Set(s); n.delete(id); return n; }),
-    watched,
-    toggleWatch: (login) => setWatched((s) => { const n = new Set(s); if (n.has(login)) n.delete(login); else n.add(login); return n; }),
-  }), [decisions, unread, watched]);
+  const say = useCallback((msg: string) => {
+    setToast(msg);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  const value = useMemo<State>(() => {
+    const rows = wd.rows.map((r) => (decisions[r.request_id] ? { ...r, status: decisions[r.request_id], decided_by: "demo.admin" } : r)) as WdRow[];
+    return {
+      wdRows: rows,
+      pending: rows.filter((r) => r.status === "pending"),
+      decide: (id, d) => setDecisions((s) => ({ ...s, [id]: d })),
+      undo: (id) => setDecisions((s) => { const n = { ...s }; delete n[id]; return n; }),
+      decisionOf: (id) => decisions[id],
+      unread,
+      markRead: (id) => setUnread((s) => { if (id === undefined) return new Set(); const n = new Set(s); n.delete(id); return n; }),
+      watched,
+      toggleWatch: (login) => setWatched((s) => { const n = new Set(s); if (n.has(login)) n.delete(login); else n.add(login); return n; }),
+      get: <T,>(key: string, fallback: T) => (key in kv ? (kv[key] as T) : fallback),
+      set: (key, v) => setKv((s) => ({ ...s, [key]: v })),
+      toast,
+      say,
+    };
+  }, [decisions, unread, watched, kv, toast, say]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

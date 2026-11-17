@@ -14,8 +14,18 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 - Put these rules in the prompt of every subagent that reads code.
 
 ## Where things are
-- `src/lib/data.ts`: all dummy data and the number formatters. One file, so the demo tells one story.
-- `src/components/app-state.tsx`: in-memory state (approve or reject, read alerts, watchlist). Nothing is saved.
+- `source/payloads/*.json.gz`: the desktop portal demo's own dummy payloads. `python3 scripts/distill.py` turns them
+  into `src/data/*.json`, one small file per screen. Never hand-write numbers, change the converter instead.
+- `src/lib/data.ts`: clients, alerts and the formatters. `src/lib/levels.ts`: traffic light labels.
+- Navigation (owner 2026-11-18): four tabs, Today, Risk, Liquidity, Withdrawals, plus the search circle (Clients).
+  Bell (Alerts) and account (Users, Device access, Build paths) sit top right on every tab root. Every portal page has a
+  screen: Risk holds the risk pages, CRA and Promotion; Liquidity holds CLTL, PG Markups, Manual Level, Group Spread,
+  Book View. CandleTL Control and Algo Config are confidential and stay out.
+- Rule (owner 2026-11-18, "never hyperlink some feature or display anything from some buttons"): every button does its
+  real job inside the app. A client row links only when that client has a profile. Settings changes go through a
+  Confirm sheet that lists each change. The crawl in the verification step must report no dead link and no empty tap.
+- The tab bar never moves or shrinks on scroll (owner 2026-11-18).
+- `src/components/app-state.tsx`: in-memory state (decisions, reads, watchlist, control edits, toast). Nothing is saved.
 - `src/components/ios.tsx`: the iOS building blocks. NavBar (collapsing large title), Group and Row (inset grouped
   lists), Sheet, Switch, Segmented. Build every screen from these, never from ad hoc cards.
 - `src/components/tab-bar.tsx`, `src/components/ui.tsx`: the floating glass tab bar, Stocks-style sparkline and

@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppState } from "@/components/app-state";
 import { TabBar } from "@/components/tab-bar";
 import { LightSource } from "@/components/liquid";
+import { Toast } from "@/components/ios";
 
 export const metadata: Metadata = {
   title: "Risk Desk",
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <LightSource />
         <AppState>
           <main className="screen">{children}</main>
+          <Toast />
           <TabBar />
         </AppState>
       </body>

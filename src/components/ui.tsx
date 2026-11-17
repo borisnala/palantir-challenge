@@ -43,3 +43,19 @@ const STATUS_LABEL = { watch: "Watch", escalated: "Escalated", cleared: "Cleared
 export function StatusTag({ s }: { s: keyof typeof STATUS_LABEL }) {
   return <span className={`tag tag-${s}`}>{STATUS_LABEL[s]}</span>;
 }
+
+/** Monthly or weekly counts as bars, labels under the first and last. */
+export function Bars({ data, tone = "var(--blue)" }: { data: { label: string; v: number }[]; tone?: string }) {
+  const max = Math.max(1, ...data.map((d) => d.v));
+  return (
+    <div className="barchart">
+      <div className="bars">{data.map((d) => <span key={d.label} title={`${d.label} ${d.v}`} style={{ height: `${(d.v / max) * 100}%`, background: tone }} />)}</div>
+      {data.length > 1 && <div className="bar-axis"><span>{data[0].label}</span><span>{data[data.length - 1].label}</span></div>}
+    </div>
+  );
+}
+
+/** A share of the whole as a thin bar under a row. */
+export function Share({ v, of, tone = "var(--blue)" }: { v: number; of: number; tone?: string }) {
+  return <span className="hbar" aria-hidden><i style={{ width: `${of ? Math.max(2, (v / of) * 100) : 0}%`, background: tone }} /></span>;
+}

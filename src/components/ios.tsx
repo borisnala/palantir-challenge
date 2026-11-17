@@ -5,12 +5,40 @@
 // Sizes follow Apple's type ramp (17 body, 15 subhead, 13 footnote) and 44 pt minimum touch targets.
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, ChevronLeft, ChevronRight, Minus, Plus, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useApp } from "./app-state";
 import { Glass, Spring, stretch, useSpringLoop } from "./liquid";
 
-export function NavBar({ title, eyebrow, trailing, back, large = true }: {
-  title: string; eyebrow?: string; trailing?: React.ReactNode; back?: { href: string; label: string }; large?: boolean;
+/** Bell (alerts, with the unread count) and account, top right of every tab's root screen, as in Apple's own apps. */
+function RootActions() {
+  const { unread } = useApp();
+  return (
+    <span className="nav-actions">
+      <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
+        <Glass className="glassbtn round"><Bell size={20} strokeWidth={2.2} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}</Glass>
+      </Link>
+      <Link href="/account/" className="glassbtn-link" aria-label="Account and admin">
+        <Glass className="glassbtn round"><UserRound size={20} strokeWidth={2.2} /></Glass>
+      </Link>
+    </span>
+  );
+}
+
+/** Back goes to the screen you came from, or to the parent when the page was opened directly. */
+function BackButton({ href, label }: { href: string; label: string }) {
+  const router = useRouter();
+  return (
+    <button className="glassbtn-link" aria-label={`Back to ${label}`}
+      onClick={() => (window.history.length > 1 ? router.back() : router.push(href))}>
+      <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.4} /></Glass>
+    </button>
+  );
+}
+
+export function NavBar({ title, eyebrow, trailing, back, large = true, root = false }: {
+  title: string; eyebrow?: string; trailing?: React.ReactNode; back?: { href: string; label: string }; large?: boolean; root?: boolean;
 }) {
   const sentinel = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(!large);
@@ -28,14 +56,10 @@ export function NavBar({ title, eyebrow, trailing, back, large = true }: {
       <div className={`navbar ${scrolled ? "navbar-on" : ""}`}>
         <div className="navbar-row">
           <div className="nav-side">
-            {back && (
-              <Link href={back.href} aria-label={`Back to ${back.label}`} className="glassbtn-link">
-                <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.4} /></Glass>
-              </Link>
-            )}
+            {back && <BackButton href={back.href} label={back.label} />}
           </div>
           <span className="nav-title" aria-hidden={large && !scrolled}>{title}</span>
-          <div className="nav-side nav-trailing">{trailing}</div>
+          <div className="nav-side nav-trailing">{trailing}{root && <RootActions />}</div>
         </div>
       </div>
       {large && (
@@ -201,5 +225,57 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
         <button key={o.v} role="tab" aria-selected={o.v === value} onClick={() => onChange(o.v)}>{o.label}</button>
       ))}
     </div>
+  );
+}
+
+/** The iOS stepper: minus and plus in one capsule, the value beside it. */
+export function Stepper({ value, onChange, step = 1, min = -Infinity, max = Infinity, digits = 0, label }: {
+  value: number; onChange: (v: number) => void; step?: number; min?: number; max?: number; digits?: number; label: string;
+}) {
+  const set = (v: number) => onChange(Math.min(max, Math.max(min, Number(v.toFixed(Math.max(digits, 2))))));
+  return (
+    <span className="stepper-wrap">
+      <span className="stepper-val num">{value.toFixed(digits)}</span>
+      <span className="stepper" role="group" aria-label={label}>
+        <button aria-label={`Lower ${label}`} onClick={() => set(value - step)} disabled={value - step < min}><Minus size={16} strokeWidth={2.6} /></button>
+        <i aria-hidden />
+        <button aria-label={`Raise ${label}`} onClick={() => set(value + step)} disabled={value + step > max}><Plus size={16} strokeWidth={2.6} /></button>
+      </span>
+    </span>
+  );
+}
+
+/** A strip of headline numbers, as on the Approvals screen. */
+export function Metrics({ items, label }: { items: { k: string; v: React.ReactNode; tone?: "pos" | "neg" | "warn" }[]; label: string }) {
+  return (
+    <div className="metrics" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }} aria-label={label}>
+      {items.map((m) => <div key={m.k}><span>{m.k}</span><b className={m.tone ?? ""}>{m.v}</b></div>)}
+    </div>
+  );
+}
+
+/** A small status chip. */
+export function Chip({ tone = "gray", children }: { tone?: "gray" | "green" | "orange" | "red" | "blue" | "purple"; children: React.ReactNode }) {
+  return <span className={`chip chip-${tone}`}>{children}</span>;
+}
+
+/** The confirmation toast at the bottom, above the tab bar. */
+export function Toast() {
+  const { toast } = useApp();
+  return <div className={`toast ${toast ? "toast-on" : ""}`} role="status" aria-live="polite">{toast}</div>;
+}
+
+/** Confirm sheet for anything that changes a setting: says what will change, then Cancel or the action. */
+export function Confirm({ open, title, lines, action, destructive, onCancel, onConfirm }: {
+  open: boolean; title: string; lines: string[]; action: string; destructive?: boolean; onCancel: () => void; onConfirm: () => void;
+}) {
+  return (
+    <Sheet open={open} onClose={onCancel} title={title}>
+      <Group>{lines.map((l, i) => <Row key={i} title={l} chevron={false} />)}</Group>
+      <div className="sheet-actions">
+        <button className="btn btn-gray" onClick={onCancel}>Cancel</button>
+        <button className={`btn ${destructive ? "btn-red" : "btn-blue"}`} onClick={onConfirm}>{action}</button>
+      </div>
+    </Sheet>
   );
 }
