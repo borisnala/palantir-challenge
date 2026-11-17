@@ -25,6 +25,11 @@ interface State {
   set: <T>(key: string, value: T) => void;
   toast: string | null;
   say: (msg: string) => void;
+  /** Side menu, and the pages opened lately (shown under Recents, as in the Claude app). */
+  drawer: boolean;
+  setDrawer: (v: boolean) => void;
+  recents: { path: string; title: string; sub?: string }[];
+  visit: (path: string, title: string, sub?: string) => void;
 }
 
 const Ctx = createContext<State | null>(null);
@@ -35,6 +40,11 @@ export function AppState({ children }: { children: React.ReactNode }) {
   const [watched, setWatched] = useState(() => new Set(WATCHLIST.map((w) => w.login)));
   const [kv, setKv] = useState<Record<string, unknown>>({});
   const [toast, setToast] = useState<string | null>(null);
+  const [drawer, setDrawer] = useState(false);
+  const [recents, setRecents] = useState<{ path: string; title: string; sub?: string }[]>([]);
+  const visit = useCallback((path: string, title: string, sub?: string) => {
+    setRecents((r) => (r[0]?.path === path ? r : [{ path, title, sub }, ...r.filter((x) => x.path !== path)].slice(0, 6)));
+  }, []);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const say = useCallback((msg: string) => {
@@ -59,8 +69,12 @@ export function AppState({ children }: { children: React.ReactNode }) {
       set: (key, v) => setKv((s) => ({ ...s, [key]: v })),
       toast,
       say,
+      drawer,
+      setDrawer,
+      recents,
+      visit,
     };
-  }, [decisions, unread, watched, kv, toast, say]);
+  }, [decisions, unread, watched, kv, toast, say, drawer, recents, visit]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

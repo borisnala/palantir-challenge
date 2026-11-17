@@ -395,3 +395,98 @@ html.lg-refract .lg { backdrop-filter: var(--lens) blur(14px); }
 .inline-flow { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .sheet-actions.inset { padding: 4px 16px 14px; }
 .checkform { display: flex; flex-direction: column; gap: 10px; }
+
+/* ===== 2026-11-18, the owner's gold standard: the Claude iOS app. Warm off-white, soft black, round glass buttons,
+   a title capsule, sentence-case gray section labels, white cards with big radii, outline icons, black action pill. */
+:root {
+  --bg: #f8f7f4; --cell: #ffffff; --label: #1f1e1d; --label2: #8a8780; --label3: #c3c0b8; --sep: rgba(31,30,29,.08);
+  --fill: rgba(31,30,29,.06); --fill2: rgba(31,30,29,.09); --ink: #1f1e1d; --ink-text: #ffffff;
+  --glass: rgba(255,255,255,.86); --glass-strong: rgba(255,255,255,.9); --r-cell: 24px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1c1b1a; --cell: #262624; --label: #f2f0eb; --label2: #9b978f; --label3: #5d5a55; --sep: rgba(255,255,255,.07);
+    --fill: rgba(255,255,255,.07); --fill2: rgba(255,255,255,.1); --ink: #f2f0eb; --ink-text: #1c1b1a;
+    --glass: rgba(48,47,45,.86); --glass-strong: rgba(52,51,49,.9); }
+}
+body { letter-spacing: -0.2px; }
+.screen { gap: 26px; padding-top: 0; }
+
+/* Top bar: menu or back, the title capsule, the bell */
+.topbar { position: sticky; top: 0; z-index: 16; display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; gap: 10px;
+  margin: 0 -8px; padding: calc(env(safe-area-inset-top) + 8px) 0 6px; }
+.topbar > :last-child { justify-self: end; }
+.glassbtn.round { width: 52px; height: 52px; }
+.titlecap { justify-self: center; max-width: 100%; min-width: 0; border-radius: 30px; padding: 7px 22px; text-align: center; display: flex; flex-direction: column; }
+.titlecap h1 { margin: 0; font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titlecap p { margin: 0; font-size: 13px; line-height: 17px; color: var(--label2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scroll-edge { height: calc(env(safe-area-inset-top) + 74px); background: linear-gradient(var(--bg) 40%, transparent); -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask: none; mask: none; }
+.navbar, .largetitle { display: none; }
+
+/* Bottom: search circle left, the screen's action pill right */
+.searchdock { position: fixed; left: max(16px, env(safe-area-inset-left)); bottom: calc(env(safe-area-inset-bottom) + 14px); z-index: 20; }
+.glassbtn.round.big { width: 60px; height: 60px; }
+.dock { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(env(safe-area-inset-bottom) + 14px); z-index: 20; display: flex; gap: 10px; }
+.pillbtn { display: inline-flex; align-items: center; gap: 8px; height: 60px; padding: 0 28px; border-radius: 30px; background: var(--ink); color: var(--ink-text);
+  font-size: 17px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.18); transition: transform .35s var(--spring); }
+.pillbtn:active { transform: scale(.96); }
+.toast { bottom: calc(env(safe-area-inset-bottom) + 90px); }
+
+/* Side menu */
+.drawer-scrim { position: fixed; inset: 0; z-index: 38; background: rgba(0,0,0,.25); }
+.drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 39; width: min(84vw, 340px); background: var(--bg); display: flex; flex-direction: column;
+  padding: calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 16px); box-shadow: 8px 0 40px rgba(0,0,0,.12); touch-action: pan-y; will-change: transform; overflow-y: auto; }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 18px 10px; }
+.brand { font-size: 28px; font-weight: 700; letter-spacing: -0.6px; }
+.drawer-nav { display: flex; flex-direction: column; gap: 2px; }
+.drawer-item { display: flex; align-items: center; gap: 16px; min-height: 52px; padding: 0 14px; border-radius: 18px; font-size: 18px; }
+.drawer-item span { flex: 1; min-width: 0; }
+.drawer-on { background: var(--fill2); font-weight: 600; }
+.drawer-badge { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 11px; background: var(--red); color: #fff; font-size: 13px; line-height: 22px; text-align: center; font-weight: 600; }
+.drawer-label { font-size: 15px; color: var(--label2); padding: 22px 14px 8px; }
+.drawer-account { margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 18px 10px 0; font-size: 16px; font-weight: 600; }
+.drawer-account small { display: block; font-size: 13px; font-weight: 400; color: var(--label2); }
+
+/* Sections and cards */
+.grp-head, .sub-head { text-transform: none; font-size: 16px; line-height: 21px; font-weight: 500; color: var(--label2); letter-spacing: -0.2px; padding: 0 6px 10px; margin: 0; }
+.sub-head { padding-bottom: 0; }
+.grp-foot { font-size: 14px; line-height: 19px; padding: 10px 6px 0; }
+.grp-body, .digest, .hcard, .metrics, .chartcard, .action { border-radius: var(--r-cell); }
+.row { padding-left: 18px; min-height: 56px; }
+.row-main { padding: 14px 18px 14px 0; gap: 10px; }
+.grp-body > .row + .row .row-main { box-shadow: inset 0 1px 0 var(--sep); }
+.row-title { font-size: 17px; }
+.row-sub { font-size: 15px; color: var(--label2); }
+.row-detail { color: var(--label2); font-size: 16px; }
+.tile-icon { width: 26px; height: 30px; border-radius: 0; background: none !important; color: var(--label); }
+.tile-icon svg { stroke-width: 1.8; }
+.row-chev { color: var(--label3); }
+.digest { padding: 18px 20px; font-size: 17px; line-height: 25px; }
+.hcard { padding: 16px 18px 18px; box-shadow: none; }
+.hcard-value { font-family: inherit; letter-spacing: -0.8px; }
+.metrics { padding: 16px 6px; }
+.metrics span { font-size: 13px; }
+.metrics b { font-family: inherit; letter-spacing: -0.5px; }
+.chip { border-radius: 10px; padding: 4px 9px; }
+.segmented { height: 40px; border-radius: 20px; background: var(--fill); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.segmented button { font-size: 14px; border-radius: 18px; }
+.seg-thumb { border-radius: 18px; background: var(--cell); }
+.searchfield { background: var(--cell); box-shadow: none; height: 48px; border-radius: 24px; margin-top: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.btn { min-height: 56px; border-radius: 28px; }
+.btn-blue { background: var(--ink); color: var(--ink-text); box-shadow: none; }
+.btn-gray { background: var(--cell); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.action { background: var(--cell); color: var(--label); }
+.action-on { background: var(--ink); color: var(--ink-text); }
+.contact-name { letter-spacing: -0.6px; }
+.monogram { background: var(--fill2); color: var(--label); font-family: inherit; font-weight: 600; }
+
+/* Sheets: big radius, X on the left, centered title */
+.sheet { border-radius: 40px; background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+.sheet-bar { height: 72px; padding: 0 14px; grid-template-columns: 52px 1fr 52px; }
+.sheet-bar .nav-title { font-size: 19px; font-weight: 700; }
+.sheet-body { gap: 24px; padding: 4px 18px 24px; }
+.grabber { width: 40px; background: var(--label3); }
+
+/* Timeline, as the tool steps in the Claude app: a thin line joins the icons */
+.timeline .grp-body > .row + .row .row-main { box-shadow: none; }
+.timeline .grp-body > .row { position: relative; }
+.timeline .grp-body > .row + .row::before { content: ""; position: absolute; left: 30px; top: -14px; height: 22px; width: 1.5px; background: var(--label3); }

@@ -5,26 +5,11 @@
 // Sizes follow Apple's type ramp (17 body, 15 subhead, 13 footnote) and 44 pt minimum touch targets.
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Bell, ChevronLeft, ChevronRight, Minus, Plus, UserRound } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, ChevronLeft, ChevronRight, Menu, Minus, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "./app-state";
 import { Glass, Spring, stretch, useSpringLoop } from "./liquid";
-
-/** Bell (alerts, with the unread count) and account, top right of every tab's root screen, as in Apple's own apps. */
-function RootActions() {
-  const { unread } = useApp();
-  return (
-    <span className="nav-actions">
-      <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
-        <Glass className="glassbtn round"><Bell size={20} strokeWidth={2.2} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}</Glass>
-      </Link>
-      <Link href="/account/" className="glassbtn-link" aria-label="Account and admin">
-        <Glass className="glassbtn round"><UserRound size={20} strokeWidth={2.2} /></Glass>
-      </Link>
-    </span>
-  );
-}
 
 /** Back goes to the screen you came from, or to the parent when the page was opened directly. */
 function BackButton({ href, label }: { href: string; label: string }) {
@@ -32,50 +17,41 @@ function BackButton({ href, label }: { href: string; label: string }) {
   return (
     <button className="glassbtn-link" aria-label={`Back to ${label}`}
       onClick={() => (window.history.length > 1 ? router.back() : router.push(href))}>
-      <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.4} /></Glass>
+      <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.2} /></Glass>
     </button>
   );
 }
 
-export function NavBar({ title, eyebrow, trailing, back, large = true, root = false }: {
+/** The top bar of the Claude iOS app: a round button each side, the title in a glass capsule with a second line,
+ *  and nothing else. The screen's main action (Read All, Apply, Edit) sits in a black pill at the bottom right. */
+export function NavBar({ title, eyebrow, trailing, back }: {
   title: string; eyebrow?: string; trailing?: React.ReactNode; back?: { href: string; label: string }; large?: boolean; root?: boolean;
 }) {
-  const sentinel = useRef<HTMLDivElement>(null);
-  const [scrolled, setScrolled] = useState(!large);
-  useEffect(() => {
-    if (!large || !sentinel.current) return;
-    const io = new IntersectionObserver(([e]) => setScrolled(!e.isIntersecting), { rootMargin: "-52px 0px 0px 0px" });
-    io.observe(sentinel.current);
-    return () => io.disconnect();
-  }, [large]);
-
+  const { unread, setDrawer, visit } = useApp();
+  const path = usePathname();
+  useEffect(() => { visit(path, title, eyebrow); }, [path, title]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
-      {/* iOS 26 has no bar background: content blurs and fades under the top edge instead */}
       <div className="scroll-edge" aria-hidden />
-      <div className={`navbar ${scrolled ? "navbar-on" : ""}`}>
-        <div className="navbar-row">
-          <div className="nav-side">
-            {back && <BackButton href={back.href} label={back.label} />}
-          </div>
-          <span className="nav-title" aria-hidden={large && !scrolled}>{title}</span>
-          <div className="nav-side nav-trailing">{trailing}{root && <RootActions />}</div>
-        </div>
-      </div>
-      {large && (
-        <header className="largetitle">
-          {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-          <h1>{title}</h1>
-          <div ref={sentinel} className="sentinel" />
-        </header>
-      )}
+      <header className="topbar">
+        {back ? <BackButton href={back.href} label={back.label} /> : (
+          <button className="glassbtn-link" aria-label="Menu" onClick={() => setDrawer(true)}>
+            <Glass className="glassbtn round"><Menu size={22} strokeWidth={2} /></Glass>
+          </button>
+        )}
+        <Glass className="titlecap"><h1>{title}</h1>{eyebrow && <p>{eyebrow}</p>}</Glass>
+        <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
+          <Glass className="glassbtn round"><Bell size={20} strokeWidth={2} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}</Glass>
+        </Link>
+      </header>
+      {trailing && <div className="dock">{trailing}</div>}
     </>
   );
 }
 
-/** A glass capsule button for the nav bar, such as "Read All". */
+/** The screen's main action, as the black "New session" pill of the Claude app. */
 export function BarButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return <button className="glassbtn-link" onClick={onClick}><Glass className="glassbtn capsule">{children}</Glass></button>;
+  return <button className="pillbtn" onClick={onClick}>{children}</button>;
 }
 
 export function Group({ header, footer, children, className = "" }: { header?: React.ReactNode; footer?: React.ReactNode; children: React.ReactNode; className?: string }) {
@@ -95,7 +71,7 @@ export function Row({ href, onClick, icon, tint, title, subtitle, detail, chevro
   const body = (
     <>
       {unread !== undefined && <span className={`unread ${unread ? "unread-on" : ""}`} aria-label={unread ? "Unread" : undefined} />}
-      {icon && <span className="tile-icon" style={{ background: tint }}>{icon}</span>}
+      {icon && <span className="tile-icon" style={{ color: tint }}>{icon}</span>}
       <span className="row-main">
         <span className="row-text">
           <span className="row-title">{title}</span>
@@ -176,11 +152,11 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
         <div className="sheet-grip" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
           <span className="grabber" aria-hidden />
           <div className="sheet-bar">
-            <span />
-            <span className="nav-title">{title}</span>
-            <button className="glassbtn-link" onPointerDown={(e) => e.stopPropagation()} onClick={onClose} aria-label="Done">
+            <button className="glassbtn-link" onPointerDown={(e) => e.stopPropagation()} onClick={onClose} aria-label="Close">
               <Glass className="glassbtn round"><span className="xmark" aria-hidden /></Glass>
             </button>
+            <span className="nav-title">{title}</span>
+            <span />
           </div>
         </div>
         <div className="sheet-body">{children}</div>

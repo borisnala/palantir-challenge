@@ -17,21 +17,29 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 - `source/payloads/*.json.gz`: the desktop portal demo's own dummy payloads. `python3 scripts/distill.py` turns them
   into `src/data/*.json`, one small file per screen. Never hand-write numbers, change the converter instead.
 - `src/lib/data.ts`: clients, alerts and the formatters. `src/lib/levels.ts`: traffic light labels.
-- Navigation (owner 2026-11-18): four tabs, Today, Risk, Liquidity, Withdrawals, plus the search circle (Clients).
-  Bell (Alerts) and account (Users, Device access, Build paths) sit top right on every tab root. Every portal page has a
+- Navigation (owner 2026-11-18): the side menu (src/components/shell.tsx) holds Today, Risk, Liquidity, Withdrawals,
+  Clients, Alerts and Recents; the account (Users, Device access, Build paths) sits at its bottom. The bell is top right. Every portal page has a
   screen: Risk holds the risk pages, CRA and Promotion; Liquidity holds CLTL, PG Markups, Manual Level, Group Spread,
   Book View. CandleTL Control and Algo Config are confidential and stay out.
 - Rule (owner 2026-11-18, "never hyperlink some feature or display anything from some buttons"): every button does its
   real job inside the app. A client row links only when that client has a profile. Settings changes go through a
   Confirm sheet that lists each change. The crawl in the verification step must report no dead link and no empty tap.
-- The tab bar never moves or shrinks on scroll (owner 2026-11-18).
+- Nothing at the bottom moves or shrinks on scroll (owner 2026-11-18).
 - `src/components/app-state.tsx`: in-memory state (decisions, reads, watchlist, control edits, toast). Nothing is saved.
 - `src/components/ios.tsx`: the iOS building blocks. NavBar (collapsing large title), Group and Row (inset grouped
   lists), Sheet, Switch, Segmented. Build every screen from these, never from ad hoc cards.
-- `src/components/tab-bar.tsx`, `src/components/ui.tsx`: the floating glass tab bar, Stocks-style sparkline and
-  change pill, Contacts-style monogram.
+- `src/components/shell.tsx`: side menu and search circle. `src/components/ui.tsx`: sparkline, change pill, bars,
+  monogram.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
+
+## Gold standard (owner 2026-11-18): the Claude iOS app
+Layout follows the Claude app on iPhone: warm off-white (#f8f7f4) and soft black, a top bar of round glass buttons with
+the title in a glass capsule and a second line under it, a side menu (sections, then Recents, account at the bottom)
+instead of a tab bar, a search circle bottom left and the screen's main action as a black pill bottom right
+(NavBar `trailing`), sentence-case gray section labels, white cards with 24 px radii, outline icons (no colored
+tiles), sheets with the X on the left, step lists drawn as a timeline (Group className="timeline"). Take the
+patterns, never Claude's logo, wordmark or brand colors.
 
 ## Design rule (owner 2026-11-17: "not apple enough, be mindful of that", then "today's Apple, liquid glass, liquid physics")
 Every screen must read as a native iOS 26 app with Liquid Glass. Glass is for the control layer only (tab bar, bar

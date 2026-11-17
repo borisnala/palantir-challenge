@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppState } from "@/components/app-state";
-import { TabBar } from "@/components/tab-bar";
+import { Drawer, SearchOrb } from "@/components/shell";
 import { LightSource } from "@/components/liquid";
 import { Toast } from "@/components/ios";
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   width: "device-width", initialScale: 1, viewportFit: "cover",
-  themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f2f2f7" }, { media: "(prefers-color-scheme: dark)", color: "#000000" }],
+  themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f8f7f4" }, { media: "(prefers-color-scheme: dark)", color: "#1c1b1a" }],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -25,7 +25,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <AppState>
           <main className="screen">{children}</main>
           <Toast />
-          <TabBar />
+          <SearchOrb />
+          <Drawer />
         </AppState>
       </body>
     </html>

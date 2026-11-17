@@ -47,7 +47,7 @@ export function WdDetail({ r }: { r: WdLike }) {
       )}
 
       {r.checks && (
-        <Group header={`Checks · ${r.elapsed_ms ?? 0} ms`}>
+        <Group className="timeline" header={`Ran ${r.checks.length} checks in ${r.elapsed_ms ?? 0} ms`}>
           {r.checks.map((c) => {
             const [Icon, tint] = CHECK_ICON[(c.status as keyof typeof CHECK_ICON)] ?? CHECK_ICON.skip;
             return <Row key={c.name} icon={<Icon size={17} strokeWidth={2.4} />} tint={tint} title={c.name[0].toUpperCase() + c.name.slice(1)}
