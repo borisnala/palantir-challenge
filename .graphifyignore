@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+graphify-out/
+public/
+docs/
+*.md
+*.json
+*.css
