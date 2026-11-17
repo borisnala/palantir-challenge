@@ -34,7 +34,7 @@ export default function Today() {
 
   return (
     <>
-      <NavBar title="Today" eyebrow="Morning digest" tone="blue" />
+      <NavBar title="Today" eyebrow="Morning digest" />
 
       <p className="digest">{DIGEST.headline}</p>
 

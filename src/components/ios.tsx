@@ -9,9 +9,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Glass, Spring, stretch, useSpringLoop } from "./liquid";
 
-export function NavBar({ title, eyebrow, trailing, back, large = true, tone = "blue" }: {
+export function NavBar({ title, eyebrow, trailing, back, large = true }: {
   title: string; eyebrow?: string; trailing?: React.ReactNode; back?: { href: string; label: string }; large?: boolean;
-  tone?: "blue" | "orange" | "red" | "teal" | "purple";
 }) {
   const sentinel = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(!large);
@@ -24,8 +23,6 @@ export function NavBar({ title, eyebrow, trailing, back, large = true, tone = "b
 
   return (
     <>
-      {/* Ambient light behind the screen, so the glass has color to bend */}
-      <div className={`ambient ambient-${tone}`} aria-hidden><i /><i /><i /></div>
       {/* iOS 26 has no bar background: content blurs and fades under the top edge instead */}
       <div className="scroll-edge" aria-hidden />
       <div className={`navbar ${scrolled ? "navbar-on" : ""}`}>

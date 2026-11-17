@@ -34,9 +34,19 @@ Stocks, Mail or Contacts solve it. Check light and dark mode at 393 px before ca
 ## Commands
 - `npm run dev`: local server. `npm run check`: lint, typecheck and build. Run it before every commit.
 - CSS change not showing in the build? Turbopack kept a stale stylesheet once (2026-11-17). `rm -rf .next out`, then build.
-- `npm run build` writes `out/`, plain static files. On the lab it lives at lab.borisnala.com/risk-desk/, so build
-  with `BASE_PATH=/risk-desk npm run build` and copy `out/` into the lab's `risk-desk/` folder before the lab deploy.
-  Never deploy `out/` on its own to the borisnala-lab project: that replaces the lab hub.
+- `npm run build` writes `out/`, plain static files.
+
+## "push" means ship (owner 2026-11-17)
+When the owner says "push": commit the work, then run `bash scripts/ship.sh`. It cleans the build cache, runs the
+checks, refreshes the code map, pushes to GitHub and deploys `out/` with wrangler to the Cloudflare Pages project
+`risk-desk` (risk-desk.pages.dev). Report the deploy URL wrangler prints. Do not deploy without being told "push".
+Never deploy to the `borisnala-lab` project from here: a Pages deploy replaces the whole site, and the lab's
+IntelliTrade and Sense50 prototypes exist only on the owner's PC.
+The Cloudflare token is a network secret of the cloud environment (host api.cloudflare.com); never put it in a file.
+
+## Backgrounds (owner 2026-11-17)
+No gradient or ambient color backgrounds. Plain system background only. The glass takes its color from the content
+that scrolls under it.
 - Check the screens at phone width (390 px) with Playwright before saying a change is done.
 
 ## Writing rules (owner)

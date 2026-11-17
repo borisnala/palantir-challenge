@@ -17,7 +17,7 @@ export default function Approvals() {
 
   return (
     <>
-      <NavBar title="Approvals" eyebrow="Withdrawal screening" tone="orange" />
+      <NavBar title="Approvals" eyebrow="Withdrawal screening" />
 
       <div className="metrics" aria-label="Decisions today">
         <div><span>Auto</span><b>{DECISIONS_TODAY.auto}</b></div>

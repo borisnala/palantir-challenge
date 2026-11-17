@@ -233,18 +233,7 @@ html.lg-refract .lg { backdrop-filter: var(--lens) brightness(1.05); }
 .lg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .lg > :not(.lg-sheen):not(.lg-defs) { position: relative; z-index: 3; }
 
-/* Ambient light under each screen, so the glass has color to bend */
 .screen { position: relative; z-index: 1; }
-.ambient { position: fixed; inset: 0 0 auto 0; height: 520px; z-index: 0; pointer-events: none; overflow: hidden;
-  -webkit-mask: linear-gradient(#000 30%, transparent); mask: linear-gradient(#000 30%, transparent); }
-.ambient i { position: absolute; width: 340px; height: 340px; border-radius: 50%; filter: blur(70px); opacity: .55; }
-.ambient i:nth-child(1) { left: -90px; top: -120px; } .ambient i:nth-child(2) { right: -110px; top: -60px; } .ambient i:nth-child(3) { left: 30%; top: 120px; width: 260px; height: 260px; opacity: .35; }
-.ambient-blue i:nth-child(1) { background: #5ac8fa; } .ambient-blue i:nth-child(2) { background: #5856d6; } .ambient-blue i:nth-child(3) { background: #34c759; }
-.ambient-orange i:nth-child(1) { background: #ff9500; } .ambient-orange i:nth-child(2) { background: #ff2d55; } .ambient-orange i:nth-child(3) { background: #ffcc00; }
-.ambient-red i:nth-child(1) { background: #ff3b30; } .ambient-red i:nth-child(2) { background: #af52de; } .ambient-red i:nth-child(3) { background: #ff9500; }
-.ambient-teal i:nth-child(1) { background: #30b0c7; } .ambient-teal i:nth-child(2) { background: #34c759; } .ambient-teal i:nth-child(3) { background: #007aff; }
-.ambient-purple i:nth-child(1) { background: #af52de; } .ambient-purple i:nth-child(2) { background: #5856d6; } .ambient-purple i:nth-child(3) { background: #ff2d55; }
-@media (prefers-color-scheme: dark) { .ambient i { opacity: .38; } }
 
 /* Scroll edge: no bar, the content softly blurs and fades under the status area */
 .scroll-edge { position: fixed; inset: 0 0 auto 0; height: calc(env(safe-area-inset-top) + 64px); z-index: 14; pointer-events: none;
@@ -324,9 +313,8 @@ html.lg-refract .lg { backdrop-filter: var(--lens) brightness(1.05); }
 @media (prefers-reduced-motion: reduce) { .tabdrop, .tab, .tab-label, .tabbar, .btn, .switch i { transition: none !important; } }
 
 /* Fixes: the track fills the glass bar. The screen makes no stacking context, so the sheet sits above the tab bar.
-   The ambient light paints behind everything. */
+*/
 .tabbar { display: flex; }
 .tabtrack { flex: 1; width: 100%; }
 .screen { z-index: auto; }
-.ambient { z-index: -1; }
 body { background: transparent; }

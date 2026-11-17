@@ -22,7 +22,7 @@ export default function Clients() {
 
   return (
     <>
-      <NavBar title="Clients" eyebrow="Client 360" tone="teal" />
+      <NavBar title="Clients" eyebrow="Client 360" />
       <label className="searchfield">
         <Search size={17} strokeWidth={2.4} aria-hidden />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" inputMode="search" aria-label="Search by login, name or group" />
