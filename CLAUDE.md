@@ -30,9 +30,9 @@ Stocks, Mail or Contacts solve it. Check light and dark mode at 393 px before ca
 
 ## Commands
 - `npm run dev`: local server. `npm run check`: lint, typecheck and build. Run it before every commit.
-- `npm run build` writes `out/`, plain static files. Deploy:
-  `npx wrangler pages deploy out --project-name borisnala-lab --branch lab` (or Cloudflare Pages connected to this repo,
-  build command `npm run build`, output folder `out`).
+- `npm run build` writes `out/`, plain static files. On the lab it lives at lab.borisnala.com/risk-desk/, so build
+  with `BASE_PATH=/risk-desk npm run build` and copy `out/` into the lab's `risk-desk/` folder before the lab deploy.
+  Never deploy `out/` on its own to the borisnala-lab project: that replaces the lab hub.
 - Check the screens at phone width (390 px) with Playwright before saying a change is done.
 
 ## Writing rules (owner)
