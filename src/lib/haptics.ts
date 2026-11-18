@@ -38,8 +38,11 @@ export function buzz(firm = false) {
 /** One listener for every choice control, so a new one ticks without being told to. */
 export function listenForChoices() {
   const on = (e: Event) => {
-    const t = (e.target as Element | null)?.closest?.('[role="switch"], [role="tab"], .stepper button');
+    const el = e.target as Element | null;
+    const t = el?.closest?.('[role="switch"], [role="tab"], .stepper button');
     if (t && !(t as HTMLButtonElement).disabled) buzz();
+    // A page change ticks in the tap itself (an effect after it is too late for the iPhone)
+    else { const a = el?.closest?.("a[href]") as HTMLAnchorElement | null; if (a && a.origin === location.origin && a.pathname !== location.pathname) buzz(); }
   };
   document.addEventListener("click", on, true);
   return () => document.removeEventListener("click", on, true);

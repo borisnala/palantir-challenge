@@ -32,7 +32,6 @@ export function Transitions() {
     main.classList.remove("enter-push", "enter-pop", "enter-tab");
     void (main as HTMLElement).offsetWidth;
     main.classList.add(`enter-${kind}`);
-    buzz();
   }, [path]);
   return null;
 }

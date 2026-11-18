@@ -80,7 +80,7 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   on white for the favicon (src/app/icon.svg) and the Home Screen icon (apple-icon.png, rendered from the same SVG).
   The wordmark is "risk tool" heavy, tight and black, with the drawn plus raised top right (the Luma placement).
 - Layout values (globals.css :root, owner 2026-11-18 "nothing overlaps"): --sat/--sab are the iPhone's top and bottom
-  safe areas. The top bar sits at --bar-top (safe area + 8), is --bar-h 52 tall and ends at --bar-bottom; content
+  safe areas. The top bar sits at --bar-top (safe area - 10, at least 8: right under the Dynamic Island, as the Claude app), is --bar-h 52 tall and ends at --bar-bottom; content
   starts 14 px under it. The search circle and the action pill sit --dock-gap 14 above the bottom safe area and are
   --dock-h 60 tall; every page ends with that height + 24 of padding, so the last row always clears them. Pages use
   the full width on a phone (16 px sides), 430 px on desktop. Never write env(safe-area-*) anywhere else.
@@ -103,6 +103,12 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
 - Motion (src/components/motion.tsx, as the Autoply app): pages slide in from the right going deeper, from the left
   coming back, fade between sections. Pull down at the top to refresh with the 12-spoke spinner.
 - Back uses the app's own history (app-state canGoBack), never history.length: that counts other sites and old builds, and once led to "page not found". Moved screens redirect in router/worker.js (MOVED), never delete a route without adding it there.
+- From the owner's phone, after Autoply (2026-11-18): the status bar is black-translucent, so the page runs under it as
+  in the Claude app. Screens change without new history entries (brand.tsx turns pushState into replaceState), so the
+  iPhone edge swipe has nothing to go back to and opens the menu, and only the < button goes back. A haptic tick must be
+  fired inside the tap or touchend itself (buzz() in the handler), never from an effect or touchmove: the iPhone drops
+  those. The page never scrolls past its ends (overscroll-behavior none), no scroll bars anywhere, sheets sit 8 px off
+  the bottom edge and their list fades out under the header. The icon's mark fills about 60 percent of the tile.
 - Never remove a DOM node React rendered (the launch once did, l.remove(), and every page change after it crashed
   with "This page couldn't load"). Hide it with a class instead. Verification must include in-app navigation through
   the Worker (menu to every section, a row to a page, no reload, no page error), not only fresh page loads.

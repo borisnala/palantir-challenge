@@ -34,6 +34,8 @@ interface State {
   visit: (path: string, title: string, sub?: string) => void;
   /** True when the previous history entry is a screen of this app, so Back can go there without leaving the app. */
   canGoBack: () => boolean;
+  /** The screen before this one in the app's own history, if there is one. */
+  backPath: () => string | null;
 }
 
 // Section pages already sit in the menu, and the account pages sit at its foot, so Recents leaves them out and keeps
@@ -68,6 +70,7 @@ export function AppState({ children }: { children: React.ReactNode }) {
     if (window.self !== window.top) try { window.top?.history.replaceState(window.top.history.state, "", location.href); } catch { /* another origin */ }
   }, [path]);
   const canGoBack = useCallback(() => stack.current.length > 1, []);
+  const backPath = useCallback(() => stack.current[stack.current.length - 2] ?? null, []);
 
   const say = useCallback((msg: string) => {
     setToast(msg);
@@ -97,8 +100,9 @@ export function AppState({ children }: { children: React.ReactNode }) {
       recents,
       visit,
       canGoBack,
+      backPath,
     };
-  }, [decisions, unread, watched, kv, toast, say, drawer, recents, visit, canGoBack]);
+  }, [decisions, unread, watched, kv, toast, say, drawer, recents, visit, canGoBack, backPath]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

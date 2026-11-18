@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Risk Tool",
   description: "The Global Risk Portal, rebuilt for a phone. Demonstration data.",
   robots: { index: false, follow: false },
-  appleWebApp: { capable: true, title: "Risk Tool", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Risk Tool", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {

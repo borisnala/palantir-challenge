@@ -15,10 +15,10 @@ import { buzz } from "@/lib/haptics";
 /** Back goes to the screen you came from, or to the parent when the page was opened directly. */
 function BackButton({ href, label }: { href: string; label: string }) {
   const router = useRouter();
-  const { canGoBack } = useApp();
+  const { backPath } = useApp();
   return (
     <button className="glassbtn-link" aria-label={`Back to ${label}`}
-      onClick={() => (canGoBack() ? router.back() : router.push(href))}>
+      onClick={() => { buzz(); router.push(backPath() ?? href); }}>
       <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.2} /></Glass>
     </button>
   );
@@ -45,7 +45,7 @@ export function NavBar({ title, eyebrow, trailing, back }: {
       <div className="scroll-edge" aria-hidden />
       <header className="topbar">
         {back ? <BackButton href={back.href} label={back.label} /> : (
-          <button className="glassbtn-link" aria-label="Menu" onClick={() => setDrawer(true)}>
+          <button className="glassbtn-link" aria-label="Menu" onClick={() => { buzz(); setDrawer(true); }}>
             <Glass className="glassbtn round"><Menu size={22} strokeWidth={2} /></Glass>
           </button>
         )}

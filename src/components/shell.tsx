@@ -62,7 +62,6 @@ export function Drawer() {
     return m;
   });
 
-  const started = useRef(false);
   useEffect(() => {
     x.current.target = drawer ? 1 : 0;
     // While the menu is open the page behind can not be touched, focused or scrolled
@@ -70,8 +69,6 @@ export function Drawer() {
     const main = document.querySelector("main.screen") as HTMLElement | null;
     if (main) main.inert = drawer;
     if (panel.current) panel.current.inert = !drawer;
-    if (started.current) buzz();
-    started.current = true;
     kick();
   }, [drawer]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setDrawer(false); }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -82,7 +79,7 @@ export function Drawer() {
       const t = e.touches[0];
       const open = x.current.x > 0.5;
       const onPage = (e.target as Element)?.closest?.(".stage-scrim, .drawer");
-      if ((!open && t.clientX < 24 && !document.querySelector(".sheet-wrap")) || (open && onPage))
+      if ((!open && t.clientX < 32 && !document.querySelector(".sheet-wrap")) || (open && onPage))
         drag.current = { x0: t.clientX, p0: x.current.x, last: t.clientX, t: e.timeStamp, v: 0 };
     };
     const move = (e: TouchEvent) => {
@@ -100,12 +97,13 @@ export function Drawer() {
       const d = drag.current; if (!d) return;
       drag.current = null;
       const open = d.v > 500 || (d.v > -500 && x.current.x > 0.5);
-      if (open !== drawer) setDrawer(open); else { x.current.target = open ? 1 : 0; kick(); }
+      if (open !== drawer) { buzz(); setDrawer(open); } else { x.current.target = open ? 1 : 0; kick(); }
     };
     addEventListener("touchstart", start, { passive: true });
     addEventListener("touchmove", move, { passive: false });
     addEventListener("touchend", end);
-    return () => { removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); };
+    addEventListener("touchcancel", end); // the system took the touch: settle open or closed, never stay half way
+    return () => { removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); removeEventListener("touchcancel", end); };
   }, [drawer, setDrawer, kick]);
 
   const badge = (href: string) => (href === "/withdrawals/" ? pending.length : href === "/alerts/" ? unread.size : 0);
@@ -167,7 +165,7 @@ export function Drawer() {
 /** The dimmed page while the menu is open. Tapping it closes the menu. */
 export function StageScrim() {
   const { setDrawer } = useApp();
-  return <button className="stage-scrim" aria-label="Close menu" onClick={() => setDrawer(false)} style={{ opacity: 0, pointerEvents: "none" }} />;
+  return <button className="stage-scrim" aria-label="Close menu" onClick={() => { buzz(); setDrawer(false); }} style={{ opacity: 0, pointerEvents: "none" }} />;
 }
 
 export function SearchOrb() {
