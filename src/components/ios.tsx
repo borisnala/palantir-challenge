@@ -15,9 +15,10 @@ import { buzz } from "@/lib/haptics";
 /** Back goes to the screen you came from, or to the parent when the page was opened directly. */
 function BackButton({ href, label }: { href: string; label: string }) {
   const router = useRouter();
+  const { canGoBack } = useApp();
   return (
     <button className="glassbtn-link" aria-label={`Back to ${label}`}
-      onClick={() => (window.history.length > 1 ? router.back() : router.push(href))}>
+      onClick={() => (canGoBack() ? router.back() : router.push(href))}>
       <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.2} /></Glass>
     </button>
   );

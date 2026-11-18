@@ -18,7 +18,7 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   into `src/data/*.json`, one small file per screen. Never hand-write numbers, change the converter instead.
 - `src/lib/data.ts`: clients, alerts and the formatters. `src/lib/levels.ts`: traffic light labels.
 - Navigation (owner 2026-11-18): the side menu (src/components/shell.tsx) holds Today, Risk, Liquidity, Withdrawals,
-  Clients, Alerts and Recents; the account (Users, Device access, Build paths) sits at its bottom. The bell is top right. Every portal page has a
+  Clients and Recents (client profiles and analysis screens only, with a second line; the watchlist stands in while it is empty); the account (Users, Device access, Build paths) sits at its bottom. The bell is top right. Every portal page has a
   screen: Risk holds the risk pages, CRA and Promotion; Liquidity holds CLTL, PG Markups, Manual Level, Group Spread,
   Book View. CandleTL Control and Algo Config are confidential and stay out.
 - Rule (owner 2026-11-18, "never hyperlink some feature or display anything from some buttons"): every button does its
@@ -102,6 +102,7 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   change, menu open), a firm double tick when an action completes (every confirmation toast, pull to refresh).
 - Motion (src/components/motion.tsx, as the Autoply app): pages slide in from the right going deeper, from the left
   coming back, fade between sections. Pull down at the top to refresh with the 12-spoke spinner.
+- Back uses the app's own history (app-state canGoBack), never history.length: that counts other sites and old builds, and once led to "page not found". Moved screens redirect in router/worker.js (MOVED), never delete a route without adding it there.
 - Never remove a DOM node React rendered (the launch once did, l.remove(), and every page change after it crashed
   with "This page couldn't load"). Hide it with a class instead. Verification must include in-app navigation through
   the Worker (menu to every section, a row to a page, no reload, no page error), not only fresh page loads.

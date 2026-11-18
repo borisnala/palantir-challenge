@@ -3,7 +3,8 @@
 // In-memory state for the demo. Decisions, reads, watchlist changes and control edits live here for the session, so
 // every screen agrees. Nothing is saved or sent anywhere.
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import wd from "@/data/withdrawals.json";
 import { ALERTS, WATCHLIST } from "@/lib/data";
 import { buzz } from "@/lib/haptics";
@@ -31,7 +32,13 @@ interface State {
   setDrawer: (v: boolean) => void;
   recents: { path: string; title: string; sub?: string }[];
   visit: (path: string, title: string, sub?: string) => void;
+  /** True when the previous history entry is a screen of this app, so Back can go there without leaving the app. */
+  canGoBack: () => boolean;
 }
+
+// Section pages already sit in the menu, and the account pages sit at its foot, so Recents leaves them out and keeps
+// the screens a desk returns to: client profiles, analysis pages, the controls.
+const NOT_RECENT = /^\/(risk|liquidity|withdrawals|search|alerts)?\/?$|^\/account\//;
 
 const Ctx = createContext<State | null>(null);
 
@@ -44,9 +51,21 @@ export function AppState({ children }: { children: React.ReactNode }) {
   const [drawer, setDrawer] = useState(false);
   const [recents, setRecents] = useState<{ path: string; title: string; sub?: string }[]>([]);
   const visit = useCallback((path: string, title: string, sub?: string) => {
+    if (NOT_RECENT.test(path)) return;
     setRecents((r) => (r[0]?.path === path ? r : [{ path, title, sub }, ...r.filter((x) => x.path !== path)].slice(0, 6)));
   }, []);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // The app's own history. history.length counts pages from other sites too, so Back once used router.back() into
+  // whatever came before the app, including addresses of screens that no longer exist (the "page not found").
+  const path = usePathname();
+  const stack = useRef<string[]>([]);
+  useEffect(() => {
+    const st = stack.current;
+    if (st[st.length - 2] === path) st.pop();
+    else if (st[st.length - 1] !== path) st.push(path);
+  }, [path]);
+  const canGoBack = useCallback(() => stack.current.length > 1, []);
 
   const say = useCallback((msg: string) => {
     setToast(msg);
@@ -75,8 +94,9 @@ export function AppState({ children }: { children: React.ReactNode }) {
       setDrawer,
       recents,
       visit,
+      canGoBack,
     };
-  }, [decisions, unread, watched, kv, toast, say, drawer, recents, visit]);
+  }, [decisions, unread, watched, kv, toast, say, drawer, recents, visit, canGoBack]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

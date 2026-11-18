@@ -3,6 +3,8 @@
 import SITE from "./site.js";
 
 const PREFIX = "/risktool-prototype";
+// Screens that moved in later builds. Bookmarks, Home Screen icons and old history entries still point at them.
+const MOVED = { "/approvals/": "/withdrawals/", "/clients/": "/search/", "/today/": "/" };
 const bytes = new Map();
 const body = (f) => {
   if (!f[1]) return f[2];
@@ -22,6 +24,8 @@ const router = {
     if (!url.pathname.startsWith(PREFIX)) return new Response("Not found", { status: 404 });
     if (url.pathname === PREFIX) return Response.redirect(`${url.origin}${PREFIX}/${url.search}`, 308);
     const p = decodeURIComponent(url.pathname.slice(PREFIX.length)) || "/";
+    const moved = MOVED[p.endsWith("/") ? p : `${p}/`];
+    if (moved) return Response.redirect(`${url.origin}${PREFIX}${moved}${url.search}`, 301);
     const hit = SITE[p] ?? SITE[p.endsWith("/") ? `${p}index.html` : `${p}/index.html`];
     if (hit) {
       if (!p.endsWith("/") && !SITE[p]) return Response.redirect(`${url.origin}${PREFIX}${p}/${url.search}`, 308);

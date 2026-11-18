@@ -618,3 +618,16 @@ html.menu-open, html.menu-open body { overflow: hidden; overscroll-behavior: non
 .hgrid .hcard-unit { display: block; font-size: 13px; }
 .wordmark { align-items: flex-start; gap: 1px; }
 .wordmark svg { margin-top: 2px; }
+
+/* 2026-11-18 menu after the owner's Claude app screenshot: the pushed page fades toward the background instead of
+   going gray, and its corners follow the phone's. Recents carry a second line. */
+.stage-scrim { background: var(--bg); }
+.stage-open { border-radius: 44px; box-shadow: -2px 0 30px rgba(0,0,0,.07); }
+.drawer-head { align-items: center; }
+.drawer-two { min-height: 56px; }
+.drawer-two b { display: block; font-weight: 400; font-size: 17px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drawer-two small { display: block; font-size: 13px; line-height: 17px; color: var(--label2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notfound { min-height: 70dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: var(--bar-bottom) 24px 0; }
+.notfound h1 { margin: 0; font-size: 22px; font-weight: 600; }
+.notfound p { margin: 0 0 8px; color: var(--label2); font-size: 15px; max-width: 300px; }
+.notfound .pillbtn { height: 52px; padding: 0 24px; display: inline-flex; align-items: center; }

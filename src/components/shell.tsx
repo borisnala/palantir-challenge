@@ -6,11 +6,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { ArrowDownUp, Clock, Droplets, House, Search, ShieldAlert, Users } from "lucide-react";
+import { ArrowDownUp, Droplets, Eye, House, Search, ShieldAlert, UserRound, Users } from "lucide-react";
+import { hasProfile, nameOf } from "@/lib/data";
 import { useApp } from "./app-state";
 import { Glass, Spring, useSpringLoop } from "./liquid";
 import { buzz } from "@/lib/haptics";
 import { Wordmark } from "./brand";
+
+const SECTION: Record<string, { label: string; Icon: typeof House }> = {
+  risk: { label: "Risk Management", Icon: ShieldAlert }, liquidity: { label: "Liquidity Management", Icon: Droplets },
+  withdrawals: { label: "WD Approvals", Icon: ArrowDownUp }, clients: { label: "Client 360", Icon: UserRound },
+};
+
+/** One line under each recent screen, so two pages with the same name can be told apart. */
+function recentLine(path: string) {
+  const seg = path.split("/")[1];
+  const login = seg === "clients" ? path.split("/")[2] : null;
+  return { sub: login ? `#${login}` : SECTION[seg]?.label ?? "", Icon: SECTION[seg]?.Icon ?? House };
+}
 
 const NAV = [
   { href: "/", label: "Morning Digest", Icon: House },
@@ -24,7 +37,7 @@ const NAV = [
  *  page stays visible as a dimmed card with rounded corners. Swipe from the left edge to open, swipe left or tap the
  *  page to close. Everything follows the finger and settles on a spring. */
 export function Drawer() {
-  const { drawer, setDrawer, recents, pending, unread } = useApp();
+  const { drawer, setDrawer, recents, pending, unread, watched } = useApp();
   const path = usePathname();
   const panel = useRef<HTMLElement>(null);
   const x = useRef(new Spring(0, 320, 32)); // 0 closed, 1 open
@@ -39,7 +52,7 @@ export function Drawer() {
       stage.style.transform = p > 0.001 ? `translateX(${p * width()}px)` : "";
       stage.classList.toggle("stage-open", p > 0.001);
     }
-    if (scrim) { scrim.style.opacity = String(p * 0.12); scrim.style.pointerEvents = p > 0.02 ? "auto" : "none"; }
+    if (scrim) { scrim.style.opacity = String(p * 0.5); scrim.style.pointerEvents = p > 0.02 ? "auto" : "none"; }
     if (panel.current) { panel.current.style.transform = `translateX(${(p - 1) * width() * 0.25}px)`; panel.current.style.visibility = p > 0.001 ? "visible" : "hidden"; }
   };
   const kick = useSpringLoop((dt) => {
@@ -113,16 +126,36 @@ export function Drawer() {
           );
         })}
       </div>
-      {recents.length > 1 && (
-        <>
-          <p className="drawer-label">Recents</p>
-          <div className="drawer-nav">
-            {recents.filter((r) => r.path !== path).slice(0, 5).map((r) => (
-              <Link key={r.path} href={r.path} className="drawer-item"><Clock size={20} strokeWidth={1.8} /><span className="ellip">{r.title}</span></Link>
-            ))}
-          </div>
-        </>
-      )}
+      {(() => {
+        // Recents holds the clients and analysis screens opened lately. Until there are any, the watchlist stands in.
+        const list = recents.filter((r) => r.path !== path).slice(0, 6);
+        if (list.length) return (
+          <>
+            <p className="drawer-label">Recents</p>
+            <div className="drawer-nav">
+              {list.map((r) => {
+                const { sub, Icon } = recentLine(r.path);
+                return (
+                  <Link key={r.path} href={r.path} className="drawer-item drawer-two"><Icon size={20} strokeWidth={1.8} />
+                    <span className="ellip"><b>{r.title}</b>{sub && <small>{sub}</small>}</span></Link>
+                );
+              })}
+            </div>
+          </>
+        );
+        const watch = [...watched].filter(hasProfile).slice(0, 5);
+        return watch.length > 0 && (
+          <>
+            <p className="drawer-label">Watchlist</p>
+            <div className="drawer-nav">
+              {watch.map((l) => (
+                <Link key={l} href={`/clients/${l}/`} className="drawer-item drawer-two"><Eye size={20} strokeWidth={1.8} />
+                  <span className="ellip"><b>{nameOf(l)}</b><small>#{l}</small></span></Link>
+              ))}
+            </div>
+          </>
+        );
+      })()}
       <div className="drawer-foot">
         <Link href="/account/" className="glassbtn-link" aria-label="Account, demo.admin"><Glass className="glassbtn round avatar-orb">DA</Glass></Link>
         <Link href="/withdrawals/" className="pillbtn">{pending.length ? `Review ${pending.length} withdrawals` : "WD Approvals"}</Link>
