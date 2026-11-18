@@ -55,13 +55,12 @@ Stocks, Mail or Contacts solve it. Check light and dark mode at 393 px before ca
 - `npm run build` writes `out/`, plain static files.
 
 ## "deploy" means ship Risk Desk only (owner 2026-11-18)
-Risk Desk shows at https://lab.borisnala.com/risktool-prototype/ but is its own Cloudflare Pages project, `risk-desk`.
-A Worker (`router/`, route `lab.borisnala.com/risktool-prototype*`) serves that path from risk-desk.pages.dev, so the
-lab itself is never redeployed for Risk Desk. When the owner says "deploy" (or "push"): commit, then `bash scripts/deploy.sh`. It builds with
-BASE_PATH=/risktool-prototype, runs the checks, refreshes the map, pushes to GitHub, deploys only `risk-desk` and
-keeps the router Worker in place. The owner wants this run from the cloud session, not from his PC.
-Never deploy the `borisnala-lab` project from here: that replaces the whole lab, and the owner's IntelliTrade and
-Sense50 files exist only on his PC. From his PC: `scripts\deploy.ps1`.
+Risk Desk lives at https://lab.borisnala.com/risktool-prototype/. When the owner says "deploy" (or "push"): commit,
+then `bash scripts/deploy.sh`, from this cloud session. It builds with BASE_PATH=/risktool-prototype, runs the checks,
+refreshes the map, pushes to GitHub, packs `out/` into `router/site.js` (scripts/pack-worker.mjs) and deploys the
+`risktool-router` Worker, bound only to `lab.borisnala.com/risktool-prototype*`. The rest of the lab is never touched.
+Do not use a Pages deploy from here: the session's network swaps Pages' own upload pass for the API token and the
+upload fails (Authorization failed, code 8000013). Never deploy the `borisnala-lab` project from here either.
 The Cloudflare token is a network secret of the cloud environment (host api.cloudflare.com); never put it in a file.
 The Next.js links already carry the base path, so never write a raw `<a href="/...">` or `window.location`.
 
