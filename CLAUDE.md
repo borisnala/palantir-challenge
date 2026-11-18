@@ -54,14 +54,13 @@ Stocks, Mail or Contacts solve it. Check light and dark mode at 393 px before ca
 - CSS change not showing in the build? Turbopack kept a stale stylesheet once (2026-11-17). `rm -rf .next out`, then build.
 - `npm run build` writes `out/`, plain static files.
 
-## "deploy" means ship to the lab (owner 2026-11-18)
-Risk Desk lives at https://lab.borisnala.com/risktool-prototype/ (Cloudflare Pages project `borisnala-lab`, branch
-`lab`). When the owner says "deploy" (or "push"): commit the work, then run `bash scripts/deploy.sh`. It builds with
-BASE_PATH=/risktool-prototype, runs the checks, refreshes the map, pushes to GitHub, fetches the rest of the lab from
-the autoply branch `claude/practical-mccarthy-gz7fsk` (profiles/boris/lab), puts Risk Desk in its folder and deploys
-the whole lab. Report the URL. A Pages deploy replaces the whole site, so the script refuses while IntelliTrade or
-Sense50 are placeholders in the lab sources; never get round that with ALLOW_PLACEHOLDERS unless the owner says so.
-From the owner's PC: `scripts\deploy.ps1 -IntelliTrade <file> -Sense50 <file>` does the same with his real files.
+## "deploy" means ship Risk Desk only (owner 2026-11-18)
+Risk Desk shows at https://lab.borisnala.com/risktool-prototype/ but is its own Cloudflare Pages project, `risk-desk`.
+The lab's `_worker.js` (autoply branch `claude/practical-mccarthy-gz7fsk`, profiles/boris/lab) forwards that path to
+risk-desk.pages.dev. When the owner says "deploy" (or "push"): commit, then `bash scripts/deploy.sh`. It builds with
+BASE_PATH=/risktool-prototype, runs the checks, refreshes the map, pushes to GitHub and deploys only `risk-desk`.
+Never deploy the `borisnala-lab` project from here: that replaces the whole lab, and the owner's IntelliTrade and
+Sense50 files exist only on his PC. From his PC: `scripts\deploy.ps1`.
 The Cloudflare token is a network secret of the cloud environment (host api.cloudflare.com); never put it in a file.
 The Next.js links already carry the base path, so never write a raw `<a href="/...">` or `window.location`.
 
