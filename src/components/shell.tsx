@@ -11,6 +11,7 @@ import { useApp } from "./app-state";
 import { Glass, Spring, useSpringLoop } from "./liquid";
 import { buzz } from "@/lib/haptics";
 import { Monogram } from "./ui";
+import { Wordmark } from "./brand";
 
 const NAV = [
   { href: "/", label: "Today", Icon: House },
@@ -114,11 +115,6 @@ export function Drawer() {
       <Link href="/account/" className="drawer-account"><Monogram name="DA" size={40} /><span>demo.admin<small>Administrator</small></span></Link>
     </nav>
   );
-}
-
-/** The wordmark, drawn the way Luma draws theirs: lowercase, soft, a small mark raised at the top right. */
-export function Wordmark() {
-  return <span className="wordmark" aria-label="Risk Tool">risk tool<sup aria-hidden>+</sup></span>;
 }
 
 /** The dimmed page while the menu is open. Tapping it closes the menu. */

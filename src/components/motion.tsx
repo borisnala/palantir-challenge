@@ -113,3 +113,20 @@ export function DesktopNotice() {
     </Sheet>
   );
 }
+
+/** Opens the launch screen once, after the first paint, as the Autoply app does: the plus shows for at least 0.7 s,
+ *  gathers itself, then bursts open into the app. Only on the first load, never on page changes. */
+export function LaunchReady() {
+  useEffect(() => {
+    const l = document.getElementById("launch");
+    if (!l || l.classList.contains("go")) return;
+    const wait = Math.max(0, 700 - performance.now());
+    const t1 = setTimeout(() => {
+      l.classList.add("go");
+      document.documentElement.classList.add("revealing");
+      setTimeout(() => { l.remove(); document.documentElement.classList.remove("launching", "revealing"); }, 900);
+    }, wait);
+    return () => clearTimeout(t1);
+  }, []);
+  return null;
+}

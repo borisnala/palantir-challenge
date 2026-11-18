@@ -550,3 +550,29 @@ body { letter-spacing: -0.2px; }
 @keyframes sheetpush { from { transform: translateX(30%); opacity: .3; } }
 .sheet-pushed { animation: sheetpush .3s cubic-bezier(.32,.72,0,1); }
 .usage .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+
+/* Wordmark, the Bloomberg way: heavy, tight, black, the drawn plus raised (2026-11-18) */
+.wordmark { display: inline-flex; align-items: flex-start; gap: 2px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, "Helvetica Neue", Arial, sans-serif;
+  font-size: 30px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; color: var(--label); }
+.wordmark svg { margin-top: 1px; }
+.wordmark sup { display: none; }
+
+/* Launch, as the Autoply app: the plus from the first frame, breathing, then it bursts open into the app.
+   The page shows through a plus-shaped hole in the cover that grows to fill the screen. */
+#launch { position: fixed; inset: 0; min-height: 100lvh; z-index: 100; display: grid; place-items: center; background: var(--bg); color: var(--label); pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M34 0h32v34h34v32H66v34H34V66H0V34h34z'/%3E%3C/svg%3E") center / 0 0 no-repeat;
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M34 0h32v34h34v32H66v34H34V66H0V34h34z'/%3E%3C/svg%3E") center / 0 0 no-repeat;
+  mask-composite: exclude; }
+.launchplus { width: 44px; height: 44px; transform-origin: center; animation: plusbreath 1.6s ease-in-out infinite; overflow: visible; }
+@keyframes plusbreath { 50% { transform: scale(.9); } }
+#launch.go { animation: launchopen .78s linear forwards; }
+#launch.go .launchplus { animation: plusout .78s linear forwards; }
+@keyframes plusout { 0% { transform: scale(1); opacity: 1; animation-timing-function: cubic-bezier(.3,0,.3,1); } 26% { transform: scale(.66); opacity: 1; animation-timing-function: cubic-bezier(.7,0,.3,1); } 46% { opacity: 0; } 100% { transform: scale(172); opacity: 0; } }
+@keyframes launchopen { 0% { -webkit-mask-size: auto, 44px 44px; mask-size: auto, 44px 44px; animation-timing-function: cubic-bezier(.3,0,.3,1); } 26% { -webkit-mask-size: auto, 29px 29px; mask-size: auto, 29px 29px; animation-timing-function: cubic-bezier(.7,0,.3,1); } 100% { -webkit-mask-size: auto, 900vmax 900vmax; mask-size: auto, 900vmax 900vmax; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  #launch { -webkit-mask: none; mask: none; }
+  #launch.go { animation: launchfade .2s ease forwards; }
+  #launch.go .launchplus, .launchplus { animation: none; }
+}
+@keyframes launchfade { to { opacity: 0; visibility: hidden; } }

@@ -75,8 +75,13 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
 "Pending review", "Reasons", "Revert decision", "Demonstration data", never "Needs you", "to decide", "Why", "Undo my".
 
 ## Brand, haptics, motion (owner 2026-11-18)
-- Logo: drawn the way Luma draws theirs (lowercase soft wordmark, a small mark raised top right): "risk tool+" at the
-  top of the side menu (shell.tsx Wordmark), and "r+" as the app icon (src/app/icon.svg, apple-icon.png).
+- Logo (owner 2026-11-18, "pro, the way Bloomberg would do it"): one mark, drawn as shapes on a 100 grid in
+  src/components/brand.tsx, never typed in a font: a geometric r with a raised plus whose bars match its weight. Black
+  on white for the favicon (src/app/icon.svg) and the Home Screen icon (apple-icon.png, rendered from the same SVG).
+  The wordmark is "risk tool" heavy, tight and black, with the drawn plus raised top right (the Luma placement).
+- Launch (as the Autoply app): the plus shows from the first frame and breathes, then gathers and bursts open into the
+  app through a plus-shaped window, once per load only (brand.tsx Launch, motion.tsx LaunchReady). No glow, no
+  gradients.
 - Behaviour from the owner's Claude app recording: the side menu sits under the page and opening it pushes the page
   right as a dimmed rounded card (edge swipe from the left opens, swipe left or tap the page closes). The title capsule
   opens a Data status sheet, the round ⋯ button opens a glass menu (Share, Copy link, Refresh data, Account). Rows in a

@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppState } from "@/components/app-state";
 import { Drawer, SearchOrb, StageScrim } from "@/components/shell";
-import { DesktopNotice, PullToRefresh, Transitions } from "@/components/motion";
+import { DesktopNotice, LaunchReady, PullToRefresh, Transitions } from "@/components/motion";
+import { Launch } from "@/components/brand";
 import { LightSource } from "@/components/liquid";
 import { Toast } from "@/components/ios";
 
@@ -20,8 +21,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="launching">
       <body>
+        <Launch />
         <LightSource />
         <AppState>
           <Drawer />
@@ -29,6 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <main className="screen">{children}</main>
             <Toast />
             <Transitions />
+            <LaunchReady />
             <PullToRefresh />
             <DesktopNotice />
             <SearchOrb />
