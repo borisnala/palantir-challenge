@@ -30,11 +30,14 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   lists), Sheet, Switch, Segmented. Build every screen from these, never from ad hoc cards.
 - `src/components/shell.tsx`: side menu and search circle. `src/components/ui.tsx`: sparkline, change pill, bars,
   monogram.
-- Client 360 in full (owner 2026-11-18): the desktop demo's one complete payload (client360.json.gz, login 99000001,
-  all time) feeds src/components/c360.tsx through distill.py. Conclusion first (toxicity ring, verdict, reasons), then
-  detections, P&L with a client or broker point of view, a month grid of trading days, sessions, symbols, holding time,
-  profit windows, reconciliation, open positions, group history, withdrawals. Detail opens in a sheet. Other logins
-  keep the summary profile, since the demo has no full payload for them.
+- Client 360 (owner 2026-11-18, "everything in one page is confusing", "variant data", "more playful", "y axis",
+  "make the equity move"): src/components/c360.tsx, four tabs. Overview (live equity that ticks each second for a client
+  with open positions, the verdict, the P&L chart with a y axis and a finger scrub), Trading (month grid of trading
+  days, sessions, symbols, holding time), Risk (score ring, reasons, detections, evidence, findings, group history),
+  Account (money, profit windows, open positions, reconciliation, withdrawals, note, alerts). Header actions are Status,
+  Note and Move group (a Confirm sheet, recorded in the group history), never Watch, Alerts or Copy login. Data:
+  distill.py builds client360.json, 99000001 from the portal's own payload, every other client a seeded variant
+  shaped to that client's own figures (P&L windows, win rate, lots, open book, group moves, ETL).
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 
