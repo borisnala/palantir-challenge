@@ -31,7 +31,7 @@ export default function CraModel() {
     set("cra.versions", [v, ...versions]);
     set("cra.edits", {});
     setReview(false);
-    say("Draft saved, waiting for sign off");
+    say("Draft saved, pending approval");
   };
 
   return (

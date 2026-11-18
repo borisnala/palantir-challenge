@@ -51,7 +51,7 @@ function Fbu() {
   return (
     <>
       <Metrics label="Force build up" items={[{ k: "Events", v: f.outcomes.total }, { k: "Moved", v: f.outcomes.moved, tone: "pos" }, { k: "Moved share", v: pct(f.outcomes.moved_pct, 0) }]} />
-      <Group header="What triggered it"><Counts items={f.triggers.by_condition} k="condition" /></Group>
+      <Group header="Trigger conditions"><Counts items={f.triggers.by_condition} k="condition" /></Group>
       <Group header="Combinations"><Counts items={f.triggers.by_combination} k="combination" /></Group>
       <Group header="Tiers"><Counts items={f.tiers.by_tier} k="tier" /></Group>
       <Group header="Outcomes"><Counts items={f.outcomes.by_status} k="status" /></Group>
@@ -73,7 +73,7 @@ export default function RiskAnalysis() {
       <h2 className="sub-head">Protection</h2>
       <Segmented label="Window" value={scope} onChange={setScope} options={[{ v: "default", label: "Since cutoff" }, { v: "all", label: "All moves" }]} />
       <Metrics label="Protection" items={[{ k: "Protected", v: compact(p.totals.protection_usd), tone: "pos" }, { k: "House P&L", v: compact(p.totals.pl_house), tone: p.totals.pl_house >= 0 ? "pos" : "neg" }, { k: "Lots", v: num(p.totals.lots_total, 0) }]} />
-      <Group header="By algorithm" footer="Protected is the extra spread the move earned on the client's later trades.">
+      <Group header="By algorithm" footer="Protection is the additional spread earned on the client's trades after the move.">
         {p.by_algo.map((x: any) => <Row key={x.algo} title={x.label} subtitle={`${x.moves} moves · ${x.accounts} accounts`} detail={money(x.protection_usd)} chevron={false} />)}
       </Group>
       <Group header="Latest moves">

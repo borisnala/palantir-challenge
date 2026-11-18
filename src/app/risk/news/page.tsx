@@ -29,7 +29,7 @@ export default function News() {
 
   return (
     <>
-      <NavBar title="News" eyebrow="Profit around news events" back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="News" eyebrow="Client P&L around economic releases" back={{ href: "/risk/", label: "Risk" }} />
       <Segmented label="Period" value={p} onChange={setP} options={[{ v: "7d", label: "7 days" }, { v: "30d", label: "30 days" }, { v: "90d", label: "90 days" }, { v: "all", label: "All" }]} />
       <Segmented label="Impact" value={imp} onChange={setImp} options={[{ v: "high", label: "High" }, { v: "medium", label: "Medium" }, { v: "all", label: "All" }]} />
 
@@ -40,7 +40,7 @@ export default function News() {
       ]} />
 
       {coming.length > 0 && (
-        <Group header="Coming up">
+        <Group header="Upcoming releases">
           {coming.map((e) => <Row key={e.id} icon={<CalendarClock size={17} strokeWidth={2.4} />} tint="var(--orange)" title={e.title}
             subtitle={`${e.currency} · forecast ${val(e.forecast, e.unit)}, previous ${val(e.previous, e.unit)}`} detail={when(e.wib)} chevron={false} />)}
         </Group>
@@ -56,7 +56,7 @@ export default function News() {
       </Group>
 
       {l.hunters && l.hunters.length > 0 && (
-        <Group header="News hunters" footer="Clients who profit around most releases they trade.">
+        <Group header="News hunters" footer="Clients with consistent profit around news releases.">
           {l.hunters.slice(0, 10).map((h) => (
             <ClientRow key={h.login} login={h.login} name={h.name} sub={`${h.events_positive} of ${h.events_participated} events won · hit ${pct(h.hit_rate * 100, 0)}`} value={h.total_net} />
           ))}
@@ -72,14 +72,14 @@ export default function News() {
               <Row title="Forecast" detail={val(sel.forecast, sel.unit)} />
               <Row title="Previous" detail={val(sel.previous, sel.unit)} />
             </Group>
-            <Group header="Clients around the release">
+            <Group header="Client activity around the release">
               <Row title="Accounts active" detail={num(sel.accounts_active)} />
               <Row title="Closed client P&L" detail={sel.closed_net !== null ? <Pnl v={sel.closed_net} /> : "Not computed"} />
               {sel.opened_lots !== undefined && <Row title="Lots opened" detail={num(sel.opened_lots, 2)} />}
               {sel.closed_lots !== undefined && <Row title="Lots closed" detail={num(sel.closed_lots, 2)} />}
             </Group>
             {(sel.top_winner || sel.top_loser) && (
-              <Group header="Biggest">
+              <Group header="Largest results">
                 {sel.top_winner && <ClientRow login={sel.top_winner.login} name={sel.top_winner.name} sub="Top winner" value={sel.top_winner.close_net} />}
                 {sel.top_loser && <ClientRow login={sel.top_loser.login} name={sel.top_loser.name} sub="Top loser" value={sel.top_loser.close_net} />}
               </Group>

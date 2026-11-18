@@ -6,6 +6,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import wd from "@/data/withdrawals.json";
 import { ALERTS, WATCHLIST } from "@/lib/data";
+import { buzz } from "@/lib/haptics";
 
 export type Decision = "approved" | "rejected";
 export type WdRow = (typeof wd.rows)[number];
@@ -49,6 +50,7 @@ export function AppState({ children }: { children: React.ReactNode }) {
 
   const say = useCallback((msg: string) => {
     setToast(msg);
+    buzz(true); // a confirmation means an action completed: the firm double tick
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(null), 2200);
   }, []);

@@ -32,22 +32,22 @@ export default function Withdrawals() {
       <NavBar title="Withdrawals" eyebrow="Withdrawal screening" root />
 
       <Metrics label="Today" items={[
-        { k: "Waiting", v: pending.length, tone: pending.length ? "warn" : undefined },
+        { k: "Pending", v: pending.length, tone: pending.length ? "warn" : undefined },
         { k: "Auto", v: wdRows.filter((x) => x.status === "auto").length },
         { k: "Approved", v: wdRows.filter((x) => x.status === "approved").length, tone: "pos" },
         { k: "Rejected", v: wdRows.filter((x) => x.status === "rejected").length, tone: "neg" },
       ]} />
 
-      <Group footer={wd.mode === "shadow" ? "Shadow mode is on. The screener logs its answer and Risk decides. Nothing is paid out from this app." : undefined}>
-        <PageRow href="/withdrawals/check/" Icon={ScanSearch} tint="var(--blue)" title="WD Check" sub="Screen one account before it asks" />
+      <Group footer={wd.mode === "shadow" ? "Shadow mode. The screener records its recommendation and Risk makes the final decision. No payouts are executed from this app." : undefined}>
+        <PageRow href="/withdrawals/check/" Icon={ScanSearch} tint="var(--blue)" title="WD Check" sub="Pre-screen an account before it requests a withdrawal" />
         <PageRow href="/withdrawals/health/" Icon={Activity} tint={warn ? "var(--orange)" : "var(--green)"} title="System health"
           sub={`${wd.health.checks.length} checks, ${warn} need attention`} />
       </Group>
 
-      <Segmented label="Requests" value={f} onChange={setF} options={[{ v: "waiting", label: `Waiting ${pending.length}` }, { v: "decided", label: "Decided" }, { v: "auto", label: "Auto" }]} />
+      <Segmented label="Requests" value={f} onChange={setF} options={[{ v: "waiting", label: `Pending ${pending.length}` }, { v: "decided", label: "Decided" }, { v: "auto", label: "Auto" }]} />
 
       <Group>
-        {list.length === 0 && <Row title="Nothing here" subtitle="New requests show up as the CRM sends them." chevron={false} />}
+        {list.length === 0 && <Row title="No requests" subtitle="New requests appear as the CRM submits them." chevron={false} />}
         {list.map((x) => (
           <Row key={x.request_id} onClick={() => { setSel(x.request_id); setOpen(true); }} icon={<ArrowDownUp size={17} strokeWidth={2.4} />}
             tint={x.status === "pending" ? "var(--orange)" : x.status === "rejected" ? "var(--red)" : x.status === "approved" ? "var(--green)" : "var(--blue)"}
@@ -67,7 +67,7 @@ export default function Withdrawals() {
               </div>
             )}
             {decisionOf(r.request_id) && (
-              <button className="btn btn-gray" onClick={() => { undo(r.request_id); say("Decision undone"); }}>Undo my decision</button>
+              <button className="btn btn-gray" onClick={() => { undo(r.request_id); say("Decision reverted"); }}>Revert decision</button>
             )}
           </>
         )}

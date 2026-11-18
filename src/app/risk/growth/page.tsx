@@ -23,10 +23,10 @@ export default function Growth() {
     <>
       <NavBar title="Growth Detection" eyebrow={`Scan ${win.scan_date}`} back={{ href: "/risk/", label: "Risk" }} />
       <Segmented label="Window" value={w} onChange={setW} options={[{ v: "30", label: "30 days" }, { v: "180", label: "180 days" }, { v: "all", label: "All time" }]} />
-      <Metrics label="Scan" items={[{ k: "Accounts", v: rows.length }, { k: "Steady growth", v: steady, tone: steady ? "warn" : undefined }, { k: "Client P&L", v: compact(rows.reduce((a, r) => a + r.net_change, 0)) }]} />
+      <Metrics label="Scan" items={[{ k: "Accounts", v: rows.length }, { k: "Consistent growth", v: steady, tone: steady ? "warn" : undefined }, { k: "Client P&L", v: compact(rows.reduce((a, r) => a + r.net_change, 0)) }]} />
       <Segmented label="Curve fit at least" value={fit} onChange={setFit} options={[{ v: "any", label: "Any fit" }, { v: "0.7", label: "Fit 0.70" }, { v: "0.85", label: "Fit 0.85" }]} />
 
-      <Group footer="Fit is how straight the profit curve is. A straight rising line means the client wins steadily, the pattern the desk looks for.">
+      <Group footer="Curve fit measures how linear the profit curve is. A high fit on a rising curve indicates consistent client profit.">
         {rows.map((r) => (
           <Row key={r.login} onClick={() => { setSel(r); setOpen(true); }} title={r.name ?? `#${r.login}`}
             subtitle={`Fit ${num(r.r_squared, 2)} · ${num(r.active_days)} active days · ${compact(r.slope_per_day, true)} a day`}

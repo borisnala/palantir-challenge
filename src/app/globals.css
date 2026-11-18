@@ -490,3 +490,31 @@ body { letter-spacing: -0.2px; }
 .timeline .grp-body > .row + .row .row-main { box-shadow: none; }
 .timeline .grp-body > .row { position: relative; }
 .timeline .grp-body > .row + .row::before { content: ""; position: absolute; left: 30px; top: -14px; height: 22px; width: 1.5px; background: var(--label3); }
+
+/* R+ wordmark, where the Claude app shows its name: top left of the side menu, a serif face */
+.brand { font-family: ui-serif, "New York", "Iowan Old Style", Georgia, serif; font-size: 34px; font-weight: 600; letter-spacing: -0.5px; }
+
+/* Page transitions, as in the Autoply app: right when going deeper, left coming back, a fade between sections */
+@keyframes epush { from { transform: translateX(34%); opacity: .3; } }
+@keyframes epop { from { transform: translateX(-22%); opacity: .3; } }
+@keyframes etab { from { opacity: 0; transform: scale(.992); } }
+@media (prefers-reduced-motion: no-preference) {
+  main.enter-push { animation: epush .3s cubic-bezier(.32,.72,0,1); }
+  main.enter-pop { animation: epop .28s cubic-bezier(.32,.72,0,1); }
+  main.enter-tab { animation: etab .18s ease-out; }
+}
+
+/* Pull to refresh: the 12-spoke iOS spinner */
+.ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 74px); width: 28px; height: 28px; z-index: 15; opacity: 0; pointer-events: none; transform: translate(-50%, -34px); }
+.ptr span { position: absolute; left: 12.5px; top: 0; width: 3px; height: 8px; border-radius: 2px; background: var(--label2); transform-origin: 1.5px 14px; }
+.ptr span:nth-child(1) { transform: rotate(0deg); } .ptr span:nth-child(2) { transform: rotate(30deg); } .ptr span:nth-child(3) { transform: rotate(60deg); }
+.ptr span:nth-child(4) { transform: rotate(90deg); } .ptr span:nth-child(5) { transform: rotate(120deg); } .ptr span:nth-child(6) { transform: rotate(150deg); }
+.ptr span:nth-child(7) { transform: rotate(180deg); } .ptr span:nth-child(8) { transform: rotate(210deg); } .ptr span:nth-child(9) { transform: rotate(240deg); }
+.ptr span:nth-child(10) { transform: rotate(270deg); } .ptr span:nth-child(11) { transform: rotate(300deg); } .ptr span:nth-child(12) { transform: rotate(330deg); }
+@keyframes ptrspin { to { rotate: 360deg; } }
+.ptr.spin { animation: ptrspin 1s steps(12) infinite; }
+.ptr.spin span { opacity: .75; }
+
+/* Desktop notice */
+.qr { width: 180px; height: 180px; padding: 14px; background: #fff; border-radius: 24px; margin-bottom: 14px; }
+.qr svg { width: 100%; height: 100%; display: block; }

@@ -88,11 +88,11 @@ export function ClientView({ c }: { c: Client }) {
         </Group>
       </section>
 
-      <Group footer="Alerts for clients on the watchlist also show on Today.">
+      <Group footer="Alerts for watchlist accounts also appear on Today.">
         <Row title="On watchlist" chevron={false}><Switch on={on} onChange={watch} label="On watchlist" /></Row>
       </Group>
 
-      <p className="fine">Dummy data.</p>
+      <p className="fine">Demonstration data.</p>
     </>
   );
 }

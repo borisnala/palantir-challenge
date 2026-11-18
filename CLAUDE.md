@@ -70,8 +70,18 @@ that scrolls under it.
 - Check the screens at phone width (390 px) with Playwright before saying a change is done.
 
 ## Writing rules (owner)
-Every word on screen: no colons, no semicolons, no em dashes. Short sentences and commas. Plain words a risk manager
-uses. Numbers with units.
+Every word on screen: no colons, no semicolons, no em dashes. Short sentences and commas. Numbers with units.
+Register (owner 2026-11-18, "this is professional risk tooling"): formal desk language, never chatty. "Action required",
+"Pending review", "Reasons", "Revert decision", "Demonstration data", never "Needs you", "to decide", "Why", "Undo my".
+
+## Brand, haptics, motion (owner 2026-11-18)
+- Logo R+: the serif wordmark at the top of the side menu (where the Claude app shows its name), and the app icon
+  (src/app/icon.svg, apple-icon.png).
+- Haptics (src/lib/haptics.ts, as the Autoply app): a light tick when a choice changes (switch, segmented, stepper, page
+  change, menu open), a firm double tick when an action completes (every confirmation toast, pull to refresh).
+- Motion (src/components/motion.tsx, as the Autoply app): pages slide in from the right going deeper, from the left
+  coming back, fade between sections. Pull down at the top to refresh with the 12-spoke spinner.
+- Desktop: a wide screen gets the "Built for mobile" sheet with a QR code to the same page, once per session.
 
 ## Website cloner
 This project started from JCodesMore/ai-website-cloner-template (MIT, see LICENSE). Its `/clone-website` command and

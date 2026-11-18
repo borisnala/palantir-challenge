@@ -31,7 +31,7 @@ export default function Cltl() {
         ))}
       </Group>
 
-      <Group header="Light changes">
+      <Group header="Level changes">
         {cl.events.map((e, i) => (
           <Row key={i} title={e.symbol} subtitle={<span className="inline-flow"><Chip tone={levelTone(e.from)}>{levelLabel(e.from)}</Chip><ArrowRight size={14} /><Chip tone={levelTone(e.to)}>{levelLabel(e.to)}</Chip></span>}
             detail={ago(Math.round(e.ago / 60) || 1)} chevron={false} />
@@ -48,7 +48,7 @@ export default function Cltl() {
               <Row title="M5 range" detail={pct(sel.m5_range_pct, 2)} chevron={false} />
               <Row title="Daily range" detail={pct(sel.daily_pct, 2)} chevron={false} />
             </Group>
-            <Group header="Liquidity light" footer="The spread level that starts each light.">
+            <Group header="Liquidity light" footer="Spread threshold for each level.">
               <Row title="Now" detail={<Chip tone={levelTone(sel.lptl_level)}>{levelLabel(sel.lptl_level)}</Chip>} chevron={false} />
               {(sel.lptl_thresholds ?? []).map((t) => <Row key={t.level} title={levelLabel(t.level)} detail={`${num(t.y)} pts`} chevron={false} />)}
             </Group>

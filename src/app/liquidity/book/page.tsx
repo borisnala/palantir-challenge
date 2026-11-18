@@ -42,7 +42,7 @@ export default function Book() {
         </Group>
       )}
       {v === "symbols" && (
-        <Group footer="Where clients make the most money off the book.">
+        <Group footer="Symbols ranked by client profit against the book.">
           {bk.symbols.map((s) => <Row key={s.symbol} title={s.symbol} subtitle={`${s.trades} trades · net ${s.net_lots} lots`} detail={<Pnl v={s.net_client_profit * k} short />} chevron={false} />)}
         </Group>
       )}

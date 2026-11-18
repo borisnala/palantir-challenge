@@ -26,7 +26,7 @@ export default function SearchClients() {
       </label>
       {flagged.length > 0 && <Group header={`On the watchlist · ${flagged.length}`} footer="The amount is T30, the client's profit over the last 30 days.">{flagged.map(row)}</Group>}
       {rest.length > 0 && <Group header={`Other clients · ${rest.length}`}>{rest.map(row)}</Group>}
-      {match.length === 0 && <Group><Row title={`No client matches “${q}”`} subtitle="Try a login number such as 99000003." chevron={false} /></Group>}
+      {match.length === 0 && <Group><Row title={`No client matches “${q}”`} subtitle="Search by login, for example 99000003." chevron={false} /></Group>}
     </>
   );
 }

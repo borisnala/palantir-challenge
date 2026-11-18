@@ -25,8 +25,8 @@ export const decisionChip = (r: WdLike) => {
   if (r.status === "approved") return <Chip tone="green">Approved</Chip>;
   if (r.status === "rejected") return <Chip tone="red">Rejected</Chip>;
   if (r.status === "auto") return <Chip tone="blue">Auto approved</Chip>;
-  if (r.status === "preview") return <Chip tone={r.decision === "AUTO" ? "green" : "orange"}>{r.decision === "AUTO" ? "Would auto approve" : "Would need Risk"}</Chip>;
-  return <Chip tone="orange">Needs you</Chip>;
+  if (r.status === "preview") return <Chip tone={r.decision === "AUTO" ? "green" : "orange"}>{r.decision === "AUTO" ? "Auto approval" : "Manual review"}</Chip>;
+  return <Chip tone="orange">Pending review</Chip>;
 };
 
 export function WdDetail({ r }: { r: WdLike }) {
@@ -41,13 +41,13 @@ export function WdDetail({ r }: { r: WdLike }) {
       </div>
 
       {r.reasons && r.reasons.length > 0 && (
-        <Group header="Why">
+        <Group header="Reasons">
           {r.reasons.map((x, i) => <Row key={i} title={<span className="wrap">{x}</span>} chevron={false} />)}
         </Group>
       )}
 
       {r.checks && (
-        <Group className="timeline" header={`Ran ${r.checks.length} checks in ${r.elapsed_ms ?? 0} ms`}>
+        <Group className="timeline" header={`${r.checks.length} checks completed in ${r.elapsed_ms ?? 0} ms`}>
           {r.checks.map((c) => {
             const [Icon, tint] = CHECK_ICON[(c.status as keyof typeof CHECK_ICON)] ?? CHECK_ICON.skip;
             return <Row key={c.name} icon={<Icon size={17} strokeWidth={2.4} />} tint={tint} title={c.name[0].toUpperCase() + c.name.slice(1)}

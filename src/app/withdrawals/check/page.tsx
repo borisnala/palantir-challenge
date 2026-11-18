@@ -25,7 +25,7 @@ export default function WdCheck() {
 
   return (
     <>
-      <NavBar title="WD Check" back={{ href: "/withdrawals/", label: "Withdrawals" }} eyebrow="One account, before it asks" />
+      <NavBar title="WD Check" back={{ href: "/withdrawals/", label: "Withdrawals" }} eyebrow="Pre-screen a single account" />
 
       <form className="checkform" onSubmit={(e) => { e.preventDefault(); run(q); }}>
         <label className="searchfield">
@@ -36,7 +36,7 @@ export default function WdCheck() {
       </form>
 
       {!result && !busy && (
-        <Group header="Accounts with screening data" footer="Tap one to check it, or type any account number.">
+        <Group header="Accounts with screening data" footer="Select an account or enter an account number.">
           {KNOWN.map((k) => <Row key={k} onClick={() => run(k)} title={nameOf(Number(k))} subtitle={`#${k}`} />)}
         </Group>
       )}
@@ -44,7 +44,7 @@ export default function WdCheck() {
       {result && ran && (
         PREVIEWS[ran]
           ? <WdDetail r={result} />
-          : <Group header="Result"><Row title={`No client found for #${ran}`} subtitle="The family index has no record of this account, so the screener sends it to Risk." chevron={false} /></Group>
+          : <Group header="Result"><Row title={`No client found for #${ran}`} subtitle="The client family index holds no record of this account. The screener routes it to manual review." chevron={false} /></Group>
       )}
     </>
   );

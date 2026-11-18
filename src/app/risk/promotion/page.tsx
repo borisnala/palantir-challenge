@@ -20,7 +20,7 @@ export default function Promotion() {
         {t.by_promo_segment.map((x) => <Row key={x.segment} title={x.segment} detail={x.count} chevron={false} />)}
       </Group>
 
-      <Group header="Most common moves">
+      <Group header="Most frequent moves">
         {t.top_moves.map((x, i) => <Row key={i} title={group(x.to)} subtitle={`from ${group(x.from)}`} detail={x.count} chevron={false} />)}
       </Group>
 

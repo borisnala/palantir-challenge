@@ -23,7 +23,7 @@ export default function Alerts() {
 
       <Segmented label="Severity" value={f} options={OPTS} onChange={setF} />
 
-      <Group className="mail" footer="The same alerts also go to the desk on WhatsApp.">
+      <Group className="mail" footer="Alerts are also sent to the desk WhatsApp group.">
         {list.map((a) => {
           const I = ICON[a.severity];
           return (

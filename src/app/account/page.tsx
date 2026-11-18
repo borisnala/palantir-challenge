@@ -15,14 +15,14 @@ export default function Account() {
     <>
       <NavBar title="Account" back={{ href: "/", label: "Today" }} />
       <Group>
-        <Row icon={<Monogram name="DA" size={44} />} tint="transparent" title="demo.admin" subtitle="Admin · every write control" chevron={false} />
+        <Row icon={<Monogram name="DA" size={44} />} tint="transparent" title="demo.admin" subtitle="Administrator, full write access" chevron={false} />
       </Group>
       <Group header="Admin">
         <PageRow href="/account/users/" Icon={Users} tint="var(--blue)" title="Users" detail={String(us.users.length)} />
-        <PageRow href="/account/devices/" Icon={MonitorSmartphone} tint="var(--orange)" title="Device access" sub="Approve new devices" detail={pending ? `${pending} waiting` : undefined} />
-        <PageRow href="/account/build-paths/" Icon={FolderCog} tint="var(--gray)" title="Build paths" sub="Where each algorithm's settings live" detail={`${bp.algorithms.filter((a) => !a.exists).length} missing`} />
+        <PageRow href="/account/devices/" Icon={MonitorSmartphone} tint="var(--orange)" title="Device access" sub="Device approval requests" detail={pending ? `${pending} pending` : undefined} />
+        <PageRow href="/account/build-paths/" Icon={FolderCog} tint="var(--gray)" title="Build paths" sub="Configuration file locations" detail={`${bp.algorithms.filter((a) => !a.exists).length} missing`} />
       </Group>
-      <p className="fine">Risk Desk, the Global Risk Portal on a phone. Dummy data.</p>
+      <p className="fine">Risk Desk, the Global Risk Portal for mobile. Demonstration data only.</p>
     </>
   );
 }

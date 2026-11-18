@@ -22,16 +22,16 @@ export default function Risk() {
       <Group header="Monitoring">
         <PageRow href="/risk/watchlist/" Icon={Eye} tint="var(--purple)" title="Watchlist" detail={String(watched.size)} />
         <PageRow href="/risk/open-lots/" Icon={Layers} tint="var(--blue)" title="Open Lots" sub="Live positions" detail={`${ol.totals.positions}`} />
-        <PageRow href="/risk/growth/" Icon={TrendingUp} tint="var(--green)" title="Growth Detection" sub="Steady client profit" detail={String(gr["30"].rows.length)} />
+        <PageRow href="/risk/growth/" Icon={TrendingUp} tint="var(--green)" title="Growth Detection" sub="Consistent client profit" detail={String(gr["30"].rows.length)} />
         <PageRow href="/risk/top10/" Icon={Trophy} tint="var(--orange)" title="Top 10" sub="Winners, losers, volume" />
-        <PageRow href="/risk/catches/" Icon={Crosshair} tint="var(--red)" title="Catches" sub="What the algos caught today" detail={String(ca.length)} />
-        <PageRow href="/risk/news/" Icon={Newspaper} tint="var(--orange)" title="News" sub="Profit around news events" detail={nw.lists["7d|high"].pending ? `${nw.lists["7d|high"].pending} pending` : undefined} />
+        <PageRow href="/risk/catches/" Icon={Crosshair} tint="var(--red)" title="Catches" sub="Detections and group moves today" detail={String(ca.length)} />
+        <PageRow href="/risk/news/" Icon={Newspaper} tint="var(--orange)" title="News" sub="Client P&L around economic releases" detail={nw.lists["7d|high"].pending ? `${nw.lists["7d|high"].pending} pending` : undefined} />
       </Group>
 
       <Group header="Algorithms">
         <PageRow href="/risk/analysis/" Icon={BarChart3} tint="var(--blue)" title="Risk Analysis" sub="MachineGun, ScalperAM, FBUv2" />
         <PageRow href="/risk/activity/" Icon={Activity} tint="var(--purple)" title="Algo Activity" sub="Moves and risk score" detail={`${moves30} in 30 d`} />
-        <PageRow href="/risk/housecleaning/" Icon={Brush} tint="var(--gray)" title="HouseCleaning" sub="Unused groups" detail={`${hc.summary.cutlisted} on cutlist`} />
+        <PageRow href="/risk/housecleaning/" Icon={Brush} tint="var(--gray)" title="HouseCleaning" sub="Inactive group cleanup" detail={`${hc.summary.cutlisted} on cutlist`} />
       </Group>
 
       <Group header="Customer risk (CRA)">
@@ -43,7 +43,7 @@ export default function Risk() {
         <PageRow href="/risk/promotion/" Icon={Gift} tint="var(--pink, #ff2d55)" title="Promotion Analysis" sub="JamesBond promotions" />
       </Group>
 
-      <Group header="Elsewhere" footer="Morning Digest is on Today, Client 360 is behind the search button, notifications are behind the bell.">
+      <Group header="Related" footer="Morning Digest is on Today. Client 360 is under Search. Notifications are under the bell.">
         <PageRow href="/liquidity/book/" Icon={Binoculars} tint="var(--green)" title="Book View" sub="In Liquidity" />
       </Group>
     </>

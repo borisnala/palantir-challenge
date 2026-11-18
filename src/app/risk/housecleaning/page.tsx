@@ -44,7 +44,7 @@ export default function HouseCleaning() {
       <Metrics label="Groups" items={[{ k: "Groups", v: s.total_groups }, { k: "Cutlist", v: hc.groups.filter(isCut).length }, { k: "Reinstate", v: s.reinstate, tone: "neg" }, { k: "Review", v: s.cutlist_empty_review + s.cutlist_unknown, tone: "warn" }]} />
 
       {hc.alerts.length > 0 && (
-        <Group header="Needs a look">
+        <Group header="Requires review">
           {hc.alerts.map((a) => <Row key={a.alert_key} title={path(a.group_path)} subtitle={a.code === "REINSTATE_CUTLIST" ? "On the cutlist but has accounts again" : a.code.replace(/_/g, " ").toLowerCase()} detail={<Chip tone="red">Alert</Chip>} chevron={false} />)}
         </Group>
       )}

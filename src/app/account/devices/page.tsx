@@ -18,7 +18,7 @@ export default function Devices() {
   return (
     <>
       <NavBar title="Device access" eyebrow={`${waiting.length} waiting`} back={{ href: "/account/", label: "Account" }} />
-      {waiting.length === 0 && <Group><Row title="No device is waiting" chevron={false} /></Group>}
+      {waiting.length === 0 && <Group><Row title="No pending device requests" chevron={false} /></Group>}
       {waiting.map((d) => (
         <Group key={d.id} header={d.label} footer={`First seen from ${d.first_ip} on ${when(d.created_at)}.`}>
           <Row icon={<MonitorSmartphone size={17} strokeWidth={2.4} />} tint="var(--orange)" title={d.purpose} subtitle={d.user_agent} chevron={false} />

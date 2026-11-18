@@ -27,15 +27,15 @@ export default function GroupSpread() {
   return (
     <>
       <NavBar title="Group Spread" eyebrow="Spread tier per MT5 group" back={{ href: "/liquidity/", label: "Liquidity" }} />
-      <Group footer={`Tiers ${gs.tiers.join(", ")}. A group off its suggested tier pays the wrong spread.`}>
+      <Group footer={`Tiers ${gs.tiers.join(", ")}. A group outside its suggested tier is priced incorrectly.`}>
         {GROUPS.map((g) => {
           const d = diffs(g, applied[g.name] ?? g.suggested_tier).length;
           return <Row key={g.name} onClick={() => pick(g)} title={grp(g.name)} subtitle={`${g.accounts} accounts · suggested ${g.suggested_tier}`}
-            detail={applied[g.name] ? <Chip tone="green">On {applied[g.name]}</Chip> : d ? <Chip tone="orange">{d} off</Chip> : <Chip tone="green">Matches</Chip>} />;
+            detail={applied[g.name] ? <Chip tone="green">On {applied[g.name]}</Chip> : d ? <Chip tone="orange">{d} differ</Chip> : <Chip tone="green">Matches</Chip>} />;
         })}
       </Group>
       {gs.not_in_map.length > 0 && (
-        <Group header="Paths with no tier" footer="These symbol paths have no spread in the tier map yet.">
+        <Group header="Unmapped symbol paths" footer="These symbol paths have no spread defined in the tier map.">
           {gs.not_in_map.map((p) => <Row key={p} title={sym(p)} subtitle={p.replace(/\\/g, " / ")} chevron={false} />)}
         </Group>
       )}

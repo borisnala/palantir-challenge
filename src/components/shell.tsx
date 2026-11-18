@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 import { ArrowDownUp, Bell, Clock, Droplets, House, Search, ShieldAlert, Users } from "lucide-react";
 import { useApp } from "./app-state";
 import { Glass, Spring, useSpringLoop } from "./liquid";
+import { buzz } from "@/lib/haptics";
 import { Monogram } from "./ui";
 
 const NAV = [
@@ -40,6 +41,7 @@ export function Drawer() {
   useEffect(() => {
     const w = panel.current?.offsetWidth || 320;
     x.current.target = drawer ? 0 : -w - 20;
+    if (drawer) buzz();
     kick();
   }, [drawer]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setDrawer(false); }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -64,7 +66,7 @@ export function Drawer() {
       <button ref={scrim} className="drawer-scrim" aria-label="Close menu" onClick={() => setDrawer(false)} style={{ opacity: 0, pointerEvents: "none" }} />
       <nav ref={panel} className="drawer" aria-label="Sections" aria-hidden={!drawer} style={{ transform: "translateX(-110%)" }}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
-        <div className="drawer-head"><span className="brand">Risk Desk</span>
+        <div className="drawer-head"><span className="brand" aria-label="R+ Risk Desk">R+</span>
           <Link href="/search/" className="glassbtn-link" aria-label="Search clients"><Glass className="glassbtn round"><Search size={20} strokeWidth={2} /></Glass></Link>
         </div>
         <div className="drawer-nav">

@@ -46,10 +46,10 @@ export default function Today() {
 
       <p className="digest">{digest.headline}</p>
 
-      <section className="hcards" aria-label="Needs you">
-        <h2 className="sub-head">Needs you</h2>
+      <section className="hcards" aria-label="Action required">
+        <h2 className="sub-head">Action required</h2>
         <SummaryCard href="/withdrawals/" Icon={ArrowDownUp} color="var(--orange)" label="Withdrawals"
-          value={String(pending.length)} unit="to decide" note={`${compact(wdTotal)} in total`} />
+          value={String(pending.length)} unit="pending review" note={`${compact(wdTotal)} in total`} />
         <SummaryCard href="/alerts/" Icon={Bell} color="var(--red)" label="Alerts" value={String(unread.size)} unit="unread" />
       </section>
 
@@ -76,7 +76,7 @@ export default function Today() {
         {S.new_flagged.map((r) => <ClientRow key={r.login} login={r.login} name={r.name} sub={`Tier ${r.pg} ${r.tier} · win ${pct(n(r.win_rate_pct))}`} value={n(r.t30)} />)}
       </Group>
 
-      <Group header={`Tier moves · ${S.tier_moves.length}`} footer="A worse tier means wider spreads for that client.">
+      <Group header={`Tier moves · ${S.tier_moves.length}`} footer="A downgrade widens the client's spreads.">
         {S.tier_moves.map((r) => (
           <ClientRow key={r.login} login={r.login} name={r.name} sub={`${r.pg_before} to ${r.pg_now}`}
             detail={<span className={r.direction === "worse" ? "neg" : "pos"}>{r.direction === "worse" ? "Worse" : "Better"}</span>} />
@@ -95,7 +95,7 @@ export default function Today() {
         {S.left_book.map((r) => <ClientRow key={r.login} login={r.login} name={r.name} sub={`Was tier ${r.pg} ${r.tier}`} value={n(r.t30)} />)}
       </Group>
 
-      <Group header="High impact news coming up">
+      <Group header="Upcoming high impact releases">
         {upcoming.map((e) => (
           <Row key={e.id} href="/risk/news/" icon={<Newspaper size={17} strokeWidth={2.4} />} tint="var(--orange)"
             title={e.title} subtitle={`${e.currency} · forecast ${e.forecast ?? "not set"}${e.unit ?? ""}, previous ${e.previous ?? "not set"}${e.unit ?? ""}`}
@@ -103,7 +103,7 @@ export default function Today() {
         ))}
       </Group>
 
-      <p className="fine">Dummy data. Snapshot taken {when(digest.taken_at)} UTC.</p>
+      <p className="fine">Demonstration data. Snapshot taken {when(digest.taken_at)} UTC.</p>
     </>
   );
 }

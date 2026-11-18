@@ -45,7 +45,7 @@ export default function Top10() {
       <Segmented label="Board" value={v} onChange={setV} options={[{ v: "winners", label: "Winners" }, { v: "losers", label: "Losers" }, { v: "volume", label: "Volume" }, { v: "groups", label: "Groups" }]} />
 
       <Group>
-        {(!bd || (bd[v] ?? []).length === 0) && <Row title="No accounts on this board" subtitle="Nobody in this book traded enough in the period." chevron={false} />}
+        {(!bd || (bd[v] ?? []).length === 0) && <Row title="No accounts on this board" subtitle="No account in this book met the activity threshold for the period." chevron={false} />}
         {v === "winners" || v === "losers" ? bd?.[v].map((r, i) => (
           <ClientRow key={r.login} login={r.login} name={`${i + 1}. ${r.name}`}
             sub={`${r.deals} deals · win ${pct(r.win_rate, 0)}${r.prev_rank ? ` · was ${r.prev_rank}` : " · new"}`} value={r.pl} />
