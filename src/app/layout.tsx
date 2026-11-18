@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppState } from "@/components/app-state";
-import { Drawer, SearchOrb } from "@/components/shell";
+import { Drawer, SearchOrb, StageScrim } from "@/components/shell";
 import { DesktopNotice, PullToRefresh, Transitions } from "@/components/motion";
 import { LightSource } from "@/components/liquid";
 import { Toast } from "@/components/ios";
 
 export const metadata: Metadata = {
-  title: "Risk Desk",
+  title: "Risk Tool",
   description: "The Global Risk Portal, rebuilt for a phone. Demonstration data.",
   robots: { index: false, follow: false },
-  appleWebApp: { capable: true, title: "Risk Desk", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Risk Tool", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -24,13 +24,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <LightSource />
         <AppState>
-          <main className="screen">{children}</main>
-          <Toast />
-          <Transitions />
-          <PullToRefresh />
-          <DesktopNotice />
-          <SearchOrb />
           <Drawer />
+          <div className="stage">
+            <main className="screen">{children}</main>
+            <Toast />
+            <Transitions />
+            <PullToRefresh />
+            <DesktopNotice />
+            <SearchOrb />
+            <StageScrim />
+          </div>
         </AppState>
       </body>
     </html>

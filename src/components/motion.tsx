@@ -3,7 +3,7 @@
 // Motion and touch, after the Autoply app: the page slides in from the right going deeper, from the left coming back,
 // and fades between sections, with a tick on each move; the bars stay still. Pull down at the top to refresh: a
 // 12-spoke spinner fills as you pull, and past 60 pt it spins with a firm tick.
-// Plus the desktop notice: Risk Desk is built for a phone, so a wide screen gets a sheet with a code to scan.
+// Plus the desktop notice: Risk Tool is built for a phone, so a wide screen gets a sheet with a code to scan.
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -107,7 +107,7 @@ export function DesktopNotice() {
     <Sheet open={open} onClose={close} title="Built for mobile">
       <div className="sheet-hero">
         {svg && <div className="qr" dangerouslySetInnerHTML={{ __html: svg }} />}
-        <p className="row-sub wrap">Risk Desk is designed for a phone screen. Scan the code with your phone camera to open this page there.</p>
+        <p className="row-sub wrap">Risk Tool is designed for a phone screen. Scan the code with your phone camera to open this page there.</p>
       </div>
       <Group><Row title="Continue on this screen" onClick={close} chevron={false} /></Group>
     </Sheet>

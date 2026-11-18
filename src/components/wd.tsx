@@ -4,7 +4,7 @@
 // approvals queue and WD Check, so both show a request the same way.
 
 import { CircleAlert, CircleCheck, CircleX, Info } from "lucide-react";
-import { Chip, Group, Row } from "./ios";
+import { Chip, Group, Row, useSheetPush } from "./ios";
 import { ClientRow } from "./rows";
 import { group, money, when } from "@/lib/data";
 
@@ -30,6 +30,7 @@ export const decisionChip = (r: WdLike) => {
 };
 
 export function WdDetail({ r }: { r: WdLike }) {
+  const push = useSheetPush();
   const flags = r.flags ?? r.history_flags ?? [];
   return (
     <>
@@ -50,8 +51,16 @@ export function WdDetail({ r }: { r: WdLike }) {
         <Group className="timeline" header={`${r.checks.length} checks completed in ${r.elapsed_ms ?? 0} ms`}>
           {r.checks.map((c) => {
             const [Icon, tint] = CHECK_ICON[(c.status as keyof typeof CHECK_ICON)] ?? CHECK_ICON.skip;
-            return <Row key={c.name} icon={<Icon size={17} strokeWidth={2.4} />} tint={tint} title={c.name[0].toUpperCase() + c.name.slice(1)}
-              subtitle={<span className="wrap">{c.detail}</span>} detail={c.source} chevron={false} />;
+            const name = c.name[0].toUpperCase() + c.name.slice(1);
+            return <Row key={c.name} icon={<Icon size={17} strokeWidth={2.4} />} tint={tint} title={name} subtitle={<span className="wrap">{c.detail}</span>}
+              onClick={push ? () => push(name, (
+                <Group header="Check">
+                  <Row title="Result" detail={<Chip tone={c.status === "ok" ? "green" : c.status === "flag" || c.status === "error" ? "red" : "orange"}>{c.status}</Chip>} chevron={false} />
+                  <Row title="Source" detail={c.source ?? "Not recorded"} chevron={false} />
+                  <Row title="Duration" detail={c.ms !== undefined ? `${c.ms} ms` : "Not recorded"} chevron={false} />
+                  <Row title={<span className="wrap">{c.detail}</span>} chevron={false} />
+                </Group>
+              )) : undefined} />;
           })}
         </Group>
       )}
@@ -61,7 +70,20 @@ export function WdDetail({ r }: { r: WdLike }) {
           {flags.map((f, i) => (
             <Row key={i} icon={f.info ? <Info size={17} strokeWidth={2.4} /> : <CircleAlert size={17} strokeWidth={2.4} />}
               tint={f.info ? "var(--gray)" : "var(--red)"} title={`${f.label} on #${f.login}`}
-              subtitle={<span className="wrap">{f.detail}</span>} detail={when(f.at)} chevron={false} />
+              subtitle={<span className="wrap">{f.detail}</span>} detail={when(f.at)}
+              onClick={push ? () => push(`${f.label} on #${f.login}`, (
+                <>
+                  <Group header="Flag">
+                    <Row title="Detection" detail={f.label} chevron={false} />
+                    <Row title="Account" detail={`#${f.login}`} chevron={false} />
+                    <Row title="Time" detail={when(f.at)} chevron={false} />
+                    <Row title="Source" detail={f.source} chevron={false} />
+                    <Row title="Severity" detail={f.info ? "Information" : "Flag"} chevron={false} />
+                  </Group>
+                  <Group header="Detail"><Row title={<span className="wrap">{f.detail}</span>} chevron={false} /></Group>
+                  <Group><ClientRow login={f.login} /></Group>
+                </>
+              )) : undefined} />
           ))}
         </Group>
       )}

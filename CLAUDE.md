@@ -1,6 +1,6 @@
-# Risk Desk: instructions for Claude
+# Risk Tool: instructions for Claude
 
-Risk Desk is the Global Risk Portal rebuilt for a phone. The owner built the portal alone; this app is his entry for the
+Risk Tool (named by the owner 2026-11-18, earlier "Risk Desk") is the Global Risk Portal rebuilt for a phone. The owner built the portal alone; this app is his entry for the
 Palantir design challenge (Lens B, make it click). Dummy data only: logins 99000001.., names "Demo Client N", groups
 under `DUMMY\`. Never add real logins, group names, client names or values. The portal's Algo Config page is
 confidential and stays out of this app entirely.
@@ -75,8 +75,13 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
 "Pending review", "Reasons", "Revert decision", "Demonstration data", never "Needs you", "to decide", "Why", "Undo my".
 
 ## Brand, haptics, motion (owner 2026-11-18)
-- Logo R+: the serif wordmark at the top of the side menu (where the Claude app shows its name), and the app icon
-  (src/app/icon.svg, apple-icon.png).
+- Logo: drawn the way Luma draws theirs (lowercase soft wordmark, a small mark raised top right): "risk tool+" at the
+  top of the side menu (shell.tsx Wordmark), and "r+" as the app icon (src/app/icon.svg, apple-icon.png).
+- Behaviour from the owner's Claude app recording: the side menu sits under the page and opening it pushes the page
+  right as a dimmed rounded card (edge swipe from the left opens, swipe left or tap the page closes). The title capsule
+  opens a Data status sheet, the round ⋯ button opens a glass menu (Share, Copy link, Refresh data, Account). Rows in a
+  sheet push a detail page inside it with a back button (useSheetPush). Never put will-change on .stage: it would
+  pin every sheet to the bottom of the page instead of the screen.
 - Haptics (src/lib/haptics.ts, as the Autoply app): a light tick when a choice changes (switch, segmented, stepper, page
   change, menu open), a firm double tick when an action completes (every confirmation toast, pull to refresh).
 - Motion (src/components/motion.tsx, as the Autoply app): pages slide in from the right going deeper, from the left

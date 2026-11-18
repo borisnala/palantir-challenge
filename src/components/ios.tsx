@@ -6,10 +6,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronLeft, ChevronRight, Menu, Minus, Plus } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Bell, ChevronLeft, ChevronRight, Ellipsis, Link2, Menu, Minus, Plus, RefreshCw, Share, UserRound } from "lucide-react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useApp } from "./app-state";
 import { Glass, Spring, stretch, useSpringLoop } from "./liquid";
+import { buzz } from "@/lib/haptics";
 
 /** Back goes to the screen you came from, or to the parent when the page was opened directly. */
 function BackButton({ href, label }: { href: string; label: string }) {
@@ -27,8 +28,16 @@ function BackButton({ href, label }: { href: string; label: string }) {
 export function NavBar({ title, eyebrow, trailing, back }: {
   title: string; eyebrow?: string; trailing?: React.ReactNode; back?: { href: string; label: string }; large?: boolean; root?: boolean;
 }) {
-  const { unread, setDrawer, visit } = useApp();
+  const { unread, setDrawer, visit, wdRows, pending, say, set } = useApp();
   const path = usePathname();
+  const router = useRouter();
+  const [menu, setMenu] = useState(false);
+  const [status, setStatus] = useState(false);
+  const share = async () => {
+    setMenu(false);
+    try { if (navigator.share) { await navigator.share({ title: `${title} · Risk Tool`, url: location.href }); return; } } catch { return; }
+    navigator.clipboard?.writeText(location.href).then(() => say("Link copied"), () => {});
+  };
   useEffect(() => { visit(path, title, eyebrow); }, [path, title]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
@@ -39,11 +48,40 @@ export function NavBar({ title, eyebrow, trailing, back }: {
             <Glass className="glassbtn round"><Menu size={22} strokeWidth={2} /></Glass>
           </button>
         )}
-        <Glass className="titlecap"><h1>{title}</h1>{eyebrow && <p>{eyebrow}</p>}</Glass>
-        <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
-          <Glass className="glassbtn round"><Bell size={20} strokeWidth={2} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}</Glass>
-        </Link>
+        <button className="glassbtn-link titlebtn" onClick={() => setStatus(true)} aria-label={`${title}, data status`}>
+          <Glass className="titlecap"><h1>{title}</h1>{eyebrow && <p>{eyebrow}</p>}</Glass>
+        </button>
+        <span className="nav-actions">
+          <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
+            <Glass className="glassbtn round"><Bell size={20} strokeWidth={2} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}</Glass>
+          </Link>
+          <button className="glassbtn-link" aria-label="More" aria-expanded={menu} onClick={() => setMenu(!menu)}>
+            <Glass className="glassbtn round"><Ellipsis size={22} strokeWidth={2} /></Glass>
+          </button>
+        </span>
+        {menu && (
+          <>
+            <button className="menu-scrim" aria-label="Close menu" onClick={() => setMenu(false)} />
+            <Glass className="popmenu" role="menu">
+              <button role="menuitem" onClick={share}><Share size={20} strokeWidth={1.9} />Share</button>
+              <button role="menuitem" onClick={() => { setMenu(false); navigator.clipboard?.writeText(location.href).then(() => say("Link copied"), () => {}); }}><Link2 size={20} strokeWidth={1.9} />Copy link</button>
+              <button role="menuitem" onClick={() => { setMenu(false); set("refreshedAt", new Date().toISOString()); say("Data refreshed"); }}><RefreshCw size={20} strokeWidth={1.9} />Refresh data</button>
+              <i className="popmenu-sep" />
+              <button role="menuitem" onClick={() => { setMenu(false); router.push("/account/"); }}><UserRound size={20} strokeWidth={1.9} />Account</button>
+            </Glass>
+          </>
+        )}
       </header>
+      <Sheet open={status} onClose={() => setStatus(false)} title="Data status">
+        <Group header="Workload">
+          <div className="usage"><span className="top"><b>Withdrawals pending</b><span className="muted">{pending.length} of {wdRows.length}</span></span><span className="hbar"><i style={{ width: `${(pending.length / Math.max(1, wdRows.length)) * 100}%` }} /></span></div>
+          <div className="usage"><span className="top"><b>Unread alerts</b><span className="muted">{unread.size}</span></span><span className="hbar"><i style={{ width: `${Math.min(100, unread.size * 14)}%` }} /></span></div>
+        </Group>
+        <Group header="Source" footer="Demonstration data from the Global Risk Portal frontend demo. Snapshot 13 Nov 2026.">
+          <Row title="Screen" detail={title} chevron={false} />
+          <Row title="Mode" detail="Shadow, read only" chevron={false} />
+        </Group>
+      </Sheet>
       {trailing && <div className="dock">{trailing}</div>}
     </>
   );
@@ -88,12 +126,19 @@ export function Row({ href, onClick, icon, tint, title, subtitle, detail, chevro
   return <div className="row">{body}</div>;
 }
 
+type SheetPage = { title: string; node: React.ReactNode };
+const SheetNav = createContext<((title: string, node: React.ReactNode) => void) | null>(null);
+/** Inside a sheet: push a detail page, as the Claude app does when a step row is tapped. */
+export const useSheetPush = () => useContext(SheetNav);
+
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   // mounted keeps the sheet in the DOM while it slides out. The slide runs on a spring, and a drag on the top bar
   // pulls the sheet with the finger. Let go past a third of its height, or flick down, and it closes. Otherwise it
   // springs back with a little overshoot.
   const [mounted, setMounted] = useState(open);
+  const [stack, setStack] = useState<SheetPage[]>([]);
   if (open && !mounted) setMounted(true);
+  if (!open && stack.length) setStack([]);
   const panel = useRef<HTMLDivElement>(null);
   const scrim = useRef<HTMLButtonElement>(null);
   const y = useRef(new Spring(900, 300, 28));
@@ -152,14 +197,22 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
         <div className="sheet-grip" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
           <span className="grabber" aria-hidden />
           <div className="sheet-bar">
-            <button className="glassbtn-link" onPointerDown={(e) => e.stopPropagation()} onClick={onClose} aria-label="Close">
-              <Glass className="glassbtn round"><span className="xmark" aria-hidden /></Glass>
-            </button>
-            <span className="nav-title">{title}</span>
+            {stack.length ? (
+              <button className="glassbtn-link" onPointerDown={(e) => e.stopPropagation()} onClick={() => setStack(stack.slice(0, -1))} aria-label="Back">
+                <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.2} /></Glass>
+              </button>
+            ) : (
+              <button className="glassbtn-link" onPointerDown={(e) => e.stopPropagation()} onClick={onClose} aria-label="Close">
+                <Glass className="glassbtn round"><span className="xmark" aria-hidden /></Glass>
+              </button>
+            )}
+            <span className="nav-title">{stack.length ? stack[stack.length - 1].title : title}</span>
             <span />
           </div>
         </div>
-        <div className="sheet-body">{children}</div>
+        <SheetNav.Provider value={(t, node) => { buzz(); setStack((x) => [...x, { title: t, node }]); }}>
+          <div key={stack.length} className={`sheet-body ${stack.length ? "sheet-pushed" : ""}`}>{stack.length ? stack[stack.length - 1].node : children}</div>
+        </SheetNav.Provider>
       </div>
     </div>
   );

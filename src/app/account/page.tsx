@@ -22,7 +22,7 @@ export default function Account() {
         <PageRow href="/account/devices/" Icon={MonitorSmartphone} tint="var(--orange)" title="Device access" sub="Device approval requests" detail={pending ? `${pending} pending` : undefined} />
         <PageRow href="/account/build-paths/" Icon={FolderCog} tint="var(--gray)" title="Build paths" sub="Configuration file locations" detail={`${bp.algorithms.filter((a) => !a.exists).length} missing`} />
       </Group>
-      <p className="fine">Risk Desk, the Global Risk Portal for mobile. Demonstration data only.</p>
+      <p className="fine">Risk Tool, the Global Risk Portal for mobile. Demonstration data only.</p>
     </>
   );
 }

@@ -21,78 +21,110 @@ const NAV = [
   { href: "/alerts/", label: "Alerts", Icon: Bell },
 ];
 
+/** The Claude app's side menu: it sits under the page, and opening it pushes the whole page to the right, where the
+ *  page stays visible as a dimmed card with rounded corners. Swipe from the left edge to open, swipe left or tap the
+ *  page to close. Everything follows the finger and settles on a spring. */
 export function Drawer() {
   const { drawer, setDrawer, recents, pending, unread } = useApp();
   const path = usePathname();
   const panel = useRef<HTMLElement>(null);
-  const scrim = useRef<HTMLButtonElement>(null);
-  const x = useRef(new Spring(-340, 340, 32));
-  const drag = useRef<{ x0: number; last: number; t: number } | null>(null);
+  const x = useRef(new Spring(0, 320, 32)); // 0 closed, 1 open
+  const drag = useRef<{ x0: number; p0: number; last: number; t: number; v: number } | null>(null);
+  const width = () => panel.current?.offsetWidth || 320;
 
+  const paint = () => {
+    const p = Math.max(0, Math.min(1.04, x.current.x));
+    const stage = document.querySelector(".stage") as HTMLElement | null;
+    const scrim = document.querySelector(".stage-scrim") as HTMLElement | null;
+    if (stage) {
+      stage.style.transform = p > 0.001 ? `translateX(${p * width()}px)` : "";
+      stage.classList.toggle("stage-open", p > 0.001);
+    }
+    if (scrim) { scrim.style.opacity = String(p * 0.35); scrim.style.pointerEvents = p > 0.02 ? "auto" : "none"; }
+    if (panel.current) panel.current.style.transform = `translateX(${(p - 1) * width() * 0.25}px)`;
+  };
   const kick = useSpringLoop((dt) => {
-    const moving = drag.current ? false : x.current.step(dt);
-    const w = panel.current?.offsetWidth || 320;
-    const v = Math.min(0, x.current.x);
-    if (panel.current) panel.current.style.transform = `translateX(${v}px)`;
-    if (scrim.current) { scrim.current.style.opacity = String(1 + v / w); scrim.current.style.pointerEvents = v > -w + 4 ? "auto" : "none"; }
-    return moving;
+    const m = drag.current ? false : x.current.step(dt);
+    if (!m && !drag.current) { x.current.x = x.current.target; x.current.v = 0; } // settle exactly, a 0 to 1 spring stops short otherwise
+    paint();
+    return m;
   });
 
-  useEffect(() => {
-    const w = panel.current?.offsetWidth || 320;
-    x.current.target = drawer ? 0 : -w - 20;
-    if (drawer) buzz();
-    kick();
-  }, [drawer]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { x.current.target = drawer ? 1 : 0; if (drawer) buzz(); kick(); }, [drawer]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setDrawer(false); }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const down = (e: React.PointerEvent) => { drag.current = { x0: e.clientX - x.current.x, last: e.clientX, t: e.timeStamp }; };
-  const move = (e: React.PointerEvent) => {
-    const d = drag.current; if (!d) return;
-    const nx = Math.min(0, e.clientX - d.x0);
-    if (Math.abs(nx) > 6) (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    x.current.v = ((e.clientX - d.last) / Math.max(1, e.timeStamp - d.t)) * 1000; d.last = e.clientX; d.t = e.timeStamp;
-    x.current.x = nx; kick();
-  };
-  const up = () => {
-    if (!drag.current) return; drag.current = null;
-    const w = panel.current?.offsetWidth || 320;
-    if (x.current.x < -w / 3 || x.current.v < -700) setDrawer(false); else { x.current.target = 0; kick(); }
-  };
+  // Edge swipe to open, swipe on the pushed page or the menu to close
+  useEffect(() => {
+    const start = (e: TouchEvent) => {
+      const t = e.touches[0];
+      const open = x.current.x > 0.5;
+      const onPage = (e.target as Element)?.closest?.(".stage-scrim, .drawer");
+      if ((!open && t.clientX < 24 && !document.querySelector(".sheet-wrap")) || (open && onPage))
+        drag.current = { x0: t.clientX, p0: x.current.x, last: t.clientX, t: e.timeStamp, v: 0 };
+    };
+    const move = (e: TouchEvent) => {
+      const d = drag.current; if (!d) return;
+      const t = e.touches[0];
+      d.v = ((t.clientX - d.last) / Math.max(1, e.timeStamp - d.t)) * 1000; d.last = t.clientX; d.t = e.timeStamp;
+      x.current.x = Math.max(0, Math.min(1.04, d.p0 + (t.clientX - d.x0) / width()));
+      x.current.v = d.v / width();
+      if (e.cancelable) e.preventDefault();
+      kick();
+    };
+    const end = () => {
+      const d = drag.current; if (!d) return;
+      drag.current = null;
+      const open = d.v > 500 || (d.v > -500 && x.current.x > 0.5);
+      if (open !== drawer) setDrawer(open); else { x.current.target = open ? 1 : 0; kick(); }
+    };
+    addEventListener("touchstart", start, { passive: true });
+    addEventListener("touchmove", move, { passive: false });
+    addEventListener("touchend", end);
+    return () => { removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); };
+  }, [drawer, setDrawer, kick]);
+
   const badge = (href: string) => (href === "/withdrawals/" ? pending.length : href === "/alerts/" ? unread.size : 0);
 
   return (
-    <>
-      <button ref={scrim} className="drawer-scrim" aria-label="Close menu" onClick={() => setDrawer(false)} style={{ opacity: 0, pointerEvents: "none" }} />
-      <nav ref={panel} className="drawer" aria-label="Sections" aria-hidden={!drawer} style={{ transform: "translateX(-110%)" }}
-        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
-        <div className="drawer-head"><span className="brand" aria-label="R+ Risk Desk">R+</span>
-          <Link href="/search/" className="glassbtn-link" aria-label="Search clients"><Glass className="glassbtn round"><Search size={20} strokeWidth={2} /></Glass></Link>
-        </div>
-        <div className="drawer-nav">
-          {NAV.map(({ href, label, Icon }) => {
-            const on = href === "/" ? path === "/" : path.startsWith(href.replace(/\/$/, "")) || (href === "/search/" && path.startsWith("/clients"));
-            return (
-              <Link key={href} href={href} className={`drawer-item ${on ? "drawer-on" : ""}`} aria-current={on ? "page" : undefined}>
-                <Icon size={22} strokeWidth={1.8} /><span>{label}</span>{badge(href) > 0 && <b className="drawer-badge">{badge(href)}</b>}
-              </Link>
-            );
-          })}
-        </div>
-        {recents.length > 1 && (
-          <>
-            <p className="drawer-label">Recents</p>
-            <div className="drawer-nav">
-              {recents.filter((r) => r.path !== path).slice(0, 5).map((r) => (
-                <Link key={r.path} href={r.path} className="drawer-item"><Clock size={20} strokeWidth={1.8} /><span className="ellip">{r.title}</span></Link>
-              ))}
-            </div>
-          </>
-        )}
-        <Link href="/account/" className="drawer-account"><Monogram name="DA" size={40} /><span>demo.admin<small>Admin</small></span></Link>
-      </nav>
-    </>
+    <nav ref={panel} className="drawer" aria-label="Sections" aria-hidden={!drawer}>
+      <div className="drawer-head">
+        <Wordmark />
+        <Link href="/search/" className="glassbtn-link" aria-label="Search clients"><Glass className="glassbtn round"><Search size={20} strokeWidth={2} /></Glass></Link>
+      </div>
+      <div className="drawer-nav">
+        {NAV.map(({ href, label, Icon }) => {
+          const on = href === "/" ? path === "/" : path.startsWith(href.replace(/\/$/, "")) || (href === "/search/" && path.startsWith("/clients"));
+          return (
+            <Link key={href} href={href} className={`drawer-item ${on ? "drawer-on" : ""}`} aria-current={on ? "page" : undefined}>
+              <Icon size={22} strokeWidth={1.8} /><span>{label}</span>{badge(href) > 0 && <b className="drawer-badge">{badge(href)}</b>}
+            </Link>
+          );
+        })}
+      </div>
+      {recents.length > 1 && (
+        <>
+          <p className="drawer-label">Recents</p>
+          <div className="drawer-nav">
+            {recents.filter((r) => r.path !== path).slice(0, 5).map((r) => (
+              <Link key={r.path} href={r.path} className="drawer-item"><Clock size={20} strokeWidth={1.8} /><span className="ellip">{r.title}</span></Link>
+            ))}
+          </div>
+        </>
+      )}
+      <Link href="/account/" className="drawer-account"><Monogram name="DA" size={40} /><span>demo.admin<small>Administrator</small></span></Link>
+    </nav>
   );
+}
+
+/** The wordmark, drawn the way Luma draws theirs: lowercase, soft, a small mark raised at the top right. */
+export function Wordmark() {
+  return <span className="wordmark" aria-label="Risk Tool">risk tool<sup aria-hidden>+</sup></span>;
+}
+
+/** The dimmed page while the menu is open. Tapping it closes the menu. */
+export function StageScrim() {
+  const { setDrawer } = useApp();
+  return <button className="stage-scrim" aria-label="Close menu" onClick={() => setDrawer(false)} style={{ opacity: 0, pointerEvents: "none" }} />;
 }
 
 export function SearchOrb() {
