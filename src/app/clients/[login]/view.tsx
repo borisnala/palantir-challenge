@@ -6,6 +6,8 @@ import { Bell, Copy, Eye, Route } from "lucide-react";
 import { useApp } from "@/components/app-state";
 import { Chip, Group, NavBar, Row, Segmented, Switch } from "@/components/ios";
 import { Monogram, Pnl } from "@/components/ui";
+import { ClientAnalysis } from "@/components/c360";
+import c360 from "@/data/client360.json";
 import { ALERTS, group, money, num, pct, when, type Client } from "@/lib/data";
 
 type Pov = "client" | "broker";
@@ -26,7 +28,7 @@ export function ClientView({ c }: { c: Client }) {
       <header className="contact">
         <Monogram name={c.name} size={88} />
         <h1 className="contact-name">{c.name}</h1>
-        <p className="row-sub">#{c.login} · {group(c.group_now)}</p>
+        <p className="row-sub">#{c.login} · {c.login === c360.login ? `${c360.identity.group_tier}, ${c360.identity.country}` : group(c.group_now)}</p>
         <span className="tags">{c.momentum && <Chip tone={c.momentum === "accelerating" ? "red" : "gray"}>{c.momentum[0].toUpperCase() + c.momentum.slice(1)}</Chip>}{on && <Chip tone="purple">Watch</Chip>}</span>
         <div className="actions">
           <button className={`action ${on ? "action-on" : ""}`} onClick={watch}><Eye size={20} strokeWidth={2.2} /><span>{on ? "Watching" : "Watch"}</span></button>
@@ -35,6 +37,7 @@ export function ClientView({ c }: { c: Client }) {
         </div>
       </header>
 
+      {c.login === c360.login ? <ClientAnalysis /> : (<>
       <Segmented label="Point of view" value={pov} onChange={setPov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} />
 
       <section className="chartcard">
@@ -80,6 +83,9 @@ export function ClientView({ c }: { c: Client }) {
           {c.etl.map((e, i) => <Row key={i} title={e.reason} subtitle={`${e.kind.replace(/_/g, " ")} · ${e.tpl}`} detail={when(e.time_wib)} />)}
         </Group>
       )}
+
+      <p className="caption">The full analysis is in this demonstration for {"#"}{c360.login} only.</p>
+      </>)}
 
       <section id="alerts">
         <Group header={`Alerts · ${alerts.length}`}>

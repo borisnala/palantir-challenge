@@ -222,6 +222,55 @@ out["cra"] = {"model": cm["model_get"], "history": cm.get("history"),
               "recent": cra["recent"]["items"], "stats": cra["stats"],
               "verify": cra.get("verify")}
 
+# ---- Client 360 deep profile: the desktop demo's one full payload (login 99000001, all time) ----
+def plain(t):
+    """Portal prose for the phone: no colons, double hyphens or arrows."""
+    if not isinstance(t, str):
+        return t
+    t = t.replace("Decision: ", "").replace(" -- ", ", ").replace(" - ", ", ").replace(" -> ", " to ").replace("->", " to ")
+    return t.replace(": ", ", ")
+
+
+c3 = load("client360")
+cp = c3["profile"]["all"]
+sg, beh, win, ex = cp["signals"], cp["behaviour"], cp["windows"], cp["exec_summary"]
+sym_pl = {r["symbol"]: r for r in sg["symbol_pl"]["rows"]}
+out["client360"] = {
+    "login": c3["login"], "as_of": win["as_of"],
+    "identity": pick(cp["identity"], "group", "group_tier", "country", "leverage", "registration", "last_access",
+                     "balance", "equity", "margin_free", "credit"),
+    "classification": cp["classification"]["label"], "risk_level": cp["risk_level"],
+    "lead": cp["tatto"]["parsed"]["label"] if cp.get("tatto") and cp["tatto"].get("parsed") else None,
+    "toxicity": {"score": sg["toxicity"]["score"], "band": sg["toxicity"]["band"],
+                 "factors": [{"points": f["points"], "label": plain(f["label"])} for f in sg["toxicity"]["factors"]]},
+    "decision": {"verdict": ex["decision"]["verdict"], "headline": plain(ex["decision"]["headline"])},
+    "metrics": [{"metric": m["metric"], "result": m["result"], "note": plain(m["interpretation"])} for m in ex["metrics"]],
+    "findings": [plain(f) for f in ex["findings"]],
+    "machinegun": pick(sg["machinegun"], "detected", "tier", "client_type"),
+    "scalper": {**pick(sg["scalper"], "detected", "tier", "scope_note"), "evidence": sg["scalper"]["evidence"]},
+    "force_buildup": pick(sg["force_buildup"], "detected", "tier", "conditions", "evidence"),
+    "catches": cp["algo_catches"],
+    "behaviour": {k: r2(beh[k]) for k in ("trade_count", "closed_trade_count", "active_days", "win_rate_pct", "profit_factor",
+                                         "avg_win", "avg_loss", "median_hold_label", "overnight_pct", "total_lots", "avg_lot", "max_lot")},
+    # one row per trading day, client view and broker (HPOV) view
+    "daily": [[p["day"], r2(p["daily"])] for p in cp["realized"]["pl_timeline"]],
+    "daily_hpov": [[p["day"], r2(p["daily"])] for p in cp["realized_hpov"]["pl_timeline"]],
+    "stats": cp["realized"]["stats"], "stats_hpov": cp["realized_hpov"]["stats"],
+    "sessions": sg["sessions"],
+    "symbols": [{"symbol": s["symbol"], "pct": s["pct"], "lots": s["lots"],
+                 "pl": sym_pl.get(s["symbol"], {}).get("net_pl"), "hpov": sym_pl.get(s["symbol"], {}).get("hpov_pl"),
+                 "trades": sym_pl.get(s["symbol"], {}).get("trades"), "win": sym_pl.get(s["symbol"], {}).get("win_rate")}
+                for s in beh["symbol_concentration"]],
+    "holding": sg["holding_pl"]["buckets"],
+    "windows": {**pick(win, "t_all", "t180", "t30", "fpl", "t_all_net", "t_all_commission", "t_all_swap",
+                       "lifetime_deposits", "lifetime_withdrawals"), "hpov": win["hpov"],
+                "fpl_check": pick(win["fpl_reconciliation"], "account_fpl", "position_floating", "difference", "status")},
+    "exposure": {"symbols": cp["exposure"]["symbols"], "totals": cp["exposure"]["totals"]},
+    "group_changes": [pick(c, "day", "from_tier", "to_tier", "source") for c in cp["group_timeline"]["changes"]],
+    "etl": [pick(e, "time_wib", "kind", "from_tier", "to_tier", "tpl") for e in cp["etl_log"]["events"]],
+    "withdrawals": cp["withdrawal_velocity"],
+}
+
 # ---- Admin: users, devices, build paths ----
 out["users"] = load("users")
 out["buildpaths"] = load("build_paths")
