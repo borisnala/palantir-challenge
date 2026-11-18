@@ -9,7 +9,7 @@ export default function Promotion() {
   const { population: p, promo_targets: t, expiry: e, operations: o, tier_guard: g } = pr;
   return (
     <>
-      <NavBar title="Promotion Analysis" eyebrow={`JamesBond · ${when(pr.generated_at)} UTC`} back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="Promotion Analysis" eyebrow={`JamesBond · ${when(pr.generated_at)} UTC`} back={{ href: "/risk/", label: "Risk Management" }} />
       <Metrics label="Population" items={[{ k: "Accounts", v: p.accounts }, { k: "Promoted", v: p.promotion_landed, tone: "pos" }, { k: "Never landed", v: p.never_landed, tone: "warn" }]} />
 
       <Group header="By status">

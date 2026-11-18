@@ -21,7 +21,7 @@ export default function Growth() {
 
   return (
     <>
-      <NavBar title="Growth Detection" eyebrow={`Scan ${win.scan_date}`} back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="Growth Detection" eyebrow={`Scan ${win.scan_date}`} back={{ href: "/risk/", label: "Risk Management" }} />
       <Segmented label="Window" value={w} onChange={setW} options={[{ v: "30", label: "30 days" }, { v: "180", label: "180 days" }, { v: "all", label: "All time" }]} />
       <Metrics label="Scan" items={[{ k: "Accounts", v: rows.length }, { k: "Consistent growth", v: steady, tone: steady ? "warn" : undefined }, { k: "Client P&L", v: compact(rows.reduce((a, r) => a + r.net_change, 0)) }]} />
       <Segmented label="Curve fit at least" value={fit} onChange={setFit} options={[{ v: "any", label: "Any fit" }, { v: "0.7", label: "Fit 0.70" }, { v: "0.85", label: "Fit 0.85" }]} />

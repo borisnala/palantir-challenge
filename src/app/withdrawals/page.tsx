@@ -29,7 +29,7 @@ export default function Withdrawals() {
 
   return (
     <>
-      <NavBar title="Withdrawals" eyebrow="Withdrawal screening" root />
+      <NavBar title="WD Approvals" eyebrow="Withdrawal screening" root />
 
       <Metrics label="Today" items={[
         { k: "Pending", v: pending.length, tone: pending.length ? "warn" : undefined },

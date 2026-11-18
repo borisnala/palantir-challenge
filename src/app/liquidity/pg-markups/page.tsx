@@ -32,7 +32,7 @@ export default function PgMarkups() {
 
   return (
     <>
-      <NavBar title="PG Markups" eyebrow="Spread markup per price group, in points" back={{ href: "/liquidity/", label: "Liquidity" }}
+      <NavBar title="PG Markups" eyebrow="Spread markup per price group, in points" back={{ href: "/liquidity/", label: "Liquidity Management" }}
         trailing={changes.length ? <BarButton onClick={() => setReview(true)}>Apply {changes.length}</BarButton> : null} />
 
       <Segmented label="Price group" value={g} onChange={setG} options={pg.pg_order.map((p) => ({ v: p, label: p.replace("PG-", "") }))} />

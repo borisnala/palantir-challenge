@@ -26,7 +26,7 @@ export default function GroupSpread() {
 
   return (
     <>
-      <NavBar title="Group Spread" eyebrow="Spread tier per MT5 group" back={{ href: "/liquidity/", label: "Liquidity" }} />
+      <NavBar title="Group Spread" eyebrow="Spread tier per MT5 group" back={{ href: "/liquidity/", label: "Liquidity Management" }} />
       <Group footer={`Tiers ${gs.tiers.join(", ")}. A group outside its suggested tier is priced incorrectly.`}>
         {GROUPS.map((g) => {
           const d = diffs(g, applied[g.name] ?? g.suggested_tier).length;

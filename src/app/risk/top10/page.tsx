@@ -28,7 +28,7 @@ export default function Top10() {
 
   return (
     <>
-      <NavBar title="Top 10" eyebrow={bd?.label ?? ""} back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="Top 10" eyebrow={bd?.label ?? ""} back={{ href: "/risk/", label: "Risk Management" }} />
       <Segmented label="Period" value={p} onChange={setP} options={[{ v: "day", label: "Day" }, { v: "month", label: "Month" }, { v: "ytd", label: "Year" }]} />
       <Segmented label="Book" value={b} onChange={setB} options={[{ v: "clients", label: "All clients" }, { v: "a", label: "A book" }, { v: "b", label: "B book" }]} />
 

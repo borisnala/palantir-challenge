@@ -21,14 +21,18 @@ export function Plus({ size }: { size: number }) {
 
 /** Wordmark: heavy, tight, black, with the drawn plus raised at the top right. */
 export function Wordmark() {
-  return <span className="wordmark" role="img" aria-label="Risk Tool">risk tool<Plus size={13} /></span>;
+  return <span className="wordmark" role="img" aria-label="Risk Tool">risk tool<Plus size={11} /></span>;
 }
 
 /** The launch screen, in the page's first HTML so it shows from the first frame. motion.tsx opens it once. */
 export function Launch() {
   return (
+    <>
+    {/* Once per visit: a later load skips the launch before the first frame */}
+    <script dangerouslySetInnerHTML={{ __html: "try{if(sessionStorage.getItem('launched'))document.documentElement.classList.add('nolaunch')}catch(e){}" }} />
     <div id="launch" aria-hidden>
       <svg className="launchplus" viewBox="0 0 100 100" fill="currentColor"><path d={PLUS_PATH} /></svg>
     </div>
+    </>
   );
 }

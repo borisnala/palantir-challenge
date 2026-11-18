@@ -19,7 +19,7 @@ export default function OpenLots() {
 
   return (
     <>
-      <NavBar title="Open Lots" eyebrow={`Live · as of ${when(new Date(ol.as_of * 1000).toISOString())} UTC`} back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="Open Lots" eyebrow={`Live · as of ${when(new Date(ol.as_of * 1000).toISOString())} UTC`} back={{ href: "/risk/", label: "Risk Management" }} />
 
       <Metrics label="Open now" items={[
         { k: "Clients", v: t.clients }, { k: "Positions", v: t.positions },
@@ -31,7 +31,7 @@ export default function OpenLots() {
       <Group footer={`MachineGun trips at ${ol.mg1.normal["60"]} lots in 60 s for normal groups, ${ol.mg1.micro["60"]} for micro.`}>
         {list.map((c) => (
           <Row key={c.login} onClick={() => { setSel(c); setOpen(true); }} title={nameOf(c.login)}
-            subtitle={`${c.positions} positions · ${c.top_symbols.map((s) => s[0]).join(", ")}`}
+            subtitle={`${c.positions} ${c.positions === 1 ? "position" : "positions"} · ${c.top_symbols.map((s) => s[0]).join(", ")}`}
             detail={<span className="stack-r">{sort === "fpl" ? <Pnl v={c.fpl} short /> : <span>{num(c.gross, 2)} lots</span>}
               {c.mg && c.mg.tier ? <Chip tone="red">MG{c.mg.tier}</Chip> : c.excluded ? <Chip>Excluded</Chip> : null}</span>} />
         ))}

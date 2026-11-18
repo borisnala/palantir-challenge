@@ -17,7 +17,7 @@ export default function Risk() {
   const moves30 = Object.values(aa["30"].algos).reduce((a, x) => a + x.count, 0);
   return (
     <>
-      <NavBar title="Risk" eyebrow="Risk management" root />
+      <NavBar title="Risk Management" eyebrow="Analysis, algorithms, CRA, promotion" root />
 
       <Group header="Monitoring">
         <PageRow href="/risk/watchlist/" Icon={Eye} tint="var(--purple)" title="Watchlist" detail={String(watched.size)} />

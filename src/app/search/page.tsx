@@ -18,7 +18,7 @@ export default function SearchClients() {
 
   return (
     <>
-      <NavBar title="Clients" eyebrow="Client 360" root />
+      <NavBar title="Client 360" eyebrow="Search by login, name or group" root />
       <label className="searchfield">
         <Search size={17} strokeWidth={2.4} aria-hidden />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Login, name or group" inputMode="search" aria-label="Search by login, name or group" autoFocus />

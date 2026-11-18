@@ -23,7 +23,7 @@ export default function Catches() {
 
   return (
     <>
-      <NavBar title="Catches" eyebrow="Today, most recent first" back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="Catches" eyebrow="Today, most recent first" back={{ href: "/risk/", label: "Risk Management" }} />
       <Metrics label="By algorithm" items={[{ k: "MG", v: count("mg") }, { k: "Scalper", v: count("scalper") }, { k: "FBU", v: count("fbu") }, { k: "ETL", v: count("etl") }]} />
       <Segmented label="Algorithm" value={a} onChange={setA} options={[{ v: "all", label: "All" }, { v: "mg", label: "MG" }, { v: "scalper", label: "SC" }, { v: "fbu", label: "FBU" }, { v: "etl", label: "ETL" }, { v: "journal", label: "Log" }]} />
       <Group>

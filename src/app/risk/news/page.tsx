@@ -29,7 +29,7 @@ export default function News() {
 
   return (
     <>
-      <NavBar title="News" eyebrow="Client P&L around economic releases" back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="News" eyebrow="Client P&L around economic releases" back={{ href: "/risk/", label: "Risk Management" }} />
       <Segmented label="Period" value={p} onChange={setP} options={[{ v: "7d", label: "7 days" }, { v: "30d", label: "30 days" }, { v: "90d", label: "90 days" }, { v: "all", label: "All" }]} />
       <Segmented label="Impact" value={imp} onChange={setImp} options={[{ v: "high", label: "High" }, { v: "medium", label: "Medium" }, { v: "all", label: "All" }]} />
 

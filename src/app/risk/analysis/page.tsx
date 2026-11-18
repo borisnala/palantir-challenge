@@ -66,7 +66,7 @@ export default function RiskAnalysis() {
   const p = PROT[scope];
   return (
     <>
-      <NavBar title="Risk Analysis" eyebrow={`Since ${when(ra.analysis.machinegun.generated_at)}`} back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="Risk Analysis" eyebrow={`Since ${when(ra.analysis.machinegun.generated_at)}`} back={{ href: "/risk/", label: "Risk Management" }} />
       <Segmented label="Algorithm" value={a} onChange={setA} options={[{ v: "machinegun", label: "MachineGun" }, { v: "scalperam", label: "ScalperAM" }, { v: "fbuv2", label: "FBUv2" }]} />
       {a === "machinegun" ? <MachineGun /> : a === "scalperam" ? <Scalper /> : <Fbu />}
 

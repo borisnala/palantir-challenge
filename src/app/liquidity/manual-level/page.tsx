@@ -34,7 +34,7 @@ export default function ManualLevel() {
 
   return (
     <>
-      <NavBar title="Manual Level" eyebrow={`Spread limits in ${ml.unit}`} back={{ href: "/liquidity/", label: "Liquidity" }}
+      <NavBar title="Manual Level" eyebrow={`Spread limits in ${ml.unit}`} back={{ href: "/liquidity/", label: "Liquidity Management" }}
         trailing={changes.length ? <BarButton onClick={() => setReview(true)}>Apply {changes.length}</BarButton> : null} />
 
       <Group footer="Each symbol has a minimum and maximum spread for every traffic light level, per price feed.">

@@ -102,6 +102,11 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   change, menu open), a firm double tick when an action completes (every confirmation toast, pull to refresh).
 - Motion (src/components/motion.tsx, as the Autoply app): pages slide in from the right going deeper, from the left
   coming back, fade between sections. Pull down at the top to refresh with the 12-spoke spinner.
+- Never remove a DOM node React rendered (the launch once did, l.remove(), and every page change after it crashed
+  with "This page couldn't load"). Hide it with a class instead. Verification must include in-app navigation through
+  the Worker (menu to every section, a row to a page, no reload, no page error), not only fresh page loads.
+- Names follow the desktop portal: Morning Digest, Risk Management, Liquidity Management, WD Approvals, WD Check,
+  Client 360, Notifications (behind the bell only, not in the menu), Access.
 - Desktop: a wide screen gets the "Built for mobile" sheet with a QR code to the same page, once per session.
 
 ## Website cloner

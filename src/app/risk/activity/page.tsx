@@ -19,7 +19,7 @@ export default function Activity() {
 
   return (
     <>
-      <NavBar title="Algo Activity" eyebrow={`${when(win.start, false)} to ${when(win.end, false)}`} back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="Algo Activity" eyebrow={`${when(win.start, false)} to ${when(win.end, false)}`} back={{ href: "/risk/", label: "Risk Management" }} />
       <Segmented label="Window" value={w} onChange={setW} options={[{ v: "7", label: "7 days" }, { v: "30", label: "30 days" }, { v: "90", label: "90 days" }, { v: "365", label: "Year" }]} />
       <Metrics label="Moves" items={(Object.keys(win.algos) as Algo[]).map((k) => ({ k: win.algos[k].label, v: win.algos[k].count }))} />
       <Segmented label="View" value={v} onChange={setV} options={[{ v: "moves", label: "Moves" }, { v: "score", label: "Risk score" }]} />

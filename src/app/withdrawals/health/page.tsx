@@ -12,7 +12,7 @@ export default function Health() {
   const warn = wd.health.checks.filter((c) => c.status === "warn").length;
   return (
     <>
-      <NavBar title="System health" back={{ href: "/withdrawals/", label: "Withdrawals" }} eyebrow={`${bad} down, ${warn} warnings`} />
+      <NavBar title="System health" back={{ href: "/withdrawals/", label: "WD Approvals" }} eyebrow={`${bad} down, ${warn} warnings`} />
       <Group footer="Every check the screener needs to answer a withdrawal. A check that is down sends requests to Risk.">
         {wd.health.checks.map((c) => {
           const [Icon, tint] = ICON[c.status as keyof typeof ICON] ?? ICON.warn;

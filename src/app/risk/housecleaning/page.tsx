@@ -38,7 +38,7 @@ export default function HouseCleaning() {
 
   return (
     <>
-      <NavBar title="HouseCleaning" eyebrow={`Snapshot ${when(snap)} UTC`} back={{ href: "/risk/", label: "Risk" }}
+      <NavBar title="HouseCleaning" eyebrow={`Snapshot ${when(snap)} UTC`} back={{ href: "/risk/", label: "Risk Management" }}
         trailing={<BarButton onClick={() => { set("hc.snapshot", new Date().toISOString()); say("Snapshot refreshed"); }}><RefreshCw size={16} strokeWidth={2.4} /></BarButton>} />
 
       <Metrics label="Groups" items={[{ k: "Groups", v: s.total_groups }, { k: "Cutlist", v: hc.groups.filter(isCut).length }, { k: "Reinstate", v: s.reinstate, tone: "neg" }, { k: "Review", v: s.cutlist_empty_review + s.cutlist_unknown, tone: "warn" }]} />

@@ -20,7 +20,7 @@ export default function Watchlist() {
 
   return (
     <>
-      <NavBar title="Watchlist" eyebrow={`${list.length} accounts`} back={{ href: "/risk/", label: "Risk" }}
+      <NavBar title="Watchlist" eyebrow={`${list.length} accounts`} back={{ href: "/risk/", label: "Risk Management" }}
         trailing={<BarButton onClick={() => setEdit(!edit)}>{edit ? "Done" : "Edit"}</BarButton>} />
 
       <Metrics label="Watchlist totals" items={[

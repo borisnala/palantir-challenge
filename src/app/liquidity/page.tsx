@@ -12,7 +12,7 @@ export default function Liquidity() {
   const hot = cl.symbols.filter((s) => /RED|BLACK/.test(s.effective_level ?? "")).length;
   return (
     <>
-      <NavBar title="Liquidity" eyebrow="Liquidity management" root />
+      <NavBar title="Liquidity Management" eyebrow="Control and analysis" root />
       <Group header="Control">
         <PageRow href="/liquidity/cltl/" Icon={CandlestickChart} tint="var(--red)" title="CLTL · LPTL" sub="Candle and liquidity traffic lights" detail={hot ? `${hot} red` : `${cl.symbols.length} symbols`} />
         <PageRow href="/liquidity/pg-markups/" Icon={Percent} tint="var(--blue)" title="PG Markups" sub="Spread markup per price group" detail={`${pg.pg_order.length} groups`} />

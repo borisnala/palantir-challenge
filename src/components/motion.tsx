@@ -120,12 +120,13 @@ export function DesktopNotice() {
 export function LaunchReady() {
   useEffect(() => {
     const l = document.getElementById("launch");
-    if (!l || l.classList.contains("go")) return;
+    if (!l || l.classList.contains("go") || document.documentElement.classList.contains("nolaunch")) return;
     const wait = Math.max(0, 700 - performance.now());
     const t1 = setTimeout(() => {
       l.classList.add("go");
       document.documentElement.classList.add("revealing");
-      setTimeout(() => { l.remove(); document.documentElement.classList.remove("launching", "revealing"); }, 900);
+      setTimeout(() => { l.classList.add("gone"); document.documentElement.classList.remove("launching", "revealing"); }, 900); // hide, never remove: React owns this node
+      try { sessionStorage.setItem("launched", "1"); } catch { /* private mode */ }
     }, wait);
     return () => clearTimeout(t1);
   }, []);

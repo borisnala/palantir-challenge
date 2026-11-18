@@ -19,7 +19,7 @@ export default function Cltl() {
 
   return (
     <>
-      <NavBar title="CLTL · LPTL" eyebrow={cl.profile.label} back={{ href: "/liquidity/", label: "Liquidity" }} />
+      <NavBar title="CLTL · LPTL" eyebrow={cl.profile.label} back={{ href: "/liquidity/", label: "Liquidity Management" }} />
       <Metrics label="Symbols" items={[{ k: "Symbols", v: cl.symbols.length }, { k: "Red", v: cl.symbols.filter((s) => levelTone(s.effective_level) === "red").length, tone: "neg" }, { k: "Orange", v: cl.symbols.filter((s) => /ORANGE/.test(s.effective_level ?? "")).length, tone: "warn" }]} />
       <Segmented label="Show" value={f} onChange={setF} options={[{ v: "all", label: "All symbols" }, { v: "alert", label: "On alert" }]} />
 

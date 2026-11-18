@@ -21,7 +21,7 @@ export default function Book() {
 
   return (
     <>
-      <NavBar title="Book View" eyebrow="The flagged book" back={{ href: "/liquidity/", label: "Liquidity" }} />
+      <NavBar title="Book View" eyebrow="The flagged book" back={{ href: "/liquidity/", label: "Liquidity Management" }} />
       <Segmented label="Point of view" value={pov} onChange={setPov} options={[{ v: "broker", label: "Broker P&L" }, { v: "client", label: "Client P&L" }]} />
       <Metrics label="Totals" items={[
         { k: "Accounts", v: t.count },

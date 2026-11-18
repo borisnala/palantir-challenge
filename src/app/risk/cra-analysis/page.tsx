@@ -21,7 +21,7 @@ export default function CraAnalysis() {
 
   return (
     <>
-      <NavBar title="CRA Analysis" eyebrow="Customer risk assessments" back={{ href: "/risk/", label: "Risk" }} />
+      <NavBar title="CRA Analysis" eyebrow="Customer risk assessments" back={{ href: "/risk/", label: "Risk Management" }} />
       <Metrics label="Assessments" items={[{ k: "Assessments", v: s.assessments }, { k: "Customers", v: latest.customers }, { k: "High", v: latest.overall.High, tone: "neg" }, { k: "Provisional", v: latest.provisional, tone: "warn" }]} />
 
       <Group header="Latest rating per customer">

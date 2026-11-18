@@ -36,7 +36,7 @@ export default function CraModel() {
 
   return (
     <>
-      <NavBar title="CRA Model" eyebrow={`Version ${cr.model.base_version} · ${cr.model.mode.effective} mode`} back={{ href: "/risk/", label: "Risk" }}
+      <NavBar title="CRA Model" eyebrow={`Version ${cr.model.base_version} · ${cr.model.mode.effective} mode`} back={{ href: "/risk/", label: "Risk Management" }}
         trailing={changes.length > 0 ? <BarButton onClick={() => setReview(true)}>Save {changes.length}</BarButton> : null} />
 
       <Group header="Rating thresholds" footer={`Scores run from ${M.scale.min} to ${M.scale.max}. Above High is high risk, from Medium up is medium risk.`}>

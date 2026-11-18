@@ -6,20 +6,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { ArrowDownUp, Bell, Clock, Droplets, House, Search, ShieldAlert, Users } from "lucide-react";
+import { ArrowDownUp, Clock, Droplets, House, Search, ShieldAlert, Users } from "lucide-react";
 import { useApp } from "./app-state";
 import { Glass, Spring, useSpringLoop } from "./liquid";
 import { buzz } from "@/lib/haptics";
-import { Monogram } from "./ui";
 import { Wordmark } from "./brand";
 
 const NAV = [
-  { href: "/", label: "Today", Icon: House },
-  { href: "/risk/", label: "Risk", Icon: ShieldAlert },
-  { href: "/liquidity/", label: "Liquidity", Icon: Droplets },
-  { href: "/withdrawals/", label: "Withdrawals", Icon: ArrowDownUp },
-  { href: "/search/", label: "Clients", Icon: Users },
-  { href: "/alerts/", label: "Alerts", Icon: Bell },
+  { href: "/", label: "Morning Digest", Icon: House },
+  { href: "/risk/", label: "Risk Management", Icon: ShieldAlert },
+  { href: "/liquidity/", label: "Liquidity Management", Icon: Droplets },
+  { href: "/withdrawals/", label: "WD Approvals", Icon: ArrowDownUp },
+  { href: "/search/", label: "Client 360", Icon: Users },
 ];
 
 /** The Claude app's side menu: it sits under the page, and opening it pushes the whole page to the right, where the
@@ -41,8 +39,8 @@ export function Drawer() {
       stage.style.transform = p > 0.001 ? `translateX(${p * width()}px)` : "";
       stage.classList.toggle("stage-open", p > 0.001);
     }
-    if (scrim) { scrim.style.opacity = String(p * 0.35); scrim.style.pointerEvents = p > 0.02 ? "auto" : "none"; }
-    if (panel.current) panel.current.style.transform = `translateX(${(p - 1) * width() * 0.25}px)`;
+    if (scrim) { scrim.style.opacity = String(p * 0.12); scrim.style.pointerEvents = p > 0.02 ? "auto" : "none"; }
+    if (panel.current) { panel.current.style.transform = `translateX(${(p - 1) * width() * 0.25}px)`; panel.current.style.visibility = p > 0.001 ? "visible" : "hidden"; }
   };
   const kick = useSpringLoop((dt) => {
     const m = drag.current ? false : x.current.step(dt);
@@ -125,7 +123,10 @@ export function Drawer() {
           </div>
         </>
       )}
-      <Link href="/account/" className="drawer-account"><Monogram name="DA" size={40} /><span>demo.admin<small>Administrator</small></span></Link>
+      <div className="drawer-foot">
+        <Link href="/account/" className="glassbtn-link" aria-label="Account, demo.admin"><Glass className="glassbtn round avatar-orb">DA</Glass></Link>
+        <Link href="/withdrawals/" className="pillbtn">{pending.length ? `Review ${pending.length} withdrawals` : "WD Approvals"}</Link>
+      </div>
     </nav>
   );
 }

@@ -18,7 +18,7 @@ export default function Alerts() {
 
   return (
     <>
-      <NavBar title="Alerts" eyebrow={`${unread.size} unread`} back={{ href: "/", label: "Today" }}
+      <NavBar title="Notifications" eyebrow={`${unread.size} unread`} back={{ href: "/", label: "Morning Digest" }}
         trailing={unread.size > 0 ? <BarButton onClick={() => { markRead(); say("All alerts marked read"); }}>Read All</BarButton> : null} />
 
       <Segmented label="Severity" value={f} options={OPTS} onChange={setF} />

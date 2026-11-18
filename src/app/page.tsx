@@ -42,7 +42,7 @@ export default function Today() {
 
   return (
     <>
-      <NavBar title="Today" eyebrow={`Morning digest · since ${when(digest.previous_taken_at)}`} root />
+      <NavBar title="Morning Digest" eyebrow={`Since ${when(digest.previous_taken_at)}`} root />
 
       <p className="digest">{digest.headline}</p>
 
@@ -50,7 +50,7 @@ export default function Today() {
         <h2 className="sub-head">Action required</h2>
         <SummaryCard href="/withdrawals/" Icon={ArrowDownUp} color="var(--orange)" label="Withdrawals"
           value={String(pending.length)} unit="pending review" note={`${compact(wdTotal)} in total`} />
-        <SummaryCard href="/alerts/" Icon={Bell} color="var(--red)" label="Alerts" value={String(unread.size)} unit="unread" />
+        <SummaryCard href="/alerts/" Icon={Bell} color="var(--red)" label="Notifications" value={String(unread.size)} unit="unread" />
       </section>
 
       <section className="hcards" aria-label="Flagged book">

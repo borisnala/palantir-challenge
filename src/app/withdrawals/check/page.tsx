@@ -25,7 +25,7 @@ export default function WdCheck() {
 
   return (
     <>
-      <NavBar title="WD Check" back={{ href: "/withdrawals/", label: "Withdrawals" }} eyebrow="Pre-screen a single account" />
+      <NavBar title="WD Check" back={{ href: "/withdrawals/", label: "WD Approvals" }} eyebrow="Pre-screen a single account" />
 
       <form className="checkform" onSubmit={(e) => { e.preventDefault(); run(q); }}>
         <label className="searchfield">

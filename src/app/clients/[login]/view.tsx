@@ -21,7 +21,7 @@ export function ClientView({ c }: { c: Client }) {
 
   return (
     <>
-      <NavBar title={c.name} large={false} back={{ href: "/search/", label: "Clients" }} />
+      <NavBar title={c.name} large={false} back={{ href: "/search/", label: "Client 360" }} />
 
       <header className="contact">
         <Monogram name={c.name} size={88} />

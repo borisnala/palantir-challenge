@@ -13,7 +13,7 @@ export default function Account() {
   const pending = us.pending.filter((d) => !get<Record<number, string>>("dev.decided", {})[d.id]).length;
   return (
     <>
-      <NavBar title="Account" back={{ href: "/", label: "Today" }} />
+      <NavBar title="Account" back={{ href: "/", label: "Morning Digest" }} />
       <Group>
         <Row icon={<Monogram name="DA" size={44} />} tint="transparent" title="demo.admin" subtitle="Administrator, full write access" chevron={false} />
       </Group>
