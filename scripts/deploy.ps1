@@ -1,6 +1,6 @@
 # Deploy Risk Desk only, from the owner's PC. Run from the palantir-challenge folder:
 #   powershell -ExecutionPolicy Bypass -File scripts\deploy.ps1
-# It goes to the risk-desk Pages project. The lab's _worker.js serves https://lab.borisnala.com/risktool-prototype/
+# It goes to the risk-desk Pages project. The Worker in router/ serves https://lab.borisnala.com/risktool-prototype/
 # from there, so the rest of the lab is never touched.
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path $PSScriptRoot -Parent)
@@ -18,5 +18,6 @@ Set-Content "$stage\_redirects" "/ /risktool-prototype/ 302"
 Set-Content "$stage\_headers" "/*`n  X-Robots-Tag: noindex, nofollow"
 
 npx wrangler pages deploy "$stage" --project-name risk-desk --branch main --commit-dirty=true
+Push-Location router; npx wrangler deploy; Pop-Location
 Remove-Item $stage -Recurse -Force
 Write-Host "Live at https://lab.borisnala.com/risktool-prototype/"

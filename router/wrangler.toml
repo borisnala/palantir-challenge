@@ -1,0 +1,7 @@
+name = "risktool-router"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+workers_dev = false
+routes = [
+  { pattern = "lab.borisnala.com/risktool-prototype*", zone_name = "borisnala.com" },
+]

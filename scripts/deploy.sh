@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# "deploy" (owner 2026-11-18): ship Risk Desk only. It has its own Pages project, risk-desk, and the lab's _worker.js
-# serves https://lab.borisnala.com/risktool-prototype/ from it, so this never touches the rest of the lab.
+# "deploy" (owner 2026-11-18): ship Risk Desk only, from the cloud session. It has its own Pages project, risk-desk.
+# The Worker in router/ is bound to lab.borisnala.com/risktool-prototype* and serves that path from risk-desk, so the
+# rest of the lab is never touched.
 #   bash scripts/deploy.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -25,4 +26,5 @@ if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
   export CLOUDFLARE_ACCOUNT_ID
 fi
 npx --yes wrangler@4 pages deploy "$STAGE" --project-name "$PROJECT" --branch main --commit-dirty=true
+(cd router && npx --yes wrangler@4 deploy)   # idempotent: keeps the path route in place
 echo "Live at https://lab.borisnala.com/risktool-prototype/"
