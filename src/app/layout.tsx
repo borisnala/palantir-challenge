@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppState } from "@/components/app-state";
 import { Drawer, SearchOrb, StageScrim } from "@/components/shell";
-import { DesktopNotice, LaunchReady, PullToRefresh, Transitions } from "@/components/motion";
+import { DeviceFrame, LaunchReady, PullToRefresh, Transitions } from "@/components/motion";
 import { Launch } from "@/components/brand";
 import { LightSource } from "@/components/liquid";
 import { Toast } from "@/components/ios";
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Transitions />
             <LaunchReady />
             <PullToRefresh />
-            <DesktopNotice />
+            <DeviceFrame />
             <SearchOrb />
             <StageScrim />
           </div>

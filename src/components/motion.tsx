@@ -1,5 +1,7 @@
 "use client";
 
+import { createPortal } from "react-dom";
+
 // Motion and touch, after the Autoply app: the page slides in from the right going deeper, from the left coming back,
 // and fades between sections, with a tick on each move; the bars stay still. Pull down at the top to refresh: a
 // 12-spoke spinner fills as you pull, and past 60 pt it spins with a firm tick.
@@ -9,7 +11,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { useApp } from "./app-state";
-import { Group, Row, Sheet } from "./ios";
 import { buzz, listenForChoices } from "@/lib/haptics";
 
 const SECTIONS = ["/risk", "/liquidity", "/withdrawals", "/search", "/clients", "/alerts", "/account"];
@@ -92,26 +93,40 @@ export function PullToRefresh() {
   return <div ref={spin} className="ptr" aria-hidden>{Array.from({ length: 12 }, (_, i) => <span key={i} />)}</div>;
 }
 
-export function DesktopNotice() {
-  const [open, setOpen] = useState(false);
+/** A computer or tablet sees the app as Autoply shows itself there: the phone view at iPhone size in a black frame
+ *  on a plain gray canvas, one line under it, and a code to open the same page on a phone. The app runs inside the
+ *  frame in its own page, so it scrolls, slides and lays out exactly as on a 402 px phone. */
+export function DeviceFrame() {
+  const [on, setOn] = useState(false);
+  const [src, setSrc] = useState("");
   const [svg, setSvg] = useState("");
   useEffect(() => {
-    let seen = false;
-    try { seen = sessionStorage.getItem("desktop-notice") === "1"; } catch { /* private mode */ }
-    if (seen || !matchMedia("(min-width: 700px) and (hover: hover)").matches) return;
-    QRCode.toString(location.href, { type: "svg", margin: 0, color: { dark: "#1f1e1d", light: "#00000000" } }).then(setSvg).catch(() => setSvg(""));
-    const t = setTimeout(() => setOpen(true), 400);
-    return () => clearTimeout(t);
+    if (window.self !== window.top) return;
+    const mq = matchMedia("(min-width: 700px) and (min-height: 521px)");
+    const sync = () => {
+      document.documentElement.classList.toggle("framed", mq.matches);
+      setOn(mq.matches);
+      if (mq.matches) setSrc((s) => s || location.href);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
   }, []);
-  const close = () => { setOpen(false); try { sessionStorage.setItem("desktop-notice", "1"); } catch { /* private mode */ } };
-  return (
-    <Sheet open={open} onClose={close} title="Built for mobile">
-      <div className="sheet-hero">
+  useEffect(() => {
+    if (!on) return;
+    QRCode.toString(location.href, { type: "svg", margin: 0, color: { dark: "#1f1e1d", light: "#00000000" } }).then(setSvg).catch(() => setSvg(""));
+  }, [on, src]);
+  if (!on || !src) return null;
+  return createPortal(
+    <div className="device-canvas">
+      <iframe className="device" src={src} title="Risk Tool" />
+      <aside className="device-qr" aria-label="Open on a phone">
         {svg && <div className="qr" dangerouslySetInnerHTML={{ __html: svg }} />}
-        <p className="row-sub wrap">Risk Tool is designed for a phone screen. Scan the code with your phone camera to open this page there.</p>
-      </div>
-      <Group><Row title="Continue on this screen" onClick={close} chevron={false} /></Group>
-    </Sheet>
+        <p>Scan with a phone camera to open this page there.</p>
+      </aside>
+      <p className="device-note">Built for mobile. For the best experience, open Risk Tool on your phone.</p>
+    </div>,
+    document.body,
   );
 }
 

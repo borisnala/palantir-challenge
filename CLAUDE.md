@@ -108,7 +108,11 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   the Worker (menu to every section, a row to a page, no reload, no page error), not only fresh page loads.
 - Names follow the desktop portal: Morning Digest, Risk Management, Liquidity Management, WD Approvals, WD Check,
   Client 360, Notifications (behind the bell only, not in the menu), Access.
-- Desktop: a wide screen gets the "Built for mobile" sheet with a QR code to the same page, once per session.
+- Desktop (owner 2026-11-18, "phone environment for desktop like autoply"): at 700 px wide and 521 px tall or more the
+  page shows Autoply's frame (motion.tsx DeviceFrame): the app in an iframe at 402 by up to 874, 20 px from the top,
+  radius 44, 10 px #111113 bezel, on #e9e9ee (dark #1c1c1e), one line under it, a QR code beside it when the screen is
+  over 1000 px. The app inside is the real phone layout; its address follows into the top bar. html.framed marks the
+  outer page (no launch there), html.inframe the app inside (no scroll bar).
 
 ## Website cloner
 This project started from JCodesMore/ai-website-cloner-template (MIT, see LICENSE). Its `/clone-website` command and

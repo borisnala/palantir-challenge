@@ -64,6 +64,8 @@ export function AppState({ children }: { children: React.ReactNode }) {
     const st = stack.current;
     if (st[st.length - 2] === path) st.pop();
     else if (st[st.length - 1] !== path) st.push(path);
+    // Inside the desktop phone frame, the address bar follows the screen shown, so a reload or a shared link lands there
+    if (window.self !== window.top) try { window.top?.history.replaceState(window.top.history.state, "", location.href); } catch { /* another origin */ }
   }, [path]);
   const canGoBack = useCallback(() => stack.current.length > 1, []);
 

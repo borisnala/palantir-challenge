@@ -631,3 +631,26 @@ html.menu-open, html.menu-open body { overflow: hidden; overscroll-behavior: non
 .notfound h1 { margin: 0; font-size: 22px; font-weight: 600; }
 .notfound p { margin: 0 0 8px; color: var(--label2); font-size: 15px; max-width: 300px; }
 .notfound .pillbtn { height: 52px; padding: 0 24px; display: inline-flex; align-items: center; }
+
+/* Computer or tablet (owner 2026-11-18, "phone environment for desktop like autoply"): Autoply's frame. The phone is
+   402 by 874 at most, 20 px from the top, radius 44, a 10 px black bezel, on #e9e9ee (dark #1c1c1e), one line under it.
+   The app itself runs in the iframe. The page behind is hidden. */
+html.framed, html.framed body { height: 100%; overflow: hidden; background: #e9e9ee; }
+html.framed body > :not(.device-canvas) { display: none !important; }
+.device-canvas { position: fixed; inset: 0; z-index: 100; background: #e9e9ee; }
+.device { position: absolute; top: 20px; left: 50%; width: 402px; height: calc(100dvh - 64px); max-height: 874px; margin-left: -201px;
+  border: 0; border-radius: 44px; background: var(--bg); box-shadow: 0 0 0 10px #111113, 0 20px 60px rgba(0,0,0,.25); }
+.device-note { position: absolute; left: 0; right: 0; bottom: 10px; margin: 0; text-align: center; font-size: 13px; line-height: 18px; color: #6e6e73; }
+.device-qr { position: absolute; top: 50%; left: calc(50% + 201px + 56px); transform: translateY(-50%); width: 200px; display: flex; flex-direction: column; gap: 12px;
+  font-size: 13px; line-height: 18px; color: #6e6e73; }
+.device-qr p { margin: 0; }
+.device-qr .qr { width: 132px; height: 132px; padding: 14px; border-radius: 24px; background: #fff; }
+.device-qr .qr svg { width: 100%; height: 100%; display: block; }
+@media (max-width: 1000px) { .device-qr { display: none; } }
+@media (prefers-color-scheme: dark) {
+  html.framed, html.framed body, .device-canvas { background: #1c1c1e; }
+  .device-note, .device-qr { color: #98989f; }
+}
+/* Inside the frame: an app, not a page, so no scroll bar */
+html.inframe, html.inframe body { scrollbar-width: none; }
+html.inframe::-webkit-scrollbar, html.inframe body::-webkit-scrollbar { display: none; width: 0; height: 0; }

@@ -29,7 +29,7 @@ export function Launch() {
   return (
     <>
     {/* Once per visit: a later load skips the launch before the first frame */}
-    <script dangerouslySetInnerHTML={{ __html: "try{if(sessionStorage.getItem('launched'))document.documentElement.classList.add('nolaunch')}catch(e){}" }} />
+    <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList;if(window.self!==window.top)c.add('inframe');else if(matchMedia('(min-width: 700px) and (min-height: 521px)').matches)c.add('framed','nolaunch');if(sessionStorage.getItem('launched'))c.add('nolaunch')}catch(e){}" }} />
     <div id="launch" aria-hidden>
       <svg className="launchplus" viewBox="0 0 100 100" fill="currentColor"><path d={PLUS_PATH} /></svg>
     </div>
