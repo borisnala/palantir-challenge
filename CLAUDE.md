@@ -79,6 +79,17 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   src/components/brand.tsx, never typed in a font: a geometric r with a raised plus whose bars match its weight. Black
   on white for the favicon (src/app/icon.svg) and the Home Screen icon (apple-icon.png, rendered from the same SVG).
   The wordmark is "risk tool" heavy, tight and black, with the drawn plus raised top right (the Luma placement).
+- Layout values (globals.css :root, owner 2026-11-18 "nothing overlaps"): --sat/--sab are the iPhone's top and bottom
+  safe areas. The top bar sits at --bar-top (safe area + 8), is --bar-h 52 tall and ends at --bar-bottom; content
+  starts 14 px under it. The search circle and the action pill sit --dock-gap 14 above the bottom safe area and are
+  --dock-h 60 tall; every page ends with that height + 24 of padding, so the last row always clears them. Pages use
+  the full width on a phone (16 px sides), 430 px on desktop. Never write env(safe-area-*) anywhere else.
+- Pull to refresh moves only the content (--pull on main), never the bar; the spinner sits under --bar-bottom.
+- The open menu locks the page: main is inert, the page can not scroll (html.menu-open).
+- Haptics map: light tick when a choice changes (switch, segmented, stepper, page change, ⋯ menu, menu open or close)
+  and when a drag passes its point (menu open or close, sheet dismiss, pull past refresh); firm double tick when an
+  action completes (every confirmation toast). Never before the person has touched the page.
+- Liquid Glass press: glass controls swell to 1.1 and brighten under the finger, then spring back.
 - Launch (as the Autoply app): the plus shows from the first frame and breathes, then gathers and bursts open into the
   app through a plus-shaped window, once per load only (brand.tsx Launch, motion.tsx LaunchReady). No glow, no
   gradients.

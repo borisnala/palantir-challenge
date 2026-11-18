@@ -55,7 +55,7 @@ export function NavBar({ title, eyebrow, trailing, back }: {
           <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
             <Glass className="glassbtn round"><Bell size={20} strokeWidth={2} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}</Glass>
           </Link>
-          <button className="glassbtn-link" aria-label="More" aria-expanded={menu} onClick={() => setMenu(!menu)}>
+          <button className="glassbtn-link" aria-label="More" aria-expanded={menu} onClick={() => { buzz(); setMenu(!menu); }}>
             <Glass className="glassbtn round"><Ellipsis size={22} strokeWidth={2} /></Glass>
           </button>
         </span>
@@ -177,6 +177,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
     const d = drag.current; if (!d) return;
     let ny = e.clientY - d.y0;
     if (ny < 0) ny = -Math.sqrt(-ny) * 3; // rubber band past the top
+    const h = panel.current?.offsetHeight || 600;
+    if ((y.current.x > h / 3) !== (ny > h / 3)) buzz(); // a tick when the drag passes the dismiss point
     y.current.v = ((e.clientY - d.last) / Math.max(1, e.timeStamp - d.lt)) * 1000;
     d.last = e.clientY; d.lt = e.timeStamp;
     y.current.x = ny; kick();

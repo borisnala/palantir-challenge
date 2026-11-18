@@ -24,6 +24,9 @@ function switchEl() {
 
 export function buzz(firm = false) {
   try {
+    // Only after the person has touched the page: a tick on its own would be wrong, and browsers refuse it
+    const ua = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+    if (ua && !ua.hasBeenActive) return;
     if (typeof navigator !== "undefined" && navigator.vibrate) { navigator.vibrate(firm ? [12, 40, 12] : 8); return; }
     const s = switchEl();
     if (!s) return;

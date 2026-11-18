@@ -51,12 +51,12 @@ export function PullToRefresh() {
       ptr.style.opacity = d > 0 ? "1" : "0";
       ptr.style.translate = `-50% ${Math.max(0, (Math.min(d, 90) - 28) / 2)}px`;
       ptr.classList.toggle("spin", spinning);
-      main.style.transform = d ? `translateY(${d}px)` : "";
+      main.style.setProperty("--pull", `${d}px`);
     };
     const start = (e: TouchEvent) => {
       const s = st.current;
-      if (s.busy || window.scrollY > 0 || e.touches.length > 1 || document.body.style.overflow === "hidden") return;
-      s.y0 = e.touches[0].clientY; s.d = 0; main.style.transition = "none";
+      if (s.busy || window.scrollY > 0 || e.touches.length > 1 || document.body.style.overflow === "hidden" || document.documentElement.classList.contains("menu-open") || e.touches[0].clientX < 24) return;
+      s.y0 = e.touches[0].clientY; s.d = 0; main.classList.remove("pull-settle");
     };
     const move = (e: TouchEvent) => {
       const s = st.current;
@@ -64,17 +64,18 @@ export function PullToRefresh() {
       const dy = e.touches[0].clientY - s.y0;
       if (dy <= 0 || window.scrollY > 0) { s.y0 = null; paint(0); return; }
       if (e.cancelable) e.preventDefault();
+      const was = s.d;
       s.d = Math.min(110, dy * 0.45);
+      if (was < 60 && s.d >= 60) buzz(); // the tick when the pull passes the refresh point, as iOS does
       paint(s.d);
     };
     const end = async () => {
       const s = st.current;
       if (s.y0 === null) return;
       s.y0 = null;
-      main.style.transition = "transform .32s cubic-bezier(.32,.72,0,1)";
+      main.classList.add("pull-settle");
       if (s.d < 60) { paint(0); return; }
       s.busy = true;
-      buzz(true);
       paint(62, true);
       await new Promise((r) => setTimeout(r, 700));
       set("refreshedAt", new Date().toISOString());

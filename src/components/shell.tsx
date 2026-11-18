@@ -51,7 +51,18 @@ export function Drawer() {
     return m;
   });
 
-  useEffect(() => { x.current.target = drawer ? 1 : 0; if (drawer) buzz(); kick(); }, [drawer]); // eslint-disable-line react-hooks/exhaustive-deps
+  const started = useRef(false);
+  useEffect(() => {
+    x.current.target = drawer ? 1 : 0;
+    // While the menu is open the page behind can not be touched, focused or scrolled
+    document.documentElement.classList.toggle("menu-open", drawer);
+    const main = document.querySelector("main.screen") as HTMLElement | null;
+    if (main) main.inert = drawer;
+    if (panel.current) panel.current.inert = !drawer;
+    if (started.current) buzz();
+    started.current = true;
+    kick();
+  }, [drawer]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setDrawer(false); }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Edge swipe to open, swipe on the pushed page or the menu to close
@@ -67,7 +78,9 @@ export function Drawer() {
       const d = drag.current; if (!d) return;
       const t = e.touches[0];
       d.v = ((t.clientX - d.last) / Math.max(1, e.timeStamp - d.t)) * 1000; d.last = t.clientX; d.t = e.timeStamp;
+      const before = x.current.x;
       x.current.x = Math.max(0, Math.min(1.04, d.p0 + (t.clientX - d.x0) / width()));
+      if ((before < 0.5) !== (x.current.x < 0.5)) buzz(); // a tick as the drag passes the point where the menu opens or closes
       x.current.v = d.v / width();
       if (e.cancelable) e.preventDefault();
       kick();
