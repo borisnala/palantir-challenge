@@ -80,7 +80,7 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   on white for the favicon (src/app/icon.svg) and the Home Screen icon (apple-icon.png, rendered from the same SVG).
   The wordmark is "risk tool" heavy, tight and black, with the drawn plus raised top right (the Luma placement).
 - Layout values (globals.css :root, owner 2026-11-18 "nothing overlaps"): --sat/--sab are the iPhone's top and bottom
-  safe areas. The top bar sits at --bar-top (safe area - 10, at least 8: right under the Dynamic Island, as the Claude app), is --bar-h 52 tall and ends at --bar-bottom; content
+  safe areas. The top bar sits at --bar-top (safe area - 10, but never above 46 on a notch or island phone: right under the island as the Claude app, clear of the clock on a notch), is --bar-h 52 tall and ends at --bar-bottom; content
   starts 14 px under it. The search circle and the action pill sit --dock-gap 14 above the bottom safe area and are
   --dock-h 60 tall; every page ends with that height + 24 of padding, so the last row always clears them. Pages use
   the full width on a phone (16 px sides), 430 px on desktop. Never write env(safe-area-*) anywhere else.

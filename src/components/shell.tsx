@@ -114,6 +114,7 @@ export function Drawer() {
         <Wordmark />
         <Link href="/search/" className="glassbtn-link" aria-label="Search clients"><Glass className="glassbtn round"><Search size={20} strokeWidth={2} /></Glass></Link>
       </div>
+      <div className="drawer-scroll">
       <div className="drawer-nav">
         {NAV.map(({ href, label, Icon }) => {
           const on = href === "/" ? path === "/" : path.startsWith(href.replace(/\/$/, "")) || (href === "/search/" && path.startsWith("/clients"));
@@ -154,6 +155,7 @@ export function Drawer() {
           </>
         );
       })()}
+      </div>
       <div className="drawer-foot">
         <Link href="/account/" className="glassbtn-link" aria-label="Account, demo.admin"><Glass className="glassbtn round avatar-orb">DA</Glass></Link>
         <Link href="/withdrawals/" className="pillbtn">{pending.length ? `Review ${pending.length} withdrawals` : "WD Approvals"}</Link>
