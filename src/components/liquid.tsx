@@ -61,10 +61,32 @@ export function LightSource() {
       x = e.clientX / innerWidth; y = e.clientY / innerHeight;
       if (!raf) raf = requestAnimationFrame(apply);
     };
+    // The press, as in the owner's recording: the glass under the finger swells, and a soft light pools where the
+    // finger is and follows it while it stays down. --px and --py place the light inside the pressed glass.
+    let pressed: HTMLElement | null = null;
+    const spot = (e: PointerEvent) => {
+      if (!pressed) return;
+      const r = pressed.getBoundingClientRect();
+      pressed.style.setProperty("--px", `${(((e.clientX - r.left) / r.width) * 100).toFixed(1)}%`);
+      pressed.style.setProperty("--py", `${(((e.clientY - r.top) / r.height) * 100).toFixed(1)}%`);
+    };
+    const press = (e: PointerEvent) => {
+      move(e);
+      const host = (e.target as Element)?.closest?.(".glassbtn-link, .titlebtn, .pillbtn");
+      pressed = (host?.matches(".lg") ? host : host?.querySelector(".lg")) as HTMLElement | null ?? (host?.classList.contains("pillbtn") ? host as HTMLElement : null);
+      if (pressed) { spot(e); pressed.classList.add("lg-press"); }
+    };
+    const drag = (e: PointerEvent) => { move(e); spot(e); };
+    const release = () => { pressed?.classList.remove("lg-press"); pressed = null; };
     apply();
-    addEventListener("pointermove", move, { passive: true });
-    addEventListener("pointerdown", move, { passive: true });
-    return () => { removeEventListener("pointermove", move); removeEventListener("pointerdown", move); };
+    addEventListener("pointermove", drag, { passive: true });
+    addEventListener("pointerdown", press, { passive: true });
+    addEventListener("pointerup", release, { passive: true });
+    addEventListener("pointercancel", release, { passive: true });
+    return () => {
+      removeEventListener("pointermove", drag); removeEventListener("pointerdown", press);
+      removeEventListener("pointerup", release); removeEventListener("pointercancel", release);
+    };
   }, []);
   return null;
 }

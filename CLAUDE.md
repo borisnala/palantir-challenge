@@ -97,7 +97,14 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
 - Haptics map: light tick when a choice changes (switch, segmented, stepper, page change, ⋯ menu, menu open or close)
   and when a drag passes its point (menu open or close, sheet dismiss, pull past refresh); firm double tick when an
   action completes (every confirmation toast). Never before the person has touched the page.
-- Liquid Glass press: glass controls swell to 1.1 and brighten under the finger, then spring back.
+- Liquid Glass (owner 2026-11-19, from his Outlook recording; physics, numbers and the per-control map in
+  docs/LIQUID_GLASS.md, read it before touching glass): pressed glass swells to 1.12 and a light pools under the finger
+  and follows it (LightSource, .lg-press). The segmented thumb lifts into a clear lens on touch, magnifies the labels,
+  fringes red and blue at its rim, follows the finger, rubber-bands past the ends and sinks back on release, built from
+  the page so Safari shows it too. The more menu grows out of its button. Reduce Transparency turns glass solid.
+- Live account (owner 2026-11-19, "how would a correct financier visualise floating"): equity, balance, floating and
+  margin level, floating P&L over two minutes autoscaled with a last-value tag, and each position with open and
+  current price. P&L comes from price, (price - open) x lots x contract size, with prices from distill.py PRICE.
 - Launch (as the Autoply app): the plus shows from the first frame and breathes, then gathers and bursts open into the
   app through a plus-shaped window, once per load only (brand.tsx Launch, motion.tsx LaunchReady). No glow, no
   gradients.

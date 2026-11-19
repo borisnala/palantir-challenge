@@ -113,47 +113,103 @@ function LineChart({ days, values, onScrub }: { days: number[]; values: number[]
   );
 }
 
-/** Live floating P&L for open positions: each one moves a little every second, as a price feed would move it. */
+/** The live book, read the way a dealer reads it: each open position has an open price and a current price, and its
+ *  floating P&L is (current - open) x lots x contract size, in USD (divided by the price for a USD-base pair). The
+ *  prices move every second, a little and with a pull back toward where they started, the way a quiet market does.
+ *  Equity is balance + credit + floating, margin level is equity over used margin. Simulated, the demo has no feed. */
+type Pos = Profile["exposure"]["symbols"][number];
+const pnlOf = (r: Pos, price: number) => (price - r.open_price) * r.gross_lots * r.contract_size * (r.direction === "LONG" ? 1 : -1) / (r.usd_base ? price : 1);
+const WINDOW = 120; // seconds of history on the chart
+
+function seeded(seed: number) {
+  let x = seed % 2147483647 || 1;
+  return () => (x = (x * 16807) % 2147483647) / 2147483647;
+}
+function walk(r: Pos, price: number, u: number) {
+  return price + (u - 0.5) * 2 * r.price * 0.00006 - (price - r.price) * 0.03;
+}
+
 function useLive(p: Profile, seed: number) {
   const rows = p.exposure.symbols;
-  const start = rows.map((r) => r.floating);
-  // a calm feed: each second a step of about 0.004% of the position's notional, pulled back toward where it opened
-  const step = (v: number, i: number, r: number) => +(v + (r - 0.5) * rows[i].gross_notional * 0.00008 - (v - start[i]) * 0.04).toFixed(2);
-  const [fl, setFl] = useState(start);
-  const [trail, setTrail] = useState<number[]>(() => seedTrail(start.reduce((a, b) => a + b, 0), rows.reduce((a, r) => a + r.gross_notional, 0), seed));
-  const [dir, setDir] = useState<0 | 1 | -1>(0);
+  // the two minutes before the page opened, so the chart has history from the first frame
+  const [hist] = useState(() => {
+    const rnd = seeded(seed);
+    let px = rows.map((r) => r.price);
+    const out: number[][] = [px];
+    for (let t = 1; t < WINDOW; t++) { px = px.map((v, i) => walk(rows[i], v, rnd())); out.unshift(px); }
+    return out;
+  });
+  const [prices, setPrices] = useState(() => hist[hist.length - 1]);
+  const [series, setSeries] = useState(() => hist.map((px) => px.reduce((a, v, i) => a + pnlOf(rows[i], v), 0)));
+  const [moves, setMoves] = useState<number[]>(() => rows.map(() => 0));
   useEffect(() => {
     if (!rows.length) return;
     const id = setInterval(() => {
-      setFl((prev) => {
-        const next = prev.map((v, i) => step(v, i, Math.random()));
-        const s0 = prev.reduce((a, b) => a + b, 0), s1 = next.reduce((a, b) => a + b, 0);
-        setDir(s1 > s0 ? 1 : s1 < s0 ? -1 : 0);
-        setTrail((t) => [...t.slice(-59), s1]);
+      setPrices((prev) => {
+        const next = prev.map((v, i) => walk(rows[i], v, Math.random()));
+        setMoves(next.map((v, i) => Math.sign(v - prev[i])));
+        setSeries((sr) => [...sr.slice(-(WINDOW - 1)), next.reduce((a, v, i) => a + pnlOf(rows[i], v), 0)]);
         return next;
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [rows]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rows]);
+  const fl = rows.map((r, i) => pnlOf(r, prices[i]));
   const floating = fl.reduce((a, b) => a + b, 0);
-  return { fl, floating, equity: (p.identity.balance ?? 0) + (p.identity.credit ?? 0) + floating, trail, dir };
+  const equity = (p.identity.balance ?? 0) + (p.identity.credit ?? 0) + floating;
+  const margin = rows.reduce((a, r) => a + r.gross_notional, 0) / (p.identity.leverage || 100);
+  return { prices, fl, floating, equity, margin, level: margin ? (equity / margin) * 100 : null, series, moves };
 }
 
-/** The last minute before the page opened, so the trail is never empty: a seeded walk that ends at the current value. */
-function seedTrail(end: number, notional: number, seed: number) {
-  let x = seed % 2147483647 || 1;
-  const rnd = () => (x = (x * 16807) % 2147483647) / 2147483647;
-  const out = [end];
-  for (let i = 0; i < 40; i++) out.unshift(out[0] - (rnd() - 0.5) * notional * 0.00008);
-  return out;
+/** Floating P&L over the last two minutes: green above zero, red below, the zero line dashed, a y axis on the right,
+ *  a time axis under it, and the latest value in a tag at the right edge, as a trading terminal draws it. */
+function FloatChart({ values }: { values: number[] }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [w, setW] = useState(320);
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    const ro = new ResizeObserver(() => setW(el.clientWidth));
+    ro.observe(el); setW(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+  const H = 132, axis = 58, top = 8, bottom = 20, cw = Math.max(80, w - axis);
+  // scaled to the range the book actually moved through, as a terminal autoscales; zero shows only when it is crossed
+  const mn = Math.min(...values), mx = Math.max(...values), pad = Math.max((mx - mn) * 0.2, Math.abs(mx) * 0.004, 1);
+  const lo = mn - pad, hi = mx + pad;
+  const t = ticks(lo, hi), y0 = t[0], y1 = t[t.length - 1];
+  const x = (i: number) => ((i + WINDOW - values.length) / (WINDOW - 1)) * cw;
+  const y = (v: number) => top + (1 - (v - y0) / (y1 - y0 || 1)) * (H - top - bottom);
+  const line = values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  const zy = Math.max(top, Math.min(H - bottom, y(0))), last = values[values.length - 1];
+  const area = `${line}L${x(values.length - 1)},${zy}L${x(0)},${zy}Z`;
+  return (
+    <div ref={box} className="fchart">
+      <svg width={w} height={H} role="img" aria-label={`Floating P&L over the last two minutes, now ${money(last, true)}`}>
+        <defs>
+          <clipPath id="f-above"><rect x="0" y="0" width={cw} height={zy} /></clipPath>
+          <clipPath id="f-below"><rect x="0" y={zy} width={cw} height={H} /></clipPath>
+        </defs>
+        {t.map((v) => (
+          <g key={v}>
+            <line x1="0" x2={cw} y1={y(v)} y2={y(v)} className={v === 0 ? "lc-zero" : "lc-grid"} />
+            <text x={cw + 8} y={y(v) + 4} className="lc-label">{compact(v)}</text>
+          </g>
+        ))}
+        {[[0, "2 min"], [WINDOW / 2, "1 min"], [WINDOW - 1, "Now"]].map(([i, l]) => (
+          <text key={l} x={Math.min(cw - 22, (Number(i) / (WINDOW - 1)) * cw)} y={H - 4} className="lc-label">{l}</text>
+        ))}
+        <path d={area} clipPath="url(#f-above)" className="f-area-pos" />
+        <path d={area} clipPath="url(#f-below)" className="f-area-neg" />
+        <path d={line} clipPath="url(#f-above)" className="f-line-pos" />
+        <path d={line} clipPath="url(#f-below)" className="f-line-neg" />
+        <circle cx={x(values.length - 1)} cy={y(last)} r="3.5" className={last >= 0 ? "f-dot-pos" : "f-dot-neg"} />
+      </svg>
+      <span className={`f-tag ${last >= 0 ? "f-tag-pos" : "f-tag-neg"}`} style={{ top: y(last) - 11 }}>{compact(last, true)}</span>
+    </div>
+  );
 }
 
-function Trail({ values }: { values: number[] }) {
-  if (values.length < 2) return <svg className="trail" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden />;
-  const lo = Math.min(...values), hi = Math.max(...values), s = hi - lo || 1;
-  const pts = values.map((v, i) => `${(i / 59) * 100},${26 - ((v - lo) / s) * 24}`).join(" ");
-  return <svg className="trail" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden><polyline points={pts} vectorEffect="non-scaling-stroke" /></svg>;
-}
+const fmt = (v: number, d: number) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 
 /** Months of trading days, Monday to Friday, each day green or red, as a Fitness month grid. */
 function monthsOf(daily: number[][]) {
@@ -256,15 +312,26 @@ export function Client360({ c }: { c: Client }) {
         {tab === "overview" && (
           <>
             {isLive && (
-              <section className={`livecard ${live.dir > 0 ? "tick-up" : live.dir < 0 ? "tick-down" : ""}`} aria-live="off">
-                <span className="eyebrow"><i className="live-dot" />Live equity</span>
+              <>
+              <section className="livecard" aria-live="off">
+                <span className="live-head"><span className="eyebrow"><i className="live-dot" />Live account</span><span className="muted">Simulated feed, 1 s</span></span>
+                <span className="live-k">Equity</span>
                 <b className="live-equity">{money(live.equity)}</b>
-                <span className="live-row"><span>Floating</span><Pnl v={live.floating} /></span>
-                <Trail values={live.trail} />
-                <span className="live-pos">
-                  {p.exposure.symbols.map((r, i) => <span key={r.symbol}><b>{r.symbol}</b> {r.direction === "LONG" ? "Long" : "Short"} {num(r.gross_lots, 2)} <Pnl v={live.fl[i]} short /></span>)}
-                </span>
+                <div className="live-grid">
+                  <div><span>Balance</span><b>{compact(p.identity.balance)}</b></div>
+                  <div><span>Floating</span><b className={live.floating >= 0 ? "pos" : "neg"}>{compact(live.floating, true)}</b></div>
+                  <div><span>Margin level</span><b>{live.level === null ? "None" : `${num(live.level, 0)}%`}</b></div>
+                </div>
+                <FloatChart values={live.series} />
               </section>
+              <Group header={`Open positions · ${p.exposure.symbols.length}`} footer="Price moves every second. P&L is the price change times lots times contract size.">
+                {p.exposure.symbols.map((r, i) => (
+                  <Row key={r.symbol} title={<span>{r.symbol} <Chip tone={r.direction === "LONG" ? "green" : "red"}>{r.direction === "LONG" ? "Buy" : "Sell"} {num(r.gross_lots, 2)}</Chip></span>}
+                    subtitle={<span className="px"><span>Open {fmt(r.open_price, r.digits)}</span><span className={`px-now ${live.moves[i] > 0 ? "px-up" : live.moves[i] < 0 ? "px-down" : ""}`} key={live.prices[i]}>{fmt(live.prices[i], r.digits)}</span></span>}
+                    detail={<Pnl v={live.fl[i]} />} chevron={false} />
+                ))}
+              </Group>
+              </>
             )}
 
             <Group header="Assessment">

@@ -237,6 +237,24 @@ AS_OF = cp["windows"]["as_of"]
 NOTIONAL = {"XAUUSD": 266700, "XAGUSD": 155000, "EURUSD": 108600, "GBPUSD": 127000, "USDJPY": 100000, "AUDUSD": 66000,
             "NZDUSD": 60000, "USDCAD": 100000, "GBPJPY": 127000, "TECH100": 402500, "SP500": 300000, "DJ30": 450000,
             "DE40": 240000, "USOIL": 70000, "ETHUSD": 3000, "BTCUSD": 90000}
+# price, contract size, digits, and whether P&L is in the quote currency of a USD-base pair (USDJPY, USDCAD)
+PRICE = {"XAUUSD": (2650.0, 100, 2, False), "XAGUSD": (31.2, 5000, 3, False), "EURUSD": (1.085, 100000, 5, False),
+         "GBPUSD": (1.27, 100000, 5, False), "AUDUSD": (0.66, 100000, 5, False), "NZDUSD": (0.6, 100000, 5, False),
+         "USDJPY": (151.2, 100000, 3, True), "USDCAD": (1.36, 100000, 5, True), "GBPJPY": (192.4, 100000, 3, True),
+         "TECH100": (20150.0, 20, 1, False), "SP500": (5950.0, 50, 1, False), "DJ30": (43200.0, 10, 0, False),
+         "DE40": (19400.0, 12, 1, False), "USOIL": (70.2, 1000, 2, False), "ETHUSD": (3300.0, 1, 2, False), "BTCUSD": (90000.0, 1, 1, False)}
+
+
+def priced(sym, side, lots, floating):
+    """Open and current price for a position, so that (price - open) x lots x contract size equals its floating P&L."""
+    price, cs, digits, usd_base = PRICE.get(sym, (100.0, 1000, 2, False))
+    sign = 1 if side == "LONG" else -1
+    per = lots * cs * sign / (price if usd_base else 1)
+    open_ = price - (floating / per if per else 0)
+    return {"price": price, "open_price": round(open_, digits), "contract_size": cs, "digits": digits, "usd_base": usd_base,
+            "gross_notional": r2(lots * cs * (1 if usd_base else price))}
+
+
 POOL = ["XAUUSD", "EURUSD", "GBPUSD", "XAGUSD", "TECH100", "SP500", "DJ30", "AUDUSD", "USDJPY", "USOIL", "DE40", "NZDUSD"]
 BUCKETS = ["<3m", "3-15m", "15m-1h", "1-4h", "4-24h", ">1d"]
 STYLE = {"<3m": "Scalper", "3-15m": "Scalper", "15m-1h": "Intraday trader", "1-4h": "Intraday trader", "4-24h": "Day trader", ">1d": "Swing trader"}
@@ -297,7 +315,8 @@ def real_profile():
         "windows": {**pick(win, "t_all", "t180", "t30", "fpl", "t_all_net", "t_all_commission", "t_all_swap",
                            "lifetime_deposits", "lifetime_withdrawals"), "hpov": win["hpov"],
                     "fpl_check": pick(win["fpl_reconciliation"], "account_fpl", "position_floating", "difference", "status")},
-        "exposure": {"symbols": [pick(x, "symbol", "direction", "gross_lots", "gross_notional", "floating") for x in cp["exposure"]["symbols"]],
+        "exposure": {"symbols": [{**pick(x, "symbol", "direction", "gross_lots", "floating"), **priced(x["symbol"], x["direction"], x["gross_lots"], x["floating"])}
+                                 for x in cp["exposure"]["symbols"]],
                      "totals": cp["exposure"]["totals"]},
         "group_changes": [{"day": c["day"], "title": f"{c['from_tier']} to {c['to_tier']}" if c["from_tier"] else f"Opened in {c['to_tier']}",
                            "sub": "Manual move" if c["source"] == "manual" else c["source"]} for c in cp["group_timeline"]["changes"]]
@@ -415,8 +434,8 @@ def variant(c, base):
     pos = op.get("top_symbols") or []
     fpl = c["fpl"] if c["fpl"] is not None else (op.get("fpl") or 0)
     tl = sum(l for _, l in pos) or 1
-    exp_rows = [{"symbol": sy, "direction": "SHORT" if net < 0 else "LONG", "gross_lots": l, "gross_notional": r2(l * NOTIONAL.get(sy, 100000)),
-                 "floating": r2(fpl * l / tl)} for sy, l in pos]
+    exp_rows = [{"symbol": sy, "direction": "SHORT" if net < 0 else "LONG", "gross_lots": l, "floating": r2(fpl * l / tl),
+                 **priced(sy, "SHORT" if net < 0 else "LONG", l, fpl * l / tl)} for sy, l in pos]
     gn = sum(x["gross_notional"] for x in exp_rows)
     bal = c["balance"] or 0
     exposure = {"symbols": exp_rows, "totals": {"gross_notional": r2(gn), "net_notional": r2(gn if net >= 0 else -gn), "floating": r2(fpl),

@@ -226,21 +226,44 @@ export function Switch({ on, onChange, label }: { on: boolean; onChange: () => v
 }
 
 export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { v: T; label: string }[]; onChange: (v: T) => void; label: string }) {
-  // The thumb is a drop of glass on a spring: it stretches while it travels and settles with a small wobble.
+  // iOS 26 segmented control, from the owner's screen recording (2026-11-19). At rest the thumb is a solid pill. Touch
+  // it and it lifts out of the track into a clear lens, taller than the track, with a thin bright rim: the labels under
+  // it are magnified, and the curved edges split the light into a red and a blue fringe. It follows the finger on a
+  // stiff spring (React Bits FluidGlass: omega 30, damping 0.86), stretches along its travel (1 + speed / 1800, at
+  // most 0.55 x 0.5), rubber-bands past the ends, and on release sinks back into the track and springs to the nearest
+  // segment with a small overshoot. Built from the page itself, so it works in Safari as well as Chromium.
   const i = Math.max(0, options.findIndex((o) => o.v === value));
   const track = useRef<HTMLDivElement>(null);
   const thumb = useRef<HTMLSpanElement>(null);
+  const copy = useRef<HTMLSpanElement>(null);
   const sx = useRef(new Spring(-1, 360, 26));
+  const lift = useRef(new Spring(0, 484, 24));
+  const drag = useRef<{ off: number; x0: number; last: number; t: number; moved: boolean } | null>(null);
+  const skipClick = useRef(false);
+  const unit = () => { const el = track.current; return el ? (el.clientWidth - 4) / options.length : 0; };
+
   const kick = useSpringLoop((dt) => {
-    const m = sx.current.step(dt);
-    if (thumb.current) { const { sx: kx, sy: ky } = stretch(sx.current.v, 0.25); thumb.current.style.transform = `translateX(${sx.current.x}px) scale(${kx}, ${ky})`; }
-    return m;
+    const d = drag.current;
+    const m1 = d ? false : sx.current.step(dt);
+    const m2 = lift.current.step(dt);
+    const L = Math.max(0, lift.current.x);
+    const { sx: kx, sy: ky } = stretch(sx.current.v * 1.2, 0.27);
+    if (thumb.current) {
+      thumb.current.style.transform = `translateX(${sx.current.x}px) scale(${kx * (1 + 0.14 * L)}, ${ky * (1 + 0.42 * L)})`;
+      thumb.current.style.setProperty("--lift", L.toFixed(3));
+      thumb.current.style.zIndex = L > 0.02 ? "2" : "0"; // the fill sits under the labels, the lifted lens over them
+    }
+    if (copy.current) copy.current.style.setProperty("--cx", `${-sx.current.x}px`);
+    return m1 || m2 || !!d;
   });
+
   useEffect(() => {
     const el = track.current; if (!el) return;
     const place = (instant: boolean) => {
-      const w = (el.clientWidth - 4) / options.length;
+      const w = unit();
       if (thumb.current) thumb.current.style.width = `${w}px`;
+      if (copy.current) copy.current.style.setProperty("--tw", `${el.clientWidth - 4}px`);
+      if (drag.current) return;
       sx.current.target = i * w;
       if (instant || sx.current.x < 0) { sx.current.x = i * w; sx.current.v = 0; }
       kick();
@@ -250,11 +273,58 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     ro.observe(el);
     return () => ro.disconnect();
   }, [i, options.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const local = (e: React.PointerEvent) => e.clientX - (track.current?.getBoundingClientRect().left ?? 0) - 2;
+  const down = (e: React.PointerEvent) => {
+    track.current?.setPointerCapture?.(e.pointerId); // keep the drag when the finger leaves the track
+    const w = unit(), px = local(e);
+    const onThumb = px >= sx.current.x && px <= sx.current.x + w;
+    drag.current = { off: onThumb ? px - sx.current.x : w / 2, x0: px, last: px, t: e.timeStamp, moved: false };
+    lift.current.target = 1;
+    kick();
+  };
+  const move = (e: React.PointerEvent) => {
+    const d = drag.current; if (!d) return;
+    const px = local(e), w = unit(), max = w * (options.length - 1);
+    if (Math.abs(px - d.x0) > 5) d.moved = true;
+    if (!d.moved) return;
+    let x = px - d.off;
+    if (x < 0) x = -Math.sqrt(-x) * 3; else if (x > max) x = max + Math.sqrt(x - max) * 3; // rubber band past the ends
+    const dt = Math.max(1, e.timeStamp - d.t) / 1000;
+    sx.current.v = sx.current.v * 0.4 + ((x - sx.current.x) / dt) * 0.6;
+    sx.current.x = x; d.last = px; d.t = e.timeStamp;
+    kick();
+  };
+  const up = (cancel: boolean) => {
+    const d = drag.current; if (!d) return;
+    drag.current = null;
+    lift.current.target = 0;
+    const w = unit();
+    if (d.moved && !cancel) {
+      const j = Math.max(0, Math.min(options.length - 1, Math.round(sx.current.x / w)));
+      skipClick.current = true;
+      sx.current.target = j * w;
+      if (j !== i) { buzz(); onChange(options[j].v); }
+    } else sx.current.target = i * w;
+    kick();
+  };
+
   return (
-    <div ref={track} className="segmented" role="tablist" aria-label={label} style={{ ["--n" as string]: options.length }}>
-      <span ref={thumb} className="seg-thumb" aria-hidden />
+    <div ref={track} className="segmented" role="tablist" aria-label={label} style={{ ["--n" as string]: options.length }}
+      onPointerDown={down} onPointerMove={move} onPointerUp={() => up(false)} onPointerCancel={() => up(true)}>
+      <span ref={thumb} className="seg-thumb" aria-hidden>
+        <span className="seg-fill" />
+        <span ref={copy} className="seg-lens">
+          <span className="seg-copy">{options.map((o) => <span key={o.v} className={o.v === value ? "on" : ""}>{o.label}</span>)}</span>
+          <span className="seg-edge">
+            <span className="seg-copy seg-fr">{options.map((o) => <span key={o.v}>{o.label}</span>)}</span>
+            <span className="seg-copy seg-fb">{options.map((o) => <span key={o.v}>{o.label}</span>)}</span>
+          </span>
+        </span>
+      </span>
       {options.map((o) => (
-        <button key={o.v} role="tab" aria-selected={o.v === value} onClick={() => onChange(o.v)}>{o.label}</button>
+        <button key={o.v} role="tab" aria-selected={o.v === value}
+          onClick={() => { if (skipClick.current) { skipClick.current = false; return; } onChange(o.v); }}>{o.label}</button>
       ))}
     </div>
   );
