@@ -23,9 +23,24 @@ const section = (p: string) => SECTIONS.find((s) => p.startsWith(s)) ?? "/";
 let ghostTimer: ReturnType<typeof setTimeout> | null = null;
 export function ghost(ms: number) {
   if (typeof document === "undefined" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  document.documentElement.classList.add("ghosting");
+  const root = document.documentElement;
+  // Each outline block covers exactly its own line of text, measured from the text, so a label keeps the empty space
+  // around it (owner 2026-11-19, "still attached"). Padding, margins and layout stay as they are.
+  const marked: HTMLElement[] = [];
+  document.querySelectorAll<HTMLElement>("main.screen > :not(.topbar):not(.scroll-edge) :is(span, b, p, h1, h2, h3, small, strong, em, label, a, button)").forEach((el) => {
+    if (el.children.length || !el.textContent?.trim()) return;
+    const box = el.getBoundingClientRect();
+    const range = document.createRange(); range.selectNodeContents(el);
+    const t = range.getBoundingClientRect();
+    if (!t.width || !box.width) return;
+    const top = Math.max(0, t.top - box.top + 2), bottom = Math.max(0, box.bottom - t.bottom + 2);
+    const left = Math.max(0, t.left - box.left), right = Math.max(0, box.right - t.right);
+    el.style.clipPath = `inset(${top}px ${right}px ${bottom}px ${left}px round 6px)`;
+    marked.push(el);
+  });
+  root.classList.add("ghosting");
   if (ghostTimer) clearTimeout(ghostTimer);
-  ghostTimer = setTimeout(() => document.documentElement.classList.remove("ghosting"), ms);
+  ghostTimer = setTimeout(() => { root.classList.remove("ghosting"); marked.forEach((el) => { el.style.clipPath = ""; }); }, ms);
 }
 
 export function Transitions() {

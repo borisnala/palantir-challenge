@@ -1038,5 +1038,10 @@ main.screen.pull-settle > :not(.topbar):not(.scroll-edge) { transition: transfor
 .scroll-edge-bottom { position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--sab) + var(--dock-gap) + var(--dock-h) + 22px); z-index: 19; pointer-events: none;
   background: linear-gradient(transparent, color-mix(in srgb, var(--bg) 88%, transparent) 55%); }
 html.refreshing .cmdbar > * { opacity: .45; }
-/* Outlines match the width of their own text, as Apple's placeholders do: a short label is a short block */
-html.ghosting main.screen > :not(.topbar):not(.scroll-edge) :is(span, b, p, h1, h2, h3, small, strong, em, label, a, button):not(:has(*)) { width: fit-content; max-width: 100%; }
+
+/* Dark mode press (owner 2026-11-19, "no light in the button, natural Apple"): no spotlight under the finger. The
+   glass swells and lightens evenly, then springs back. Light mode keeps only a faint, even brightening as well. */
+.lg::after, .pillbtn::after { display: none; }
+.glassbtn.lg-press, .titlecap.lg-press { filter: brightness(1.04); }
+.lg-press::before { filter: none; }
+@media (prefers-color-scheme: dark) { .glassbtn.lg-press, .titlecap.lg-press { filter: brightness(1.18); } }

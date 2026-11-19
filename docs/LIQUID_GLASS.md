@@ -45,7 +45,7 @@ Glass is for the control layer only. Content (rows, cards, charts, numbers) stay
 
 | Control | Where | Glass behaviour |
 |---|---|---|
-| Round bar buttons (menu, back, bell, more) | Top bar | Swell to 1.12 under the finger, light follows the finger, rim brightens |
+| Round bar buttons (menu, back, bell, more) | Top bar | Swell to 1.12 under the finger and lighten evenly. No spotlight under the finger (owner 2026-11-19) |
 | Title capsule | Top bar | Swells less (1.04), opens the Data status sheet |
 | More menu | Top bar | Grows out of its button, from a circle to the menu, on a spring |
 | Segmented control | Many screens, Client 360 tabs | Lifts into a lens on touch, follows the finger, magnifies with a colour fringe at the rim, rubber-bands past the ends, sinks back on release |

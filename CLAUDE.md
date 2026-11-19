@@ -104,8 +104,8 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   and when a drag passes its point (menu open or close, sheet dismiss, pull past refresh); firm double tick when an
   action completes (every confirmation toast). Never before the person has touched the page.
 - Liquid Glass (owner 2026-11-19, from his Outlook recording; physics, numbers and the per-control map in
-  docs/LIQUID_GLASS.md, read it before touching glass): pressed glass swells to 1.12 and a light pools under the finger
-  and follows it (LightSource, .lg-press). The segmented thumb lifts into a clear lens on touch, magnifies the labels,
+  docs/LIQUID_GLASS.md, read it before touching glass): pressed glass swells to 1.12 and lightens evenly, no spotlight
+  under the finger (owner 2026-11-19, "no light in the button, natural Apple"). The segmented thumb lifts into a clear lens on touch, magnifies the labels,
   fringes red and blue at its rim, follows the finger, rubber-bands past the ends and sinks back on release, built from
   the page so Safari shows it too. The more menu grows out of its button. Reduce Transparency turns glass solid.
 - Live account (owner 2026-11-19, "how would a correct financier visualise floating"): equity, balance, floating and
@@ -121,7 +121,7 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   scripts/postcss-theme.cjs copies every prefers-color-scheme dark block for it, so write dark styles as usual.
 - Loading outlines (owner 2026-11-19, "as we did it in Autoply"): motion.tsx ghost(ms) turns the screen into its own
   shimmering outline while data refreshes (pull to refresh, Refresh data). Not on plain page changes. Each outline
-  block is as wide as its own text, never the full row.
+  block is clipped to the measured box of its own line of text, so padding and spacing around it stay empty.
 - Segmented controls capture the pointer only once a drag starts: capturing on touch-down sent taps to the track and
   stopped plain taps from switching segments (2026-11-19).
 - Device fit (owner 2026-11-19, src/lib/device.ts, inline before first paint): a table of every iPhone viewport sets
