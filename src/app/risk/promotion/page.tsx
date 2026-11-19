@@ -39,7 +39,7 @@ export default function Promotion() {
         <Row title="Lead source flag missing" detail={o.lead_source_flag_absent} chevron={false} />
       </Group>
 
-      <Group header={`Tier guard · cutoff ${g.cutoff}`} footer={g.holds ? "The guard holds. No client above the cutoff tier was promoted." : "The guard was breached."}>
+      <Group header={`Tier guard · cutoff ${g.cutoff}`} footer={g.holds ? "Guard holding. No client above the cutoff tier promoted." : "The guard was breached."}>
         {g.by_tier.map((x) => <Row key={x.tier} title={`Tier ${x.tier}`} detail={x.count} chevron={false} />)}
         <Row title="Highest tier promoted" detail={<Chip tone={g.holds ? "green" : "red"}>{g.highest_tier_promoted}</Chip>} chevron={false} />
         <Row title="Groups without a tier" detail={g.untiered_groups} chevron={false} />

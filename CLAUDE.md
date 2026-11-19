@@ -86,7 +86,9 @@ that scrolls under it.
 
 ## Writing rules (owner)
 Every word on screen: no colons, no semicolons, no em dashes. Short sentences and commas. Numbers with units.
-Register (owner 2026-11-18, "this is professional risk tooling"): formal desk language, never chatty. "Action required",
+Register (owner 2026-11-18, "this is professional risk tooling"; 2026-11-19, "Bloomberg, don't overexplain"): formal desk
+language, never chatty. Footers define a figure or state a rule in one or two short sentences, never explain how to use
+the screen ("Touch and drag", "Select an account" are cut). "Action required",
 "Pending review", "Reasons", "Revert decision", "Demonstration data", never "Needs you", "to decide", "Why", "Undo my".
 
 ## Brand, haptics, motion (owner 2026-11-18)

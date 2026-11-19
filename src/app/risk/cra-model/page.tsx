@@ -39,12 +39,12 @@ export default function CraModel() {
       <NavBar title="CRA Model" eyebrow={`Version ${cr.model.base_version} · ${cr.model.mode.effective} mode`} back={{ href: "/risk/", label: "Risk Management" }}
         trailing={changes.length > 0 ? <BarButton onClick={() => setReview(true)}>Save {changes.length}</BarButton> : null} />
 
-      <Group header="Rating thresholds" footer={`Scores run from ${M.scale.min} to ${M.scale.max}. Above High is high risk, from Medium up is medium risk.`}>
+      <Group header="Rating thresholds" footer={`Scores run from ${M.scale.min} to ${M.scale.max}.`}>
         <Row title="High above" chevron={false}><Stepper label="High threshold" value={hi} step={0.1} digits={1} min={med + 0.1} max={M.scale.max} onChange={(v) => edit("thresholds.high_above", v)} /></Row>
         <Row title="Medium from" chevron={false}><Stepper label="Medium threshold" value={med} step={0.1} digits={1} min={M.scale.min} max={hi - 0.1} onChange={(v) => edit("thresholds.medium_from", v)} /></Row>
       </Group>
 
-      <Group header="Weights" footer={`Highest risk wins. Weights set which dimension decides a tie.`}>
+      <Group header="Weights" footer={"Highest risk wins. Weights break ties."}>
         {(Object.keys(M.aggregation.weights) as (keyof typeof M.aggregation.weights)[]).map((k) => (
           <Row key={k} title={M.dimensions[k].label} chevron={false}><Stepper label={`${M.dimensions[k].label} weight`} value={val(`weights.${k}`, M.aggregation.weights[k])} min={0} max={5} onChange={(v) => edit(`weights.${k}`, v)} /></Row>
         ))}

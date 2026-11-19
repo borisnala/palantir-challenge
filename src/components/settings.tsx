@@ -39,7 +39,7 @@ function Pages() {
   const [out, setOut] = useState(false);
 
   const switchUser = () => push?.("Switch user", (
-    <Group footer="Each user signs in with the clearance of their portal role.">
+    <Group footer="Clearance follows the portal role.">
       {USERS.map((u) => (
         <Row key={u.name} onClick={() => app.setUser(u.name)} icon={<Monogram name={u.name.replace("demo.", "").slice(0, 2)} size={36} />} tint="transparent"
           title={u.name} subtitle={ROLE_LABEL[u.role]} detail={app.user.name === u.name ? <b className="tick">✓</b> : undefined} chevron={false} />
@@ -62,11 +62,11 @@ function Pages() {
           {ROLE_CAN[r].map((c) => <Row key={c} title={c} detail={ROLE_RANK[app.user.role] >= ROLE_RANK[r] ? <b className="tick">✓</b> : <span className="muted">Locked</span>} chevron={false} />)}
         </Group>
       ))}
-      <p className="caption">Each level includes the one above it. Switch user to change level. Administrators change roles in Users.</p>
+      <p className="caption">Each level includes the one above. Administrators assign roles in Users.</p>
     </>
   ));
   const activity = () => push?.("Activity", (
-    <Group footer="Confirmed actions this session, newest first. Nothing is saved after Sign out.">
+    <Group footer="This session, newest first. Cleared on sign out.">
       {app.activity.length === 0 && <Row title="No actions yet" chevron={false} />}
       {app.activity.map((a, i) => <Row key={i} title={a.text} subtitle={a.by} detail={new Date(a.at).toTimeString().slice(0, 5)} chevron={false} />)}
     </Group>
@@ -121,7 +121,7 @@ function Pages() {
 function NotifyPage() {
   const app = useApp();
   return (
-    <Group footer="A kind that is off leaves the bell count and the Notifications list.">
+    <Group footer="Disabled kinds are excluded from the bell and the list.">
       {ALERT_KINDS.map((k) => (
         <Row key={k.k} title={k.label} subtitle={k.sub} chevron={false}>
           <Switch on={app.prefs.notify[k.k]} onChange={() => app.setPref("notify", { ...app.prefs.notify, [k.k]: !app.prefs.notify[k.k] })} label={k.label} />
@@ -147,14 +147,14 @@ function InfoMenu() {
             <p className="info-build">Risk Tool 1.0<br /><span className="muted">Build 2026.11.19, demonstration data</span></p>
             <i className="popmenu-sep" />
             <button role="menuitem" onClick={() => { setOpen(false); push?.("Data", (
-              <Group footer="Every number comes from the Global Risk Portal frontend demo, snapshot 13 Nov 2026. Logins 99000001 onward, names Demo Client N.">
+              <Group footer="Global Risk Portal demo, snapshot 13 Nov 2026. Logins 99000001 onward.">
                 <Row title="Source" detail="Portal demo payloads" chevron={false} />
                 <Row title="Snapshot" detail="13 Nov 2026" chevron={false} />
                 <Row title="Live prices" detail="Simulated" chevron={false} />
               </Group>
             )); }}>Data source</button>
             <button role="menuitem" onClick={() => { setOpen(false); push?.("Licenses", (
-              <Group footer="Open-source software used in Risk Tool.">{LICENSES.map(([n, l]) => <Row key={n} title={n} subtitle={l} chevron={false} />)}</Group>
+              <Group>{LICENSES.map(([n, l]) => <Row key={n} title={n} subtitle={l} chevron={false} />)}</Group>
             )); }}>Licenses</button>
           </Glass>
         </>

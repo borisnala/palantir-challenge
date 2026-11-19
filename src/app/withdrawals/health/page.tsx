@@ -13,7 +13,7 @@ export default function Health() {
   return (
     <>
       <NavBar title="System health" back={{ href: "/withdrawals/", label: "WD Approvals" }} eyebrow={`${bad} down, ${warn} warnings`} />
-      <Group footer="Every check the screener needs to answer a withdrawal. A check that is down sends requests to Risk.">
+      <Group footer="Checks run on every withdrawal. A failed check routes the request to Risk.">
         {wd.health.checks.map((c) => {
           const [Icon, tint] = ICON[c.status as keyof typeof ICON] ?? ICON.warn;
           return <Row key={c.name} icon={<Icon size={17} strokeWidth={2.4} />} tint={tint} title={c.name}

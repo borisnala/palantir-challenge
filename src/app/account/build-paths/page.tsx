@@ -9,7 +9,7 @@ export default function BuildPaths() {
   return (
     <>
       <NavBar title="Build paths" eyebrow={missing ? `${missing} missing` : "All found"} back={{ href: "/account/", label: "Account" }} />
-      <Group footer="Where the portal reads each algorithm's settings. A missing file means that algorithm runs on its defaults.">
+      <Group footer="Settings file per algorithm. A missing file runs on defaults.">
         {bp.algorithms.map((a) => (
           <Row key={a.slug} icon={a.exists ? <CircleCheck size={17} strokeWidth={2.4} /> : <CircleX size={17} strokeWidth={2.4} />} tint={a.exists ? "var(--green)" : "var(--red)"}
             title={a.label} subtitle={<span className="mono wrap">{a.path}</span>} chevron={false} />

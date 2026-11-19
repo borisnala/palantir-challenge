@@ -27,7 +27,7 @@ export default function GroupSpread() {
   return (
     <>
       <NavBar title="Group Spread" eyebrow="Spread tier per MT5 group" back={{ href: "/liquidity/", label: "Liquidity Management" }} />
-      <Group footer={`Tiers ${gs.tiers.join(", ")}. A group outside its suggested tier is priced incorrectly.`}>
+      <Group footer={`Tiers ${gs.tiers.join(", ")}. Groups outside their suggested tier are mispriced.`}>
         {GROUPS.map((g) => {
           const d = diffs(g, applied[g.name] ?? g.suggested_tier).length;
           return <Row key={g.name} onClick={() => pick(g)} title={grp(g.name)} subtitle={`${g.accounts} accounts · suggested ${g.suggested_tier}`}
@@ -35,7 +35,7 @@ export default function GroupSpread() {
         })}
       </Group>
       {gs.not_in_map.length > 0 && (
-        <Group header="Unmapped symbol paths" footer="These symbol paths have no spread defined in the tier map.">
+        <Group header="Unmapped symbol paths" footer="No spread defined in the tier map.">
           {gs.not_in_map.map((p) => <Row key={p} title={sym(p)} subtitle={p.replace(/\\/g, " / ")} chevron={false} />)}
         </Group>
       )}
@@ -44,7 +44,7 @@ export default function GroupSpread() {
         {sel && (
           <>
             <Segmented label="Tier" value={tier} onChange={setTier} options={gs.tiers.map((t) => ({ v: t, label: t }))} />
-            <Group header={`Preview, now to ${tier}`} footer="Spread in points. Balance is the extra markup for that symbol.">
+            <Group header={`Preview, now to ${tier}`} footer="Spread in points. Balance is the extra markup per symbol.">
               {gs.paths.filter((p) => nowOf(sel)[p] && EXP[tier][p]).map((p) => {
                 const a = nowOf(sel)[p], b = EXP[tier][p];
                 return <Row key={p} title={sym(p)} detail={a.sd === b.sd ? `${b.sd}` : <span><span className="muted">{a.sd} to </span><b className={b.sd > a.sd ? "neg" : "pos"}>{b.sd}</b></span>} chevron={false} />;

@@ -38,8 +38,8 @@ export default function Withdrawals() {
         { k: "Rejected", v: wdRows.filter((x) => x.status === "rejected").length, tone: "neg" },
       ]} />
 
-      <Group footer={wd.mode === "shadow" ? "Shadow mode. The screener records its recommendation and Risk makes the final decision. No payouts are executed from this app." : undefined}>
-        <PageRow href="/withdrawals/check/" Icon={ScanSearch} tint="var(--blue)" title="WD Check" sub="Pre-screen an account before it requests a withdrawal" />
+      <Group footer={wd.mode === "shadow" ? "Shadow mode. The screener recommends, Risk decides. No payouts execute from this app." : undefined}>
+        <PageRow href="/withdrawals/check/" Icon={ScanSearch} tint="var(--blue)" title="WD Check" sub="Pre-screen an account before a withdrawal" />
         <PageRow href="/withdrawals/health/" Icon={Activity} tint={warn ? "var(--orange)" : "var(--green)"} title="System health"
           sub={`${wd.health.checks.length} checks, ${warn} need attention`} />
       </Group>

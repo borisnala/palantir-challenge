@@ -36,7 +36,7 @@ export default function Activity() {
           </Group>
         </>
       ) : (
-        <Group footer="One point for each algorithm that flagged the account in the window. 3 means all three did.">
+        <Group footer="One point per algorithm that flagged the account. Maximum 3.">
           {win.risk.map((r) => (
             <ClientRow key={r.login} login={r.login} sub={r.contributing_algos.join(", ")}
               detail={<Chip tone={r.score >= 3 ? "red" : r.score === 2 ? "orange" : "gray"}>Score {r.score}</Chip>} />

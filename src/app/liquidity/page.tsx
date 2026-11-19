@@ -19,7 +19,7 @@ export default function Liquidity() {
         <PageRow href="/liquidity/manual-level/" Icon={SlidersHorizontal} tint="var(--orange)" title="Manual Level" sub="Spread limits per alert level" detail={`${Object.keys(ml.assets).length} symbols`} />
         <PageRow href="/liquidity/group-spread/" Icon={Waypoints} tint="var(--purple)" title="Group Spread" sub="Spread tier per MT5 group" detail={`${gs.groups?.length ?? 0} groups`} />
       </Group>
-      <Group header="Analysis" footer="CandleTL Control and the Algo Config page are confidential and stay on the desktop portal.">
+      <Group header="Analysis" footer="CandleTL Control and Algo Config remain on the desktop portal.">
         <PageRow href="/liquidity/book/" Icon={Binoculars} tint="var(--green)" title="Book View" sub="Book exposure and loss analysis" />
       </Group>
     </>

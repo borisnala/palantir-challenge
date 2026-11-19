@@ -33,7 +33,7 @@ export function usePageMenu(items: MenuItem[], deps: unknown[]) {
 
 /** Copy a value and say so, as the desk does with logins and groups. */
 export function copyText(text: string, say: (m: string) => void, what: string) {
-  navigator.clipboard?.writeText(text).then(() => say(`${what} copied`), () => say("Copy is not available here"));
+  navigator.clipboard?.writeText(text).then(() => say(`${what} copied`), () => say("Copy unavailable"));
 }
 
 /** Back goes to the screen you came from, or to the parent when the page was opened directly. */
@@ -97,7 +97,7 @@ export function NavBar({ title, eyebrow, trailing, back }: {
           <div className="usage"><span className="top"><b>Withdrawals pending</b><span className="muted">{pending.length} of {wdRows.length}</span></span><span className="hbar"><i style={{ width: `${(pending.length / Math.max(1, wdRows.length)) * 100}%` }} /></span></div>
           <div className="usage"><span className="top"><b>Unread alerts</b><span className="muted">{unread.size}</span></span><span className="hbar"><i style={{ width: `${Math.min(100, unread.size * 14)}%` }} /></span></div>
         </Group>
-        <Group header="Source" footer="Demonstration data from the Global Risk Portal frontend demo. Snapshot 13 Nov 2026.">
+        <Group header="Source" footer="Global Risk Portal demo. Snapshot 13 Nov 2026.">
           <Row title="Screen" detail={title} chevron={false} />
           <Row title="Mode" detail="Shadow, read only" chevron={false} />
         </Group>

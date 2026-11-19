@@ -441,7 +441,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 </div>
                 <FloatChart values={live.series} />
               </section>
-              <Group header={`Open positions · ${p.exposure.symbols.length}`} footer="Price moves every second. P&L is the price change times lots times contract size.">
+              <Group header={`Open positions · ${p.exposure.symbols.length}`} footer="Updated every second. P&L is price change x lots x contract size.">
                 {p.exposure.symbols.map((r, i) => (
                   <Row key={r.symbol} title={<span>{r.symbol} <Chip tone={r.direction === "LONG" ? "green" : "red"}>{r.direction === "LONG" ? "Buy" : "Sell"} {num(r.gross_lots, 2)}</Chip></span>}
                     subtitle={<span className="px"><span>Open {fmt(r.open_price, r.digits)}</span><span className={`px-now ${live.moves[i] > 0 ? "px-up" : live.moves[i] < 0 ? "px-down" : ""}`} key={live.prices[i]}>{fmt(live.prices[i], r.digits)}</span></span>}
@@ -490,7 +490,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 <div><span>Win rate</span><b>{pct(p.behaviour.win_rate_pct, 0)}</b></div>
               </div>
             </section>
-            <p className="caption">Touch and drag the chart to read a day. Compare price lines are scaled to the chart, simulated for the demonstration.</p>
+            <p className="caption">Compare prices simulated.</p>
 
             <Group header="At a glance">
               <Row onClick={() => setTab("trading")} title="Trades" detail={num(p.behaviour.trade_count)} />
@@ -508,7 +508,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
             <Segmented label="Point of view" value={pov} onChange={setPov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} />
             <TradingPattern trades={p.trades as unknown as Record<string, [number, number, number, number][]>} asOf={meta.as_of} />
 
-            <Group header="By trading day" footer={`Each square is a trading day, green for ${pov} profit, red for loss. Select a month for its days.`}>
+            <Group header="By trading day" footer={`One square per trading day. Green ${pov} profit, red loss.`}>
               <div className="calgrid">
                 {months.map((m, k) => (
                   <button key={m.key} className="calmonth" style={{ ["--i" as string]: k }} onClick={() => setSheet({ month: m.key })} aria-label={`${FULL[m.m]} ${m.y}, ${money(m.total, true)}`}>
@@ -520,7 +520,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               </div>
             </Group>
 
-            <Group header="When the client makes money" footer="Sessions in UTC, all time. Client view.">
+            <Group header="Profit by session" footer="UTC, all time. Client view.">
               {p.sessions.map((s) => (
                 <div key={s.session} className="barrow">
                   <span className="barrow-top"><b>{s.session}</b><Pnl v={s.net_pl} /></span>
@@ -530,7 +530,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               ))}
             </Group>
 
-            <Group header="Top symbols" footer="Share of all lots traded. P&L follows the point of view.">
+            <Group header="Top symbols" footer="Share of total lots.">
               {p.symbols.map((s) => (
                 <div key={s.symbol} className="barrow">
                   <span className="barrow-top"><b>{s.symbol}</b><span className="muted">{pct(s.pct, 1)}</span></span>
@@ -559,7 +559,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               <span className="verdict-tags"><Chip tone={b.tone}>{b.label}</Chip><Chip tone="blue">{VERDICT[p.decision.verdict] ?? p.decision.verdict}</Chip></span>
               <p>{p.decision.headline}</p>
             </section>
-            <Group header="Reasons" footer="Points added to the toxicity score, out of 100.">
+            <Group header="Reasons" footer="Points toward the toxicity score, maximum 100.">
               {p.toxicity.factors.map((f) => <Row key={f.label} title={f.label} detail={<b className="neg">+{f.points}</b>} chevron={false} />)}
             </Group>
             <Group header="Detections">
@@ -572,7 +572,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
             </Group>
             <Group header="Findings">{p.findings.map((f) => <Row key={f} title={f} chevron={false} />)}</Group>
             <section id="c360-groups" className="anchor" />
-            <Group header="Group history" className="timeline" footer={`Now in ${tier}. The P&L chart shows these periods with Groups on.`}>
+            <Group header="Group history" className="timeline" footer={`Current group ${tier}.`}>
               {[...moves.map((m) => ({ day: m.at, title: `${m.from} to ${m.to}`, sub: `${m.why ? `${m.why}. ` : ""}Manual move by ${m.by ?? "demo.admin"}` })), ...p.group_changes]
                 .sort((a, z) => z.day - a.day).map((r, i) => <Row key={i} title={r.title} subtitle={r.sub} detail={day(r.day)} chevron={false} />)}
             </Group>
@@ -600,7 +600,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
             <p className="caption">Broker side, excluding commission and swap.{w.fpl_check.status === "mismatch" ? ` Account floating ${money(w.fpl_check.account_fpl)} differs from open positions ${money(w.fpl_check.position_floating)} by ${money(w.fpl_check.difference)}.` : ""}</p>
 
             {isLive && (
-              <Group header={`Open positions · ${x.position_count}`} footer={`Gross ${compact(x.gross_notional)}, ${pct(x.gross_notional_pct_of_balance, 0)} of balance. Floating moves live.`}>
+              <Group header={`Open positions · ${x.position_count}`} footer={`Gross ${compact(x.gross_notional)}, ${pct(x.gross_notional_pct_of_balance, 0)} of balance.`}>
                 {p.exposure.symbols.map((s, i) => (
                   <Row key={s.symbol} title={s.symbol} subtitle={`${num(s.gross_lots, 2)} lots, ${compact(s.gross_notional)} gross`}
                     detail={<span className="stack-r"><Pnl v={live.fl[i]} short /><Chip tone={s.direction === "LONG" ? "green" : "red"}>{s.direction === "LONG" ? "Long" : "Short"}</Chip></span>} chevron={false} />
@@ -608,7 +608,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               </Group>
             )}
 
-            <Group header="Reconciliation, client view" footer="Matches the MT5 Manager figures. Not affected by the point of view.">
+            <Group header="Reconciliation, client view" footer="Reconciled with MT5 Manager.">
               <Row title="Lifetime net" subtitle="Including commission and swap" detail={<Pnl v={w.t_all_net} />} chevron={false} />
               <Row title="Deposits" detail={money(w.lifetime_deposits)} chevron={false} />
               <Row title="Withdrawals" detail={money(w.lifetime_withdrawals)} chevron={false} />
@@ -646,7 +646,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
 
       {/* Sheets */}
       <Sheet open={sheet === "status"} onClose={() => setSheet(null)} title="Status">
-        <Group footer="Watch and Escalated add the client to the watchlist. Pinned clients show on Morning Digest.">
+        <Group footer="Watch and Escalated add the client to the watchlist. Pinned clients appear on Morning Digest.">
           {(["none", "watch", "escalated", "cleared"] as Status[]).map((s) => (
             <Row key={s} onClick={() => setDraftStatus(s)} title={STATUS[s]} detail={draftStatus === s ? <b className="tick">✓</b> : undefined} chevron={false} />
           ))}
@@ -670,7 +670,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               detail={moveTo === t2 ? <Check size={20} strokeWidth={2.6} color="var(--blue)" /> : undefined} />
           ))}
         </Group>
-        <Group header="Reason" footer="Required. The reason is recorded in the group history with your name.">
+        <Group header="Reason" footer="Required. Recorded in the group history under your name.">
           <div className="tchips why-chips" role="radiogroup" aria-label="Reason">
             {REASONS.map((r) => <button key={r} role="radio" aria-checked={why === r} className={`tchip ${why === r ? "on" : ""}`} onClick={() => { buzz(); setWhy(r); }}>{r}</button>)}
           </div>
@@ -692,7 +692,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
         </Group>
       </Sheet>
       <Sheet open={sheet === "mg"} onClose={() => setSheet(null)} title="MachineGun">
-        <Group header={p.machinegun.detected ? `Caught, tier ${p.machinegun.tier}` : "Clear"} footer="MachineGun looks for bursts of high lot orders in a short window.">
+        <Group header={p.machinegun.detected ? `Caught, tier ${p.machinegun.tier}` : "Clear"} footer="Detects bursts of high lot orders in a short window.">
           <Row title="Pattern" detail={p.machinegun.detected ? "Burst found" : "No burst"} chevron={false} />
           <Row title="Client type" detail={p.machinegun.client_type === "micro" ? "Micro" : "Normal"} chevron={false} />
         </Group>

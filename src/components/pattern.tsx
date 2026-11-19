@@ -89,7 +89,7 @@ export function TradingPattern({ trades, asOf }: { trades: Record<string, Trade[
 
   return (
     <>
-      <Group header="Trading pattern" footer="Green arrows under a bar are buys, red arrows over a bar are sells, larger for larger trades. Daily candles are simulated for the demonstration, the trades are the client's. Drag to move through time, pinch to zoom.">
+      <Group header="Trading pattern" footer="Buys below the bar, sells above. Arrow size scales with lots. Candles simulated, trades actual.">
         <div className="pattern">
           <div className="tchips" role="radiogroup" aria-label="Symbol">
             {syms.map((s) => <button key={s} role="radio" aria-checked={sym === s} className={`tchip ${sym === s ? "on" : ""}`} onClick={() => { buzz(); setSym(s); }}>{s}</button>)}

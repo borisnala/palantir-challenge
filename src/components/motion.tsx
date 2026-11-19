@@ -150,9 +150,9 @@ export function DeviceFrame() {
       <iframe className="device" src={src} title="Risk Tool" />
       <aside className="device-qr" aria-label="Open on a phone">
         {svg && <div className="qr" dangerouslySetInnerHTML={{ __html: svg }} />}
-        <p>Scan with a phone camera to open this page there.</p>
+        <p>Scan to open on a phone.</p>
       </aside>
-      <p className="device-note">Built for mobile. For the best experience, open Risk Tool on your phone.</p>
+      <p className="device-note">Built for mobile.</p>
     </div>,
     document.body,
   );

@@ -26,7 +26,7 @@ export default function Growth() {
       <Metrics label="Scan" items={[{ k: "Accounts", v: rows.length }, { k: "Consistent growth", v: steady, tone: steady ? "warn" : undefined }, { k: "Client P&L", v: compact(rows.reduce((a, r) => a + r.net_change, 0)) }]} />
       <Segmented label="Curve fit at least" value={fit} onChange={setFit} options={[{ v: "any", label: "Any fit" }, { v: "0.7", label: "Fit 0.70" }, { v: "0.85", label: "Fit 0.85" }]} />
 
-      <Group footer="Curve fit measures how linear the profit curve is. A high fit on a rising curve indicates consistent client profit.">
+      <Group footer="Curve fit measures how linear the profit curve is. High fit on a rising curve means consistent profit.">
         {rows.map((r) => (
           <Row key={r.login} onClick={() => { setSel(r); setOpen(true); }} title={r.name ?? `#${r.login}`}
             subtitle={`Fit ${num(r.r_squared, 2)} · ${num(r.active_days)} active days · ${compact(r.slope_per_day, true)} a day`}

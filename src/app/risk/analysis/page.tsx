@@ -73,7 +73,7 @@ export default function RiskAnalysis() {
       <h2 className="sub-head">Protection</h2>
       <Segmented label="Window" value={scope} onChange={setScope} options={[{ v: "default", label: "Since cutoff" }, { v: "all", label: "All moves" }]} />
       <Metrics label="Protection" items={[{ k: "Protected", v: compact(p.totals.protection_usd), tone: "pos" }, { k: "House P&L", v: compact(p.totals.pl_house), tone: p.totals.pl_house >= 0 ? "pos" : "neg" }, { k: "Lots", v: num(p.totals.lots_total, 0) }]} />
-      <Group header="By algorithm" footer="Protection is the additional spread earned on the client's trades after the move.">
+      <Group header="By algorithm" footer="Additional spread earned on the client's trades after the move.">
         {p.by_algo.map((x: any) => <Row key={x.algo} title={x.label} subtitle={`${x.moves} moves · ${x.accounts} accounts`} detail={money(x.protection_usd)} chevron={false} />)}
       </Group>
       <Group header="Latest moves">

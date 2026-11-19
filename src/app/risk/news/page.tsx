@@ -46,7 +46,7 @@ export default function News() {
         </Group>
       )}
 
-      <Group header={`Computed · ${done.length}`} footer="Client profit closed in the minutes around each release. Negative broker net means clients won.">
+      <Group header={`Computed · ${done.length}`} footer="Client profit closed around each release. Negative broker net means clients won.">
         {done.length === 0 && <Row title="No computed events in this period" chevron={false} />}
         {done.map((e) => (
           <Row key={e.id} onClick={() => { setSel(EVENTS[String(e.id)] ?? e); setOpen(true); }} icon={<Newspaper size={17} strokeWidth={2.4} />}
@@ -56,7 +56,7 @@ export default function News() {
       </Group>
 
       {l.hunters && l.hunters.length > 0 && (
-        <Group header="News hunters" footer="Clients with consistent profit around news releases.">
+        <Group header="News hunters" footer="Consistently profitable around releases.">
           {l.hunters.slice(0, 10).map((h) => (
             <ClientRow key={h.login} login={h.login} name={h.name} sub={`${h.events_positive} of ${h.events_participated} events won · hit ${pct(h.hit_rate * 100, 0)}`} value={h.total_net} />
           ))}

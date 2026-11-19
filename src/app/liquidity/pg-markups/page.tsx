@@ -50,11 +50,11 @@ export default function PgMarkups() {
         ))}
       </Group>
 
-      <Group header="IB rebate bands" footer="An IB's rebate decides which price group its clients get.">
+      <Group header="IB rebate bands" footer="The IB rebate sets the clients' price group.">
         {pg.ib_rebate_bands.map((b) => <Row key={b.pg} title={`${b.low} to ${b.high} pips rebate`} detail={b.pg} chevron={false} />)}
       </Group>
 
-      <Group header="Settings" footer={sim ? "Simulation mode is on, so applying only logs what would change." : "Simulation mode is off. Applying changes MT5 groups."}>
+      <Group header="Settings" footer={sim ? "Simulation mode on. Changes are logged, not applied." : "Simulation mode off. Changes apply to MT5 groups."}>
         {cfg.map((f, i) => f.kind === "bool" ? (
           <Row key={f.key} title={nice(f.key)} chevron={false}>
             <Switch on={f.value === "true"} label={nice(f.key)} onChange={() => setCfg(cfg.map((x, j) => j === i ? { ...x, value: x.value === "true" ? "false" : "true" } : x))} />

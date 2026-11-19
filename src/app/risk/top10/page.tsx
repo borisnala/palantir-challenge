@@ -46,7 +46,7 @@ export default function Top10() {
       ]} />
 
       {gross > 0 && (
-        <Group header="Profit and loss" footer="Top 10 winners against top 10 losers for the period. Client profit is a cost to the book.">
+        <Group header="Profit and loss" footer="Client profit is a cost to the book.">
           <div className="split">
             <span className="split-top"><b className="pos">{pct(share, 1)} profit</b><b className="neg">{pct(100 - share, 1)} loss</b></span>
             <span className="split-bar" role="img" aria-label={`${pct(share, 1)} profit, ${pct(100 - share, 1)} loss`}>
@@ -61,14 +61,14 @@ export default function Top10() {
         </Group>
       )}
 
-      <Group footer="Counts floating P&L of open positions together with closed profit.">
+      <Group footer="Adds floating P&L on open positions.">
         <Row title="Include floating P&L" chevron={false}><Switch on={fl} onChange={() => setFl(!fl)} label="Include floating P&L" /></Row>
       </Group>
 
       <Segmented label="Board" value={v} onChange={setV} options={[{ v: "winners", label: "Winners" }, { v: "losers", label: "Losers" }, { v: "volume", label: "Volume" }, { v: "groups", label: "Groups" }]} />
 
       <Group>
-        {(!bd || (bd[v] ?? []).length === 0) && <Row title="No accounts on this board" subtitle="No account in this book met the activity threshold for the period." chevron={false} />}
+        {(!bd || (bd[v] ?? []).length === 0) && <Row title="No accounts on this board" subtitle="No account met the activity threshold." chevron={false} />}
         {v === "winners" || v === "losers" ? bd?.[v].map((r, i) => (
           <ClientRow key={r.login} login={r.login} name={r.name}
             sub={`Rank ${i + 1} · ${r.deals} deals · win ${pct(r.win_rate, 0)}${r.prev_rank ? ` · was ${r.prev_rank}` : " · new"}`} value={r.pl} />

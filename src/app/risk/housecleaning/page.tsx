@@ -80,7 +80,7 @@ export default function HouseCleaning() {
       </Sheet>
 
       <Confirm open={dry} title="Dry run" action="Done" onCancel={() => setDry(false)} onConfirm={() => setDry(false)}
-        lines={deletable.length ? deletable.map((g) => `Would delete ${path(g.group_path)}`) : ["No cutlisted group is under the test prefix, so nothing would be deleted."]} />
+        lines={deletable.length ? deletable.map((g) => `Would delete ${path(g.group_path)}`) : ["No cutlisted group under the test prefix. Nothing to delete."]} />
     </>
   );
 }

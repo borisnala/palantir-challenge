@@ -43,7 +43,7 @@ export default function Risk() {
         <PageRow href="/risk/promotion/" Icon={Gift} tint="var(--pink, #ff2d55)" title="Promotion Analysis" sub="JamesBond promotions" />
       </Group>
 
-      <Group header="Related" footer="Morning Digest is on Today. Client 360 is under Search. Notifications are under the bell.">
+      <Group header="Related">
         <PageRow href="/liquidity/book/" Icon={Binoculars} tint="var(--green)" title="Book View" sub="In Liquidity" />
       </Group>
     </>

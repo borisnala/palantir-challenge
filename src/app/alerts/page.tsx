@@ -51,14 +51,14 @@ export default function Alerts() {
 
   return (
     <>
-      <NavBar title="Notifications" eyebrow={onlyUnread ? `${unread.size} unread, unread only` : `${unread.size} unread`} back={{ href: "/", label: "Morning Digest" }}
+      <NavBar title="Notifications" eyebrow={onlyUnread ? `${unread.size} unread, filtered` : `${unread.size} unread`} back={{ href: "/", label: "Morning Digest" }}
         trailing={unread.size > 0 ? <BarButton onClick={() => { markRead(); say("All alerts marked read"); }}>Read All</BarButton> : null} />
 
       <Segmented label="Severity" value={f} options={OPTS} onChange={setF} />
 
-      <Group footer="Alerts are also sent to the desk WhatsApp group.">
+      <Group footer="Also sent to the desk WhatsApp group.">
         {list.map((a) => <MailRow key={a.id} a={a} unread={unread.has(a.id)} onOpen={() => markRead(a.id)} />)}
-        {list.length === 0 && <div className="mailrow"><span className="mailrow-main"><span className="mailrow-sub">No alerts in this view.</span></span></div>}
+        {list.length === 0 && <div className="mailrow"><span className="mailrow-main"><span className="mailrow-sub">No alerts.</span></span></div>}
       </Group>
     </>
   );

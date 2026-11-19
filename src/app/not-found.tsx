@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <div className="notfound">
       <h1>Screen not available</h1>
-      <p>This address is not part of Risk Tool. It may come from an earlier version of the app.</p>
+      <p>This address is not part of Risk Tool.</p>
       <Link href="/" className="pillbtn">Open Morning Digest</Link>
     </div>
   );

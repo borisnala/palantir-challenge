@@ -23,7 +23,7 @@ export default function Cltl() {
       <Metrics label="Symbols" items={[{ k: "Symbols", v: cl.symbols.length }, { k: "Red", v: cl.symbols.filter((s) => levelTone(s.effective_level) === "red").length, tone: "neg" }, { k: "Orange", v: cl.symbols.filter((s) => /ORANGE/.test(s.effective_level ?? "")).length, tone: "warn" }]} />
       <Segmented label="Show" value={f} onChange={setF} options={[{ v: "all", label: "All symbols" }, { v: "alert", label: "On alert" }]} />
 
-      <Group footer="The light is the higher of the candle light (M1, M5, daily range) and the liquidity light (spread). A higher light widens client spreads.">
+      <Group footer="The light is the higher of the candle light (M1, M5, daily range) and the liquidity light (spread). Higher lights widen client spreads.">
         {list.map((s) => (
           <Row key={s.symbol} onClick={() => { setSel(s); setOpen(true); }} title={s.symbol}
             subtitle={`Spread ${s.spread_points} pts · day ${pct(s.daily_pct, 2)} · led by ${s.live_leader ?? (s.sources ?? []).join(", ")}`}
