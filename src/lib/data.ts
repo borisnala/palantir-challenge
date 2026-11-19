@@ -35,6 +35,17 @@ export const ALERTS: Alert[] = [
   { id: 7, minutesAgo: 210, severity: "warn", login: 99000010, title: "Moved to a worse tier", detail: "F3 to F5", unread: false },
 ];
 
+/** The four kinds of alert, so Settings can switch each kind on or off. */
+export type AlertKind = "news" | "tier" | "swing" | "book";
+export const ALERT_KINDS: { k: AlertKind; label: string; sub: string }[] = [
+  { k: "news", label: "News profit", sub: "Client profit around a high impact release" },
+  { k: "tier", label: "Tier moves", sub: "A client moves to a worse or better tier" },
+  { k: "swing", label: "Floating swings", sub: "A large change in floating P&L" },
+  { k: "book", label: "Flagged book", sub: "A client enters or leaves the flagged book" },
+];
+export const alertKind = (a: Alert): AlertKind =>
+  /news/i.test(a.title) ? "news" : /tier/i.test(a.title) ? "tier" : /swing/i.test(a.title) ? "swing" : "book";
+
 /* ---------- formatters ---------- */
 
 export const money = (v: number | null | undefined, sign = false) => {

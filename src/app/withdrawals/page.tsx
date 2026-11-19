@@ -12,7 +12,7 @@ import { money, when } from "@/lib/data";
 type F = "waiting" | "decided" | "auto";
 
 export default function Withdrawals() {
-  const { wdRows, pending, decide, undo, decisionOf, say } = useApp();
+  const { wdRows, pending, decide, undo, decisionOf, say, guard } = useApp();
   const [f, setF] = useState<F>("waiting");
   const [sel, setSel] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -21,7 +21,7 @@ export default function Withdrawals() {
   const warn = wd.health.checks.filter((c) => c.status !== "ok").length;
 
   const act = (d: "approved" | "rejected") => {
-    if (!r) return;
+    if (!r || !guard("editor")) return;
     decide(r.request_id, d);
     say(`${money(r.amount)} for #${r.ta_id} ${d}`);
     setOpen(false);

@@ -5,10 +5,10 @@ import { ArrowDownUp, Bell, ChevronRight, Newspaper, TrendingUp, Waves } from "l
 import { useApp } from "@/components/app-state";
 import { Group, NavBar, Row } from "@/components/ios";
 import { ClientRow } from "@/components/rows";
-import { ChangePill } from "@/components/ui";
+import { ChangePill, Monogram } from "@/components/ui";
 import digest from "@/data/digest.json";
 import newsData from "@/data/news.json";
-import { compact, day, pct, when } from "@/lib/data";
+import { compact, day, hasProfile, pct, when } from "@/lib/data";
 
 // Health "Summary" card: tinted label row, big rounded value.
 function SummaryCard({ href, Icon, color, label, time, value, unit, note }: {
@@ -31,6 +31,50 @@ function SummaryCard({ href, Icon, color, label, time, value, unit, note }: {
 }
 
 type R = Record<string, unknown> & { login: number; name: string };
+
+/** The digest as a board (owner 2026-11-19, "so lame, showcase as a chart or kanban"): the profit change first, the
+ *  flagged count as in and out, then one column per kind of movement with its clients as cards, swiped sideways. */
+function Board() {
+  const t = digest.totals;
+  const tm = S.tier_moves;
+  const cols: { k: string; title: string; tone: string; rows: R[]; fig: (r: R) => React.ReactNode }[] = [
+    { k: "new", title: "Entered", tone: "var(--orange)", rows: S.new_flagged, fig: (r) => `Tier ${r.pg} ${r.tier}` },
+    { k: "worse", title: "Worse tier", tone: "var(--red)", rows: tm.filter((r) => r.direction === "worse"), fig: (r) => `${r.pg_before} to ${r.pg_now}` },
+    { k: "better", title: "Better tier", tone: "var(--green)", rows: tm.filter((r) => r.direction !== "worse"), fig: (r) => `${r.pg_before} to ${r.pg_now}` },
+    { k: "up", title: "Profit up", tone: "var(--purple)", rows: S.exposure_up, fig: (r) => compact(n(r.t30_delta), true) },
+    { k: "swing", title: "Floating swing", tone: "var(--blue)", rows: S.floating_swing, fig: (r) => compact(n(r.fpl_delta), true) },
+    { k: "left", title: "Left", tone: "var(--gray)", rows: S.left_book, fig: (r) => `Was ${r.pg}` },
+  ];
+  const inN = S.new_flagged.length, outN = S.left_book.length;
+  return (
+    <section className="board" aria-label="Book movement">
+      <div className="board-head">
+        <span className="eyebrow">Client profit, flagged book</span>
+        <b className={`board-big ${t.t30_delta >= 0 ? "neg" : "pos"}`}>{compact(t.t30_delta, true)}</b>
+        <span className="row-sub">30 days {compact(t.t30_before)} to {compact(t.t30_now)}. Client profit is a cost to the book.</span>
+        <div className="board-flow" aria-label={`Flagged accounts ${t.flagged_before} to ${t.flagged_now}`}>
+          <span className="bf-n">{t.flagged_before}</span>
+          <span className="bf-bars"><i className="bf-in" style={{ flex: inN }}>+{inN} in</i><i className="bf-out" style={{ flex: outN }}>−{outN} out</i></span>
+          <span className="bf-n">{t.flagged_now}</span>
+        </div>
+      </div>
+      <div className="kanban">
+        {cols.map((c) => (
+          <div key={c.k} className="kcol" style={{ ["--tone" as string]: c.tone }}>
+            <span className="kcol-head"><i />{c.title}<b>{c.rows.length}</b></span>
+            {c.rows.length === 0 && <span className="kempty">None</span>}
+            {c.rows.map((r) => {
+              const body = (<><Monogram name={String(r.name)} size={28} /><span className="kcard-t"><b>{String(r.name)}</b><small>{c.fig(r)}</small></span></>);
+              return hasProfile(r.login)
+                ? <Link key={r.login} href={`/clients/${r.login}/`} className="kcard">{body}</Link>
+                : <span key={r.login} className="kcard">{body}</span>;
+            })}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 const S = digest.sections as unknown as Record<string, R[]>;
 const n = (v: unknown) => (typeof v === "number" ? v : 0);
 
@@ -44,7 +88,7 @@ export default function Today() {
     <>
       <NavBar title="Morning Digest" eyebrow={`Since ${when(digest.previous_taken_at)}`} root />
 
-      <p className="digest">{digest.headline}</p>
+      <Board />
 
       <section className="hcards" aria-label="Action required">
         <h2 className="sub-head">Action required</h2>

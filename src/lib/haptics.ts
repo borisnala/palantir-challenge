@@ -4,6 +4,9 @@
 // Taptic Engine. Android uses navigator.vibrate. Phones without either stay silent.
 
 let hidden: HTMLLabelElement | null = null;
+let enabled = true;
+/** Settings can switch haptics off for this viewer. */
+export function setHaptics(on: boolean) { enabled = on; }
 
 function switchEl() {
   if (hidden || typeof document === "undefined") return hidden;
@@ -23,6 +26,7 @@ function switchEl() {
 }
 
 export function buzz(firm = false) {
+  if (!enabled) return;
   try {
     // Only after the person has touched the page: a tick on its own would be wrong, and browsers refuse it
     const ua = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;

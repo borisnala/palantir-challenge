@@ -9,9 +9,9 @@ import { when } from "@/lib/data";
 type D = (typeof us.pending)[number];
 
 export default function Devices() {
-  const { get, set, say } = useApp();
+  const { get, set, say, guard } = useApp();
   const decided = get<Record<number, string>>("dev.decided", {});
-  const decide = (d: D, s: "approved" | "denied") => { set("dev.decided", { ...decided, [d.id]: s }); say(`${d.label} ${s}`); };
+  const decide = (d: D, s: "approved" | "denied") => { if (!guard("admin")) return; set("dev.decided", { ...decided, [d.id]: s }); say(`${d.label} ${s}`); };
   const waiting = us.pending.filter((d) => !decided[d.id]);
   const done = [...us.pending.filter((d) => decided[d.id]).map((d) => ({ ...d, status: decided[d.id], decided_by: "demo.admin", decided_at: new Date().toISOString() })), ...us.decided];
 

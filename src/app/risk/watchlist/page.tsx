@@ -11,7 +11,7 @@ import { WATCHLIST, compact, group, when } from "@/lib/data";
 type Sort = "t30" | "fpl" | "balance";
 
 export default function Watchlist() {
-  const { watched, toggleWatch, say } = useApp();
+  const { watched, toggleWatch, say, guard } = useApp();
   const [sort, setSort] = useState<Sort>("t30");
   const [edit, setEdit] = useState(false);
   const list = WATCHLIST.filter((w) => watched.has(w.login)).sort((a, b) => (b[sort] ?? 0) - (a[sort] ?? 0));
@@ -34,7 +34,7 @@ export default function Watchlist() {
       <Group footer="Accounts under desk monitoring. Add accounts from the client profile.">
         {list.length === 0 && <Row title="No accounts on the watchlist" chevron={false} />}
         {list.map((w) => edit ? (
-          <Row key={w.login} onClick={() => { toggleWatch(w.login); say(`${w.name} removed`); }} icon={<MinusCircle size={20} strokeWidth={2.4} />} tint="var(--red)"
+          <Row key={w.login} onClick={() => { if (!guard("editor")) return; toggleWatch(w.login); say(`${w.name} removed`); }} icon={<MinusCircle size={20} strokeWidth={2.4} />} tint="var(--red)"
             title={w.name} subtitle={`#${w.login}`} chevron={false} detail="Remove" />
         ) : (
           <ClientRow key={w.login} login={w.login} name={w.name}

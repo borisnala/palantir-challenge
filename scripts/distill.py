@@ -431,8 +431,11 @@ def variant(c, base):
     conds = {"c1_baseline": rng.random() < .3, "c2_deposit": rng.random() < .3, "c3_exposure": rng.random() < .25, "c4_equity": rng.random() < .5}
     fb = sum(conds.values()) >= 3
 
-    pos = op.get("top_symbols") or []
-    fpl = c["fpl"] if c["fpl"] is not None else (op.get("fpl") or 0)
+    # Half the book trades live, half is flat (owner 2026-11-19, "half not active, half active"): odd logins keep
+    # their open positions, even logins have closed everything, so no floating P&L and equity equals balance
+    live = c["login"] % 2 == 1
+    pos = (op.get("top_symbols") or []) if live else []
+    fpl = (c["fpl"] if c["fpl"] is not None else (op.get("fpl") or 0)) if live else 0.0
     tl = sum(l for _, l in pos) or 1
     exp_rows = [{"symbol": sy, "direction": "SHORT" if net < 0 else "LONG", "gross_lots": l, "floating": r2(fpl * l / tl),
                  **priced(sy, "SHORT" if net < 0 else "LONG", l, fpl * l / tl)} for sy, l in pos]
@@ -457,7 +460,7 @@ def variant(c, base):
         "source": "variant",
         "identity": {"group": c["group_now"], "group_tier": tier, "country": rng.choice(["Singapore", "Malaysia", "Thailand", "Vietnam", "Indonesia", "Philippines", "UAE"]),
                      "leverage": rng.choice([100, 200, 400, 500]), "registration": days[0] - rng.randint(5, 90) * 86400,
-                     "last_access": AS_OF - rng.randint(2, 600) * 60, "balance": bal, "equity": c["equity"],
+                     "last_access": AS_OF - rng.randint(2, 600) * 60, "balance": bal, "equity": c["equity"] if live else bal,
                      "margin_free": r2((c["equity"] or 0) - gn / 200), "credit": c["credit"]},
         "classification": STYLE[top_bucket], "lead": None,
         "toxicity": {"score": score, "band": band, "factors": sorted(factors, key=lambda f_: -f_["points"])},
@@ -487,11 +490,44 @@ def num_(v):
     return f"{v:g}" if isinstance(v, (int, float)) else "some"
 
 
+def with_trades(prof, login):
+    """Per-day net lots (the bars under the P&L chart) and each trading day's buys and sells by symbol (the marks on
+    the trading pattern chart). 99000001 from the portal's own daily positions, the others seeded from their figures."""
+    import random
+    top = [x["symbol"] for x in prof["symbols"][:4]]
+    trades = {sy: [] for sy in top}
+    net = []
+    if login == c3["login"]:
+        for dpos in cp["signals"]["daily_positions"]:
+            n = 0.0
+            for x in dpos["symbols"]:
+                n += x.get("net_exposure") or 0
+                if x["symbol"] in trades and x.get("trades"):
+                    trades[x["symbol"]].append([dpos["day"], 1 if (x.get("net_exposure") or 0) >= 0 else -1, r2(x["lots"]), r2(x.get("net_pl") or 0)])
+            net.append([dpos["day"], r2(n)])
+    else:
+        rng = random.Random(login * 7 + 3)
+        w = [x["pct"] for x in prof["symbols"][:4]]
+        bias = rng.uniform(0.35, 0.7)
+        for d, v in prof["daily"]:
+            n = 0.0
+            for sy in rng.choices(top, weights=w, k=rng.choice([1, 1, 2])):
+                side = 1 if rng.random() < bias else -1
+                lots = r2(max(0.01, rng.uniform(0.05, 1.2) * (prof["behaviour"]["total_lots"] or 100) / 400))
+                n += side * lots
+                trades[sy].append([d, side, lots, r2(v * rng.uniform(0.3, 0.9))])
+            net.append([d, r2(n)])
+    prof["netlots"] = net
+    prof["trades"] = trades
+    return prof
+
+
 profiles = {}
 real = real_profile()
 for c in out["clients"]:
-    profiles[str(c["login"])] = real if c["login"] == c3["login"] else variant(c, real)
-out["client360"] = {"as_of": AS_OF, "real_login": c3["login"], "profiles": profiles}
+    profiles[str(c["login"])] = with_trades(real if c["login"] == c3["login"] else variant(c, real), c["login"])
+out["client360"] = {"as_of": AS_OF, "real_login": c3["login"], "profiles": profiles,
+                    "prices": {k: [v[0], v[2]] for k, v in PRICE.items()}}
 
 # ---- Admin: users, devices, build paths ----
 out["users"] = load("users")

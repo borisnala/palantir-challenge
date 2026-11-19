@@ -37,11 +37,11 @@ const NAV = [
  *  page stays visible as a dimmed card with rounded corners. Swipe from the left edge to open, swipe left or tap the
  *  page to close. Everything follows the finger and settles on a spring. */
 export function Drawer() {
-  const { drawer, setDrawer, recents, pending, unread, watched } = useApp();
+  const { drawer, setDrawer, recents, pending, unread, watched, user, set } = useApp();
   const path = usePathname();
   const panel = useRef<HTMLElement>(null);
   const x = useRef(new Spring(0, 320, 32)); // 0 closed, 1 open
-  const drag = useRef<{ x0: number; p0: number; last: number; t: number; v: number } | null>(null);
+  const drag = useRef<{ x0: number; y0: number; p0: number; last: number; t: number; v: number; axis: "x" | "y" | null } | null>(null);
   const width = () => panel.current?.offsetWidth || 320;
 
   const paint = () => {
@@ -80,11 +80,18 @@ export function Drawer() {
       const open = x.current.x > 0.5;
       const onPage = (e.target as Element)?.closest?.(".stage-scrim, .drawer");
       if ((!open && t.clientX < 32 && !document.querySelector(".sheet-wrap")) || (open && onPage))
-        drag.current = { x0: t.clientX, p0: x.current.x, last: t.clientX, t: e.timeStamp, v: 0 };
+        drag.current = { x0: t.clientX, y0: t.clientY, p0: x.current.x, last: t.clientX, t: e.timeStamp, v: 0, axis: null };
     };
     const move = (e: TouchEvent) => {
       const d = drag.current; if (!d) return;
       const t = e.touches[0];
+      // Decide once per touch: a mostly vertical move scrolls the menu list, a mostly sideways one moves the menu
+      if (!d.axis) {
+        const dx = Math.abs(t.clientX - d.x0), dy = Math.abs(t.clientY - d.y0);
+        if (dx < 6 && dy < 6) return;
+        d.axis = dx > dy ? "x" : "y";
+      }
+      if (d.axis === "y") { drag.current = null; return; }
       d.v = ((t.clientX - d.last) / Math.max(1, e.timeStamp - d.t)) * 1000; d.last = t.clientX; d.t = e.timeStamp;
       const before = x.current.x;
       x.current.x = Math.max(0, Math.min(1.04, d.p0 + (t.clientX - d.x0) / width()));
@@ -96,6 +103,7 @@ export function Drawer() {
     const end = () => {
       const d = drag.current; if (!d) return;
       drag.current = null;
+      if (!d.axis) return; // a tap, not a drag
       const open = d.v > 500 || (d.v > -500 && x.current.x > 0.5);
       if (open !== drawer) { buzz(); setDrawer(open); } else { x.current.target = open ? 1 : 0; kick(); }
     };
@@ -157,7 +165,7 @@ export function Drawer() {
       })()}
       </div>
       <div className="drawer-foot">
-        <Link href="/account/" className="glassbtn-link" aria-label="Account, demo.admin"><Glass className="glassbtn round avatar-orb">DA</Glass></Link>
+        <button className="glassbtn-link" aria-label={`Settings, ${user.name}`} onClick={() => { buzz(); set("ui.settings", true); }}><Glass className="glassbtn round avatar-orb">{user.name.replace("demo.", "").slice(0, 2).toUpperCase()}</Glass></button>
         <Link href="/withdrawals/" className="pillbtn">{pending.length ? `Review ${pending.length} withdrawals` : "WD Approvals"}</Link>
       </div>
     </nav>

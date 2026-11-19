@@ -37,7 +37,11 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   Account (money, profit windows, open positions, reconciliation, withdrawals, note, alerts). Header actions are Status,
   Note and Move group (a Confirm sheet, recorded in the group history), never Watch, Alerts or Copy login. Data:
   distill.py builds client360.json, 99000001 from the portal's own payload, every other client a seeded variant
-  shaped to that client's own figures (P&L windows, win rate, lots, open book, group moves, ETL).
+  shaped to that client's own figures (P&L windows, win rate, lots, open book, group moves, ETL). Odd logins trade live,
+  even logins are flat. The P&L chart has Realized P&L or Portfolio growth, Linear or Log, Groups bands, compare price
+  and net lots bars, like the desktop panel. Trading holds the trading pattern on TradingView Lightweight Charts 5.2.1
+  (pattern.tsx): simulated daily candles with the client's own buys and sells as arrows.
+- Morning Digest opens with a board (profit change, flagged in and out, movement columns of client cards), not prose.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 
@@ -105,6 +109,18 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
 - Live account (owner 2026-11-19, "how would a correct financier visualise floating"): equity, balance, floating and
   margin level, floating P&L over two minutes autoscaled with a last-value tag, and each position with open and
   current price. P&L comes from price, (price - open) x lots x contract size, with prices from distill.py PRICE.
+- Settings (owner 2026-11-19, the Claude app's Settings sheet; src/components/settings.tsx): opened from the menu
+  avatar, the more menu and Account. Account card with Switch user, then Account (Profile, Clearance level, Activity,
+  Notifications, Users and roles, Device access, Build paths), App (Start screen, Point of view, Live prices, Haptic
+  feedback), Appearance tiles, Sign out, and an i menu (build, data source, licenses). Every row works.
+  Clearance: the portal roles viewer, editor, admin (app-state ROLE_CAN). Confirm checks `need` (default editor), and
+  direct actions call guard(): withdrawals, statuses, notes, watchlist and group moves need editor; users and devices
+  need admin. Preferences live in the browser (risktool-prefs). Light or Dark is forced through data-theme:
+  scripts/postcss-theme.cjs copies every prefers-color-scheme dark block for it, so write dark styles as usual.
+- Loading outlines (owner 2026-11-19, "as we did it in Autoply"): motion.tsx ghost(ms) turns the screen into its own
+  shimmering outline, on the first open of each screen in a visit and while data refreshes.
+- Segmented controls capture the pointer only once a drag starts: capturing on touch-down sent taps to the track and
+  stopped plain taps from switching segments (2026-11-19).
 - Launch (as the Autoply app): the plus shows from the first frame and breathes, then gathers and bursts open into the
   app through a plus-shaped window, once per load only (brand.tsx Launch, motion.tsx LaunchReady). No glow, no
   gradients.

@@ -7,15 +7,27 @@ import { createPortal } from "react-dom";
 // 12-spoke spinner fills as you pull, and past 60 pt it spins with a firm tick.
 // Plus the desktop notice: Risk Tool is built for a phone, so a wide screen gets a sheet with a code to scan.
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { useApp } from "./app-state";
+import { readPrefs, useApp } from "./app-state";
 import { buzz, listenForChoices } from "@/lib/haptics";
 
 const SECTIONS = ["/risk", "/liquidity", "/withdrawals", "/search", "/clients", "/alerts", "/account"];
 const depth = (p: string) => p.split("/").filter(Boolean).length;
 const section = (p: string) => SECTIONS.find((s) => p.startsWith(s)) ?? "/";
+
+/** Loading outlines, as the Autoply app draws them (owner 2026-11-19): while a screen loads, its own outline shows in
+ *  shimmering grey, the same blocks where the words, numbers, icons and charts will be, never the words. Shown the
+ *  first time each screen opens in a visit, and while data refreshes. */
+let ghostTimer: ReturnType<typeof setTimeout> | null = null;
+export function ghost(ms: number) {
+  if (typeof document === "undefined" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.documentElement.classList.add("ghosting");
+  if (ghostTimer) clearTimeout(ghostTimer);
+  ghostTimer = setTimeout(() => document.documentElement.classList.remove("ghosting"), ms);
+}
+const seenScreens = new Set<string>();
 
 export function Transitions() {
   const path = usePathname();
@@ -32,6 +44,7 @@ export function Transitions() {
     main.classList.remove("enter-push", "enter-pop", "enter-tab");
     void (main as HTMLElement).offsetWidth;
     main.classList.add(`enter-${kind}`);
+    if (!seenScreens.has(path)) { seenScreens.add(path); ghost(520); }
   }, [path]);
   return null;
 }
@@ -77,6 +90,7 @@ export function PullToRefresh() {
       if (s.d < 60) { paint(0); return; }
       s.busy = true;
       paint(62, true);
+      ghost(760);
       await new Promise((r) => setTimeout(r, 700));
       set("refreshedAt", new Date().toISOString());
       paint(0);
@@ -132,6 +146,14 @@ export function DeviceFrame() {
 /** Opens the launch screen once, after the first paint, as the Autoply app does: the plus shows for at least 0.7 s,
  *  gathers itself, then bursts open into the app. Only on the first load, never on page changes. */
 export function LaunchReady() {
+  const router = useRouter();
+  // Settings, Start screen: an app opened at its front door goes to the screen this viewer chose
+  useEffect(() => {
+    if (location.pathname.replace(/\/$/, "").endsWith("risktool-prototype") || location.pathname === "/") {
+      const start = readPrefs().start;
+      if (start && start !== "/") router.replace(start);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const l = document.getElementById("launch");
     if (!l || l.classList.contains("go") || document.documentElement.classList.contains("nolaunch")) return;

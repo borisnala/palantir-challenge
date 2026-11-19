@@ -6,6 +6,7 @@ import { DeviceFrame, LaunchReady, PullToRefresh, Transitions } from "@/componen
 import { Launch } from "@/components/brand";
 import { LightSource } from "@/components/liquid";
 import { Toast } from "@/components/ios";
+import { SettingsSheet } from "@/components/settings";
 
 export const metadata: Metadata = {
   title: "Risk Tool",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <LightSource />
         <AppState>
           <Drawer />
+          <SettingsSheet />
           <div className="stage">
             <main className="screen">{children}</main>
             <Toast />

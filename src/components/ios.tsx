@@ -8,9 +8,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronLeft, ChevronRight, Ellipsis, Link2, Menu, Minus, Plus, RefreshCw, Share, UserRound } from "lucide-react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { useApp } from "./app-state";
+import { ROLE_LABEL, useApp, type Role } from "./app-state";
 import { Glass, Spring, stretch, useSpringLoop } from "./liquid";
 import { buzz } from "@/lib/haptics";
+import { ghost } from "./motion";
 
 /** Back goes to the screen you came from, or to the parent when the page was opened directly. */
 function BackButton({ href, label }: { href: string; label: string }) {
@@ -31,7 +32,6 @@ export function NavBar({ title, eyebrow, trailing, back }: {
 }) {
   const { unread, setDrawer, visit, wdRows, pending, say, set } = useApp();
   const path = usePathname();
-  const router = useRouter();
   const [menu, setMenu] = useState(false);
   const [status, setStatus] = useState(false);
   const share = async () => {
@@ -66,9 +66,9 @@ export function NavBar({ title, eyebrow, trailing, back }: {
             <Glass className="popmenu" role="menu">
               <button role="menuitem" onClick={share}><Share size={20} strokeWidth={1.9} />Share</button>
               <button role="menuitem" onClick={() => { setMenu(false); navigator.clipboard?.writeText(location.href).then(() => say("Link copied"), () => {}); }}><Link2 size={20} strokeWidth={1.9} />Copy link</button>
-              <button role="menuitem" onClick={() => { setMenu(false); set("refreshedAt", new Date().toISOString()); say("Data refreshed"); }}><RefreshCw size={20} strokeWidth={1.9} />Refresh data</button>
+              <button role="menuitem" onClick={() => { setMenu(false); ghost(760); setTimeout(() => { set("refreshedAt", new Date().toISOString()); say("Data refreshed"); }, 760); }}><RefreshCw size={20} strokeWidth={1.9} />Refresh data</button>
               <i className="popmenu-sep" />
-              <button role="menuitem" onClick={() => { setMenu(false); router.push("/account/"); }}><UserRound size={20} strokeWidth={1.9} />Account</button>
+              <button role="menuitem" onClick={() => { setMenu(false); set("ui.settings", true); }}><UserRound size={20} strokeWidth={1.9} />Settings</button>
             </Glass>
           </>
         )}
@@ -132,7 +132,7 @@ const SheetNav = createContext<((title: string, node: React.ReactNode) => void) 
 /** Inside a sheet: push a detail page, as the Claude app does when a step row is tapped. */
 export const useSheetPush = () => useContext(SheetNav);
 
-export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+export function Sheet({ open, onClose, title, children, trailing, tall }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; trailing?: React.ReactNode; tall?: boolean }) {
   // mounted keeps the sheet in the DOM while it slides out. The slide runs on a spring, and a drag on the top bar
   // pulls the sheet with the finger. Let go past a third of its height, or flick down, and it closes. Otherwise it
   // springs back with a little overshoot.
@@ -196,7 +196,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   return (
     <div className="sheet-wrap">
       <button ref={scrim} className="sheet-scrim" aria-label="Close" onClick={onClose} />
-      <div ref={panel} className="sheet" role="dialog" aria-modal="true" aria-label={title} style={{ transform: "translateY(100%)" }}>
+      <SheetNav.Provider value={(t, node) => { buzz(); setStack((x) => [...x, { title: t, node }]); }}>
+      <div ref={panel} className={`sheet ${tall ? "sheet-tall" : ""}`} role="dialog" aria-modal="true" aria-label={title} style={{ transform: "translateY(100%)" }}>
         <div className="sheet-grip" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
           <span className="grabber" aria-hidden />
           <div className="sheet-bar">
@@ -210,13 +211,12 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
               </button>
             )}
             <span className="nav-title">{stack.length ? stack[stack.length - 1].title : title}</span>
-            <span />
+            {stack.length ? <span /> : trailing ?? <span />}
           </div>
         </div>
-        <SheetNav.Provider value={(t, node) => { buzz(); setStack((x) => [...x, { title: t, node }]); }}>
-          <div key={stack.length} className={`sheet-body ${stack.length ? "sheet-pushed" : ""}`}>{stack.length ? stack[stack.length - 1].node : children}</div>
-        </SheetNav.Provider>
+        <div key={stack.length} className={`sheet-body ${stack.length ? "sheet-pushed" : ""}`}>{stack.length ? stack[stack.length - 1].node : children}</div>
       </div>
+      </SheetNav.Provider>
     </div>
   );
 }
@@ -236,8 +236,8 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   const track = useRef<HTMLDivElement>(null);
   const thumb = useRef<HTMLSpanElement>(null);
   const copy = useRef<HTMLSpanElement>(null);
-  const sx = useRef(new Spring(-1, 360, 26));
-  const lift = useRef(new Spring(0, 484, 24));
+  const sx = useRef(new Spring(-1, 300, 24));
+  const lift = useRef(new Spring(0, 260, 19)); // slower lift and sink, a small overshoot (owner: "way too fast")
   const drag = useRef<{ off: number; x0: number; last: number; t: number; moved: boolean } | null>(null);
   const skipClick = useRef(false);
   const unit = () => { const el = track.current; return el ? (el.clientWidth - 4) / options.length : 0; };
@@ -276,7 +276,6 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
 
   const local = (e: React.PointerEvent) => e.clientX - (track.current?.getBoundingClientRect().left ?? 0) - 2;
   const down = (e: React.PointerEvent) => {
-    track.current?.setPointerCapture?.(e.pointerId); // keep the drag when the finger leaves the track
     const w = unit(), px = local(e);
     const onThumb = px >= sx.current.x && px <= sx.current.x + w;
     drag.current = { off: onThumb ? px - sx.current.x : w / 2, x0: px, last: px, t: e.timeStamp, moved: false };
@@ -286,10 +285,17 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   const move = (e: React.PointerEvent) => {
     const d = drag.current; if (!d) return;
     const px = local(e), w = unit(), max = w * (options.length - 1);
-    if (Math.abs(px - d.x0) > 5) d.moved = true;
+    if (!d.moved && Math.abs(px - d.x0) > 5) {
+      d.moved = true;
+      // capture only once it is a drag: a captured tap would land on the track instead of the segment's button
+      track.current?.setPointerCapture?.(e.pointerId);
+    }
     if (!d.moved) return;
     let x = px - d.off;
     if (x < 0) x = -Math.sqrt(-x) * 3; else if (x > max) x = max + Math.sqrt(x - max) * 3; // rubber band past the ends
+    // and never past the screen: the lifted lens (14% wider than the thumb) stays 6 px inside either edge
+    const left = track.current?.getBoundingClientRect().left ?? 0, half = w * 0.07 + 6;
+    x = Math.max(-left - 2 + half, Math.min(innerWidth - left - 2 - w - half, x));
     const dt = Math.max(1, e.timeStamp - d.t) / 1000;
     sx.current.v = sx.current.v * 0.4 + ((x - sx.current.x) / dt) * 0.6;
     sx.current.x = x; d.last = px; d.t = e.timeStamp;
@@ -368,15 +374,18 @@ export function Toast() {
 }
 
 /** Confirm sheet for anything that changes a setting: says what will change, then Cancel or the action. */
-export function Confirm({ open, title, lines, action, destructive, onCancel, onConfirm }: {
-  open: boolean; title: string; lines: string[]; action: string; destructive?: boolean; onCancel: () => void; onConfirm: () => void;
+export function Confirm({ open, title, lines, action, destructive, onCancel, onConfirm, need = "editor" }: {
+  open: boolean; title: string; lines: string[]; action: string; destructive?: boolean; onCancel: () => void; onConfirm: () => void; need?: Role;
 }) {
+  // Every change in the app passes through here, so this is where clearance is checked (Settings, Clearance level)
+  const { can, guard, user } = useApp();
+  const ok = can(need);
   return (
     <Sheet open={open} onClose={onCancel} title={title}>
-      <Group>{lines.map((l, i) => <Row key={i} title={l} chevron={false} />)}</Group>
+      <Group footer={ok ? undefined : `Signed in as ${user.name}, ${ROLE_LABEL[user.role]}. This change requires ${ROLE_LABEL[need]} clearance.`}>{lines.map((l, i) => <Row key={i} title={l} chevron={false} />)}</Group>
       <div className="sheet-actions">
         <button className="btn btn-gray" onClick={onCancel}>Cancel</button>
-        <button className={`btn ${destructive ? "btn-red" : "btn-blue"}`} onClick={onConfirm}>{action}</button>
+        <button className={`btn ${destructive ? "btn-red" : "btn-blue"} ${ok ? "" : "btn-locked"}`} onClick={() => { if (guard(need)) onConfirm(); }}>{ok ? action : "Not permitted"}</button>
       </div>
     </Sheet>
   );

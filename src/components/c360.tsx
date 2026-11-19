@@ -10,6 +10,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRightLeft, Bell, Flag, NotebookPen } from "lucide-react";
 import { useApp } from "./app-state";
+import { buzz } from "@/lib/haptics";
+import { TradingPattern } from "./pattern";
 import { Chip, Confirm, Group, Metrics, Row, Segmented, Sheet, Switch } from "./ios";
 import { Monogram, Pnl, Share } from "./ui";
 import c3 from "@/data/client360.json";
@@ -56,9 +58,41 @@ function ticks(lo: number, hi: number) {
   return out;
 }
 
-/** The Stocks chart: a line with a y axis on the right, a zero line, and a finger that scrubs through the days. While
- *  the finger is down the headline shows that day's value and date. */
-function LineChart({ days, values, onScrub }: { days: number[]; values: number[]; onScrub: (i: number | null) => void }) {
+type Scale = "linear" | "log";
+type Band = { from: number; to: number; tier: string };
+const OVERLAY = ["var(--orange)", "var(--purple)", "var(--blue)", "#ff2d55"];
+
+/** Group periods from the group history: each change starts a band labelled with the tier the client moved into. */
+function bandsOf(changes: { day: number; title: string }[], first: number, last: number): Band[] {
+  const moves = changes.map((c) => ({ day: c.day, m: c.title.match(/^(?:Opened in (\w+)|(\w+) to (\w+))$/) }))
+    .filter((c) => c.m).sort((x, y) => x.day - y.day);
+  if (!moves.length) return [];
+  const out: Band[] = [];
+  let start = first, tier = moves[0].m![1] ?? moves[0].m![2];
+  for (const mv of moves) {
+    if (mv.day > start) out.push({ from: start, to: Math.min(mv.day, last), tier });
+    start = Math.max(start, mv.day); tier = mv.m![1] ?? mv.m![3];
+  }
+  out.push({ from: start, to: last, tier });
+  return out.filter((x) => x.to > x.from);
+}
+
+/** A seeded daily price index for the compare overlay (the demo has no price history). Starts at 100. */
+function priceIndex(sym: string, n: number) {
+  let x = [...sym].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7) % 2147483647 || 1;
+  const rnd = () => (x = (x * 16807) % 2147483647) / 2147483647;
+  const out = [100];
+  for (let i = 1; i < n; i++) out.push(out[i - 1] * (1 + (rnd() - 0.49) * 0.018));
+  return out;
+}
+
+/** P&L and exposure, as the portal's desktop chart: a line with a y axis on the right, a linear or log scale, group
+ *  periods as shaded bands, compare-price lines, and net lots per day as bars under it. A finger scrubs through the
+ *  days and a tag shows the day's figures. */
+function ExposureChart({ days, values, net, scale, bands, overlays, onScrub, tip }: {
+  days: number[]; values: number[]; net: number[]; scale: Scale; bands: Band[]; overlays: string[];
+  onScrub: (i: number | null) => void; tip: (i: number) => React.ReactNode;
+}) {
   const box = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(320);
   const [at, setAt] = useState<number | null>(null);
@@ -68,47 +102,78 @@ function LineChart({ days, values, onScrub }: { days: number[]; values: number[]
     ro.observe(el); setW(el.clientWidth);
     return () => ro.disconnect();
   }, []);
-  const H = 190, axis = 52, top = 10, bottom = 24, cw = Math.max(80, w - axis);
-  const lo = Math.min(0, ...values), hi = Math.max(0, ...values);
-  const t = ticks(lo, hi), y0 = t[0], y1 = t[t.length - 1];
+  const H = 200, NB = 46, axis = 52, top = 14, bottom = 18, cw = Math.max(80, w - axis);
+  // the scale: linear, or a symmetric log so a P&L that crosses zero still has a log axis
+  const f = (v: number) => (scale === "log" ? Math.sign(v) * Math.log10(1 + Math.abs(v) / 100) : v);
+  const fi = (u: number) => (scale === "log" ? Math.sign(u) * (10 ** Math.abs(u) - 1) * 100 : u);
+  const lo0 = Math.min(0, ...values), hi0 = Math.max(0, ...values);
+  let t: number[];
+  if (scale === "log") {
+    const cand = [0, 100, 300, 1000, 3000, 10000, 30000, 100000, 300000, 1000000].flatMap((v) => (v ? [v, -v] : [0]));
+    t = cand.filter((v) => v >= lo0 * 1.05 - 1 && v <= hi0 * 1.05 + 1).sort((p, q) => p - q);
+  } else t = ticks(lo0, hi0);
+  const y0 = f(Math.min(t[0], lo0)), y1 = f(Math.max(t[t.length - 1], hi0));
   const x = (i: number) => (i / Math.max(1, values.length - 1)) * cw;
-  const y = (v: number) => top + (1 - (v - y0) / (y1 - y0 || 1)) * (H - top - bottom);
+  const y = (v: number) => top + (1 - (f(v) - y0) / (y1 - y0 || 1)) * (H - top - bottom);
   const d = values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
-  const up = values[values.length - 1] >= 0;
+  const zero = y(0);
+  const xOf = (day: number) => { const k = days.findIndex((dd) => dd >= day); return x(k < 0 ? days.length - 1 : k); };
+  const nmax = Math.max(0.01, ...net.map(Math.abs));
   const months = useMemo(() => {
     const seen: { i: number; label: string }[] = [];
     days.forEach((dd, i) => { const m = new Date(dd * 1000).getUTCMonth(); if (!seen.length || new Date(days[seen[seen.length - 1].i] * 1000).getUTCMonth() !== m) seen.push({ i, label: MONTHS[m] }); });
-    return seen.filter((_, k, a) => k % Math.ceil(a.length / 4) === 0);
+    return seen.filter((_, k, arr) => k % Math.ceil(arr.length / 4) === 0);
   }, [days]);
+  const lines = overlays.map((sym) => {
+    const idx = priceIndex(sym, values.length), mn = Math.min(...idx), mx = Math.max(...idx);
+    return idx.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${(top + (1 - (v - mn) / (mx - mn || 1)) * (H - top - bottom)).toFixed(1)}`).join("");
+  });
   const pick = (clientX: number) => {
     const r = box.current?.getBoundingClientRect(); if (!r) return;
     const i = Math.round(Math.max(0, Math.min(1, (clientX - r.left) / cw)) * (values.length - 1));
     setAt(i); onScrub(i);
   };
   const end = () => { setAt(null); onScrub(null); };
+  const up = values[values.length - 1] >= 0;
   return (
     <div ref={box} className={`lchart ${up ? "lchart-up" : "lchart-down"}`}
       onPointerDown={(e) => { (e.target as Element).setPointerCapture?.(e.pointerId); pick(e.clientX); }}
       onPointerMove={(e) => { if (at !== null || e.pointerType === "mouse") pick(e.clientX); }}
       onPointerUp={end} onPointerCancel={end} onPointerLeave={(e) => { if (e.pointerType === "mouse") end(); }}>
-      <svg width={w} height={H} role="img" aria-label="Cumulative P&L chart">
-        <defs><linearGradient id="lfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".22" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient></defs>
+      <svg width={w} height={H + NB + 16} role="img" aria-label="P&L and net lots chart">
+        <defs><linearGradient id="lfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".2" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient></defs>
+        {bands.map((bd, k) => (
+          <g key={k}>
+            <rect x={xOf(bd.from)} y={top - 12} width={Math.max(1, xOf(bd.to) - xOf(bd.from))} height={H - top - bottom + 12} className={k % 2 ? "band-b" : "band-a"} />
+            {k > 0 && <line x1={xOf(bd.from)} x2={xOf(bd.from)} y1={top - 12} y2={H - bottom} className="band-line" />}
+            <text x={xOf(bd.from) + 4} y={top - 2} className="lc-label band-label">{bd.tier}</text>
+          </g>
+        ))}
         {t.map((v) => (
           <g key={v}>
             <line x1="0" x2={cw} y1={y(v)} y2={y(v)} className={v === 0 ? "lc-zero" : "lc-grid"} />
             <text x={cw + 8} y={y(v) + 4} className="lc-label">{compact(v)}</text>
           </g>
         ))}
-        {months.map((m) => <text key={m.i} x={Math.min(cw - 20, x(m.i))} y={H - 6} className="lc-label">{m.label}</text>)}
-        <path d={`${d}L${cw},${y(Math.max(y0, Math.min(y1, 0)))}L0,${y(Math.max(y0, Math.min(y1, 0)))}Z`} fill="url(#lfill)" className="lc-area" />
+        {lines.map((ld, k) => <path key={overlays[k]} d={ld} className="lc-overlay" style={{ stroke: OVERLAY[k % OVERLAY.length] }} />)}
+        <path d={`${d}L${cw},${zero}L0,${zero}Z`} fill="url(#lfill)" className="lc-area" />
         <path d={d} className="lc-line" pathLength={1} />
+        {/* net lots per day */}
+        <text x={cw + 8} y={H + 12} className="lc-label">Net lots</text>
+        <line x1="0" x2={cw} y1={H + NB / 2 + 8} y2={H + NB / 2 + 8} className="lc-grid" />
+        {net.map((v, i) => v ? (
+          <rect key={i} x={x(i) - 1} width="2.2" y={v > 0 ? H + NB / 2 + 8 - (v / nmax) * (NB / 2) : H + NB / 2 + 8} height={Math.max(1, (Math.abs(v) / nmax) * (NB / 2))} className={v > 0 ? "nl-pos" : "nl-neg"} />
+        ) : null)}
+        {months.map((m) => <text key={m.i} x={Math.min(cw - 20, x(m.i))} y={H + NB + 14} className="lc-label">{m.label}</text>)}
         {at !== null && (
           <g>
-            <line x1={x(at)} x2={x(at)} y1={top} y2={H - bottom} className="lc-cursor" />
+            <line x1={x(at)} x2={x(at)} y1={top} y2={H + NB + 8} className="lc-cursor" />
             <circle cx={x(at)} cy={y(values[at])} r="5.5" className="lc-dot" />
           </g>
         )}
       </svg>
+      {at !== null && <div className="lc-tip" style={{ left: Math.min(Math.max(0, x(at) - 80), cw - 160) }}>{tip(at)}</div>}
+      <span hidden>{fi(0)}</span>
     </div>
   );
 }
@@ -129,7 +194,7 @@ function walk(r: Pos, price: number, u: number) {
   return price + (u - 0.5) * 2 * r.price * 0.00006 - (price - r.price) * 0.03;
 }
 
-function useLive(p: Profile, seed: number) {
+function useLive(p: Profile, seed: number, on: boolean) {
   const rows = p.exposure.symbols;
   // the two minutes before the page opened, so the chart has history from the first frame
   const [hist] = useState(() => {
@@ -143,7 +208,7 @@ function useLive(p: Profile, seed: number) {
   const [series, setSeries] = useState(() => hist.map((px) => px.reduce((a, v, i) => a + pnlOf(rows[i], v), 0)));
   const [moves, setMoves] = useState<number[]>(() => rows.map(() => 0));
   useEffect(() => {
-    if (!rows.length) return;
+    if (!rows.length || !on) return; // Settings, Live prices off: the book holds still
     const id = setInterval(() => {
       setPrices((prev) => {
         const next = prev.map((v, i) => walk(rows[i], v, Math.random()));
@@ -153,7 +218,7 @@ function useLive(p: Profile, seed: number) {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [rows]);
+  }, [rows, on]);
   const fl = rows.map((r, i) => pnlOf(r, prices[i]));
   const floating = fl.reduce((a, b) => a + b, 0);
   const equity = (p.identity.balance ?? 0) + (p.identity.credit ?? 0) + floating;
@@ -248,11 +313,11 @@ export function Client360({ c }: { c: Client }) {
   const p = profileOf(c.login);
   const app = useApp();
   const [tab, setTab] = useState<Tab>("overview");
-  const [pov, setPov] = useState<Pov>("client");
+  const [pov, setPov] = useState<Pov>(app.prefs.pov);
   const [scrub, setScrub] = useState<number | null>(null);
   const [sheet, setSheet] = useState<null | "status" | "note" | "move" | "mg" | "sc" | "fb" | { month: string }>(null);
   const [moveTo, setMoveTo] = useState<string | null>(null);
-  const live = useLive(p, c.login);
+  const live = useLive(p, c.login, app.prefs.live);
 
   const status = app.get<Status>(`status-${c.login}`, app.watched.has(c.login) ? "watch" : "none");
   const pinned = app.get<boolean>(`pin-${c.login}`, false);
@@ -267,6 +332,17 @@ export function Client360({ c }: { c: Client }) {
   const daily = pov === "client" ? p.daily : p.daily_hpov;
   const st = pov === "client" ? p.stats : p.stats_hpov;
   const cum = useMemo(() => cumulative(daily), [daily]);
+  const [series, setSeries] = useState<"realized" | "growth">("realized");
+  const [scale, setScale] = useState<Scale>("linear");
+  const [groups, setGroups] = useState(false);
+  const [compare, setCompare] = useState<string[]>([]);
+  // Portfolio growth: the balance through time, ending at today's balance
+  const start = (p.identity.balance ?? 0) - p.stats.net_pl;
+  const plotted = series === "realized" ? cum : cumulative(p.daily).map((v) => start + v);
+  const netMap = new Map(p.netlots.map(([dd, v]) => [dd, v]));
+  const netByDay = daily.map(([dd]) => netMap.get(dd) ?? 0);
+  const bands = bandsOf(p.group_changes, daily[0][0], daily[daily.length - 1][0]);
+  const bandAt = (dd: number) => bands.find((bd) => dd >= bd.from && dd <= bd.to)?.tier;
   const months = useMemo(() => monthsOf(daily), [daily]);
   const month = sheet && typeof sheet === "object" ? months.find((m) => m.key === sheet.month) : undefined;
   const alerts = ALERTS.filter((a) => a.login === c.login);
@@ -276,6 +352,8 @@ export function Client360({ c }: { c: Client }) {
   const w = p.windows, x = p.exposure.totals, wd = p.withdrawals;
   const isLive = p.exposure.symbols.length > 0;
 
+  // switch tab, then bring the section into view once it has drawn
+  const jump = (to: Tab, id: string) => { setTab(to); setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 80); };
   const saveStatus = () => {
     app.set(`status-${c.login}`, draftStatus); app.set(`pin-${c.login}`, draftPin);
     if ((draftStatus !== "none") !== app.watched.has(c.login)) app.toggleWatch(c.login);
@@ -291,7 +369,7 @@ export function Client360({ c }: { c: Client }) {
   return (
     <>
       <header className="contact c360-head">
-        <Monogram name={c.name} size={76} />
+        <Monogram name={c.name} size={64} />
         <h1 className="contact-name">{c.name}</h1>
         <p className="row-sub">#{c.login} · {tier}, {p.identity.country}</p>
         <span className="tags">
@@ -300,9 +378,9 @@ export function Client360({ c }: { c: Client }) {
           {isLive && <Chip tone="green"><i className="live-dot" />Live</Chip>}
         </span>
         <div className="actions">
-          <button className={`action ${status !== "none" ? "action-on" : ""}`} onClick={() => { setDraftStatus(status); setDraftPin(pinned); setSheet("status"); }}><Flag size={20} strokeWidth={2.2} /><span>{status === "none" ? "Set status" : STATUS[status]}</span></button>
-          <button className={`action ${note ? "action-on" : ""}`} onClick={() => { setDraftNote(note?.text ?? ""); setSheet("note"); }}><NotebookPen size={20} strokeWidth={2.2} /><span>{note ? "Edit note" : "Add note"}</span></button>
-          <button className="action" onClick={() => setSheet("move")}><ArrowRightLeft size={20} strokeWidth={2.2} /><span>Move group</span></button>
+          <button className={`action ${status !== "none" ? "action-on" : ""}`} onClick={() => { if (!app.guard("editor")) return; setDraftStatus(status); setDraftPin(pinned); setSheet("status"); }}><Flag size={20} strokeWidth={2.2} /><span>{status === "none" ? "Set status" : STATUS[status]}</span></button>
+          <button className={`action ${note ? "action-on" : ""}`} onClick={() => { if (!app.guard("editor")) return; setDraftNote(note?.text ?? ""); setSheet("note"); }}><NotebookPen size={20} strokeWidth={2.2} /><span>{note ? "Edit note" : "Add note"}</span></button>
+          <button className="action" onClick={() => { if (app.guard("editor")) setSheet("move"); }}><ArrowRightLeft size={20} strokeWidth={2.2} /><span>Move group</span></button>
         </div>
       </header>
 
@@ -314,8 +392,7 @@ export function Client360({ c }: { c: Client }) {
             {isLive && (
               <>
               <section className="livecard" aria-live="off">
-                <span className="live-head"><span className="eyebrow"><i className="live-dot" />Live account</span><span className="muted">Simulated feed, 1 s</span></span>
-                <span className="live-k">Equity</span>
+                <span className="live-head"><span className="live-k"><i className="live-dot" />Equity</span><span className="muted">{app.prefs.live ? "Simulated feed, 1 s" : "Live prices paused"}</span></span>
                 <b className="live-equity">{money(live.equity)}</b>
                 <div className="live-grid">
                   <div><span>Balance</span><b>{compact(p.identity.balance)}</b></div>
@@ -347,9 +424,25 @@ export function Client360({ c }: { c: Client }) {
 
             <Segmented label="Point of view" value={pov} onChange={setPov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} />
             <section className="chartcard">
-              <span className="eyebrow">{scrub === null ? "Realized P&L, all time" : day(daily[scrub][0])}</span>
-              <b className="chart-value"><Pnl v={scrub === null ? st.net_pl : cum[scrub]} /></b>
-              <LineChart days={daily.map((d) => d[0])} values={cum} onScrub={setScrub} />
+              <Segmented label="Series" value={series} onChange={setSeries} options={[{ v: "realized", label: "Realized P&L" }, { v: "growth", label: "Portfolio growth" }]} />
+              <span className="eyebrow">{scrub === null ? (series === "realized" ? "Realized P&L, all time" : "Balance, all time") : day(daily[scrub][0])}</span>
+              <b className="chart-value">{series === "realized" ? <Pnl v={scrub === null ? st.net_pl : cum[scrub]} /> : money(scrub === null ? plotted[plotted.length - 1] : plotted[scrub])}</b>
+              <div className="tchips" role="toolbar" aria-label="Chart options">
+                <span className="tseg" role="radiogroup" aria-label="Scale">
+                  {(["linear", "log"] as Scale[]).map((m) => <button key={m} role="radio" aria-checked={scale === m} className={scale === m ? "on" : ""} onClick={() => { buzz(); setScale(m); }}>{m === "linear" ? "Linear" : "Log"}</button>)}
+                </span>
+                <button role="switch" aria-checked={groups} className={`tchip ${groups ? "on" : ""}`} onClick={() => { buzz(); setGroups(!groups); }}>Groups</button>
+              </div>
+              <ExposureChart days={daily.map((dd) => dd[0])} values={plotted} net={netByDay} scale={scale} bands={groups ? bands : []} overlays={compare} onScrub={setScrub}
+                tip={(i) => (<><b>{day(daily[i][0])}</b><span>{series === "realized" ? "Cumulative" : "Balance"} {money(plotted[i])}</span><span>Change {money(daily[i][1], true)}</span>{bandAt(daily[i][0]) && <span>Group {bandAt(daily[i][0])}</span>}<span>Net lots {num(netByDay[i], 2)}</span></>)} />
+              <div className="tchips" role="group" aria-label="Compare price">
+                <span className="tlabel">Compare price</span>
+                {p.symbols.slice(0, 4).map((sy, k) => {
+                  const onC = compare.includes(sy.symbol);
+                  return <button key={sy.symbol} role="switch" aria-checked={onC} className={`tchip ${onC ? "on" : ""}`} style={{ ["--c" as string]: OVERLAY[compare.indexOf(sy.symbol) >= 0 ? compare.indexOf(sy.symbol) : k] }}
+                    onClick={() => { buzz(); setCompare(onC ? compare.filter((z) => z !== sy.symbol) : [...compare, sy.symbol].slice(-2)); }}><i />{sy.symbol}</button>;
+                })}
+              </div>
               <div className="chart-stats">
                 <div><span>Drawdown</span><b>{compact(st.max_drawdown)}</b></div>
                 <div><span>Best day</span><Pnl v={st.best_day} short /></div>
@@ -357,14 +450,15 @@ export function Client360({ c }: { c: Client }) {
                 <div><span>Win rate</span><b>{pct(p.behaviour.win_rate_pct, 0)}</b></div>
               </div>
             </section>
-            <p className="caption">Touch and drag the chart to read a day.</p>
+            <p className="caption">Touch and drag the chart to read a day. Compare price lines are scaled to the chart, simulated for the demonstration.</p>
 
             <Group header="At a glance">
               <Row onClick={() => setTab("trading")} title="Trades" detail={num(p.behaviour.trade_count)} />
               <Row onClick={() => setTab("trading")} title="Top symbol" detail={`${p.symbols[0].symbol}, ${pct(p.symbols[0].pct, 0)}`} />
               <Row onClick={() => setTab("trading")} title="Best session" detail={[...p.sessions].sort((a, z) => z.net_pl - a.net_pl)[0].session} />
               <Row onClick={() => setTab("account")} title="Balance" detail={money(p.identity.balance)} />
-              <Row onClick={() => setTab("risk")} title="Group moves" detail={num(p.group_changes.length + moves.length)} />
+              <Row onClick={() => jump("risk", "c360-groups")} title="Group history" detail={`${num(p.group_changes.length + moves.length)} changes`} />
+              <Row onClick={() => jump("account", "c360-wd")} title="Withdrawal velocity" detail={`${wd.withdrawal_count} withdrawals`} />
             </Group>
           </>
         )}
@@ -372,6 +466,8 @@ export function Client360({ c }: { c: Client }) {
         {tab === "trading" && (
           <>
             <Segmented label="Point of view" value={pov} onChange={setPov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} />
+            <TradingPattern trades={p.trades as unknown as Record<string, [number, number, number, number][]>} asOf={c3.as_of} />
+
             <Group header="By trading day" footer={`Each square is a trading day, green for ${pov} profit, red for loss. Select a month for its days.`}>
               <div className="calgrid">
                 {months.map((m, k) => (
@@ -435,7 +531,8 @@ export function Client360({ c }: { c: Client }) {
               {p.metrics.map((m) => <Row key={m.metric} title={m.metric} subtitle={m.note} detail={<b>{m.result}</b>} chevron={false} />)}
             </Group>
             <Group header="Findings">{p.findings.map((f) => <Row key={f} title={f} chevron={false} />)}</Group>
-            <Group header="Group history" className="timeline" footer={`Now in ${tier}.`}>
+            <section id="c360-groups" className="anchor" />
+            <Group header="Group history" className="timeline" footer={`Now in ${tier}. The P&L chart shows these periods with Groups on.`}>
               {[...moves.map((m) => ({ day: m.at, title: `${m.from} to ${m.to}`, sub: "Manual move by demo.admin" })), ...p.group_changes]
                 .sort((a, z) => z.day - a.day).map((r, i) => <Row key={i} title={r.title} subtitle={r.sub} detail={day(r.day)} chevron={false} />)}
             </Group>
@@ -479,7 +576,8 @@ export function Client360({ c }: { c: Client }) {
               <Row title="Swap" detail={money(w.t_all_swap)} chevron={false} />
             </Group>
 
-            <Metrics label="Withdrawals" items={[
+            <section id="c360-wd" className="anchor"><h2 className="sub-head">Withdrawal velocity</h2></section>
+            <Metrics label="Withdrawal velocity" items={[
               { k: "Net flow", v: compact(wd.net_flow), tone: wd.net_flow >= 0 ? "pos" : "neg" },
               { k: "Withdrawals", v: wd.withdrawal_count },
               { k: "After profit", v: wd.fastest_withdraw_after_profit_days ? `${num(wd.fastest_withdraw_after_profit_days)} d` : "None" },

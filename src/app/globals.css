@@ -831,3 +831,109 @@ html, body { overscroll-behavior: none; }
   .seg-lens { background: var(--cell); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .seg-edge { display: none; }
 }
+
+/* 2026-11-19 from the owner's phone. Glass moves slower and smoother ("way too fast"): a press swells in 0.35 s and
+   releases over 0.75 s on a soft spring, the more menu opens over 0.7 s. The Client 360 header sits closer to the bar
+   and its chips wrap with a gap, never overlapping. */
+:root { --spring-soft: cubic-bezier(.22, 1.25, .36, 1); }
+.glassbtn, .titlecap, .searchorb, .pillbtn { transition: transform .75s var(--spring-soft), filter .5s ease-out; }
+.glassbtn.lg-press, .titlecap.lg-press, .pillbtn.lg-press { transition: transform .35s var(--spring-soft), filter .2s; }
+.lg::after, .pillbtn::after { transition: opacity .6s ease-out; }
+.lg-press::after { transition: opacity .15s; }
+.popmenu { animation: morphopen .7s var(--spring-soft) both; }
+.popmenu > * { animation: fadein .35s .15s both; }
+.action { transition: transform .6s var(--spring-soft), background-color .3s, color .3s; }
+.c360-head { margin-top: -18px; gap: 2px; }
+.c360-head .monogram { margin-bottom: 2px; }
+.tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; max-width: 100%; }
+.tags .chip { line-height: 16px; }
+
+/* Settings (owner 2026-11-19, the Claude app's Settings sheet): a tall sheet, value pickers with an up-down mark over
+   the phone's own picker, three appearance tiles drawn as small previews, the i menu at the top right. */
+.sheet-tall { height: calc(100dvh - var(--bar-top) - 8px); max-height: none; }
+.sheet-tall .sheet-body { flex: 1; }
+.pick { position: relative; display: inline-flex; align-items: center; gap: 4px; color: var(--label2); font-size: 17px; }
+.pick select { position: absolute; inset: 0; opacity: 0; font-size: 16px; appearance: none; -webkit-appearance: none; }
+.link-blue { color: var(--blue); }
+.info-wrap { position: relative; justify-self: end; }
+.info-menu { right: 0; top: calc(100% + 6px); min-width: 250px; transform-origin: calc(100% - 26px) -26px; }
+.info-build { margin: 6px 14px 4px; font-size: 17px; line-height: 22px; }
+.info-build .muted { font-size: 13px; }
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px; }
+.theme { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 15px; color: var(--label); }
+.theme-on { color: var(--blue); }
+.theme-art { position: relative; width: 100%; aspect-ratio: 1.45; border-radius: 16px; padding: 10px; overflow: hidden; display: flex; flex-direction: column; gap: 5px;
+  box-shadow: 0 0 0 1px var(--sep); transition: box-shadow .3s; }
+.theme-on .theme-art { box-shadow: 0 0 0 2.5px var(--blue); }
+.theme-art i { display: block; height: 4px; width: 60%; border-radius: 2px; background: #8e8e93; }
+.theme-art i + i { width: 40%; }
+.theme-art b { position: absolute; right: 12px; bottom: 12px; width: 14px; height: 14px; border-radius: 50%; background: var(--label); }
+.theme-light { background: #fff; } .theme-light b { background: #1f1e1d; }
+.theme-dark { background: #1c1b1a; } .theme-dark b { background: #f2f0eb; }
+.theme-system { background: linear-gradient(135deg, #fff 50%, #1c1b1a 50%); } .theme-system b { background: #8e8e93; }
+.btn-locked { opacity: .45; }
+
+/* Loading outlines (Autoply's bones): every leaf on the screen becomes a grey block of its own size with a light that
+   sweeps across, icons and charts become blocks too, the top bar stays as it is. */
+@keyframes bone { to { background-position: -200% 0; } }
+html.ghosting main.screen > :not(.topbar):not(.scroll-edge) * { color: transparent !important; border-color: transparent !important; text-shadow: none !important; box-shadow: none !important; }
+html.ghosting main.screen > :not(.topbar):not(.scroll-edge) :is(span, b, p, h1, h2, h3, small, strong, em, label, a, button):not(:has(*)),
+html.ghosting main.screen > :not(.topbar):not(.scroll-edge) :is(.tile-icon, .monogram, .lchart, .fchart, .score-ring, .caldays, .hbar, .chip, .switch) {
+  background: linear-gradient(100deg, var(--fill) 30%, color-mix(in srgb, var(--fill) 35%, transparent) 50%, var(--fill) 70%) !important;
+  background-size: 200% 100% !important; border-radius: 7px; animation: bone 1.2s linear infinite !important; }
+html.ghosting main.screen > :not(.topbar):not(.scroll-edge) :is(svg, canvas, img, .tile-icon > *, .monogram > *, .chip > *) { visibility: hidden; }
+html.ghosting main.screen > :not(.topbar):not(.scroll-edge) :is(.monogram, .score-ring) { border-radius: 50%; }
+html.ghosting .searchdock, html.ghosting .dock { opacity: .6; transition: opacity .2s; }
+html.ghosting main.screen > :not(.topbar):not(.scroll-edge) :is(.split-bar i, .seg-fill, .live-dot) { background: var(--fill) !important; }
+html.ghosting main.screen > :not(.topbar):not(.scroll-edge) .tile-icon:has(.monogram) { border-radius: 50%; }
+
+/* Morning Digest board (owner 2026-11-19): the profit change, flagged in and out, and a sideways board of movement
+   columns, each client a card that opens Client 360. */
+.board { display: flex; flex-direction: column; gap: 12px; }
+.board-head { background: var(--cell); border-radius: var(--r-cell); padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.board-big { font-family: var(--rounded); font-size: 34px; line-height: 40px; font-weight: 700; }
+.board-flow { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.bf-n { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-bars { flex: 1; display: flex; gap: 3px; height: 26px; }
+.bf-bars i { display: flex; align-items: center; justify-content: center; border-radius: 8px; font-style: normal; font-size: 12px; font-weight: 600; color: #fff; animation: grow .8s var(--spring-soft) both; transform-origin: left; }
+.bf-in { background: var(--orange); } .bf-out { background: var(--gray); }
+.kanban { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 4px; scroll-padding: 0 16px; touch-action: pan-x pan-y; }
+.kcol { flex: none; width: 168px; scroll-snap-align: start; background: var(--cell); border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.kcol-head { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--label2); }
+.kcol-head i { width: 8px; height: 8px; border-radius: 50%; background: var(--tone); }
+.kcol-head b { margin-left: auto; color: var(--label); font-variant-numeric: tabular-nums; }
+.kcard { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 14px; background: var(--bg); box-shadow: inset 3px 0 0 var(--tone); transition: transform .5s var(--spring-soft); }
+.kcard:active { transform: scale(.97); }
+.kcard-t { display: flex; flex-direction: column; min-width: 0; }
+.kcard-t b { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kcard-t small { font-size: 12px; color: var(--label2); font-variant-numeric: tabular-nums; }
+.kempty { font-size: 13px; color: var(--label3); padding: 6px 2px; }
+
+/* P&L and exposure (owner 2026-11-19, the desktop chart's modes): scale and groups toggles, compare-price chips with
+   their line colour, group bands, net lots bars, a tag that follows the finger. */
+.tchips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 2px; }
+.tlabel { font-size: 12px; color: var(--label2); margin-right: 2px; }
+.tseg { display: inline-flex; background: var(--fill); border-radius: 15px; padding: 2px; }
+.tseg button { height: 26px; padding: 0 12px; border-radius: 13px; font-size: 13px; font-weight: 500; transition: background-color .35s, box-shadow .35s; }
+.tseg button.on { background: var(--cell); box-shadow: 0 1px 4px rgba(0,0,0,.14); font-weight: 600; }
+.tchip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 15px; background: var(--fill); font-size: 13px; font-weight: 500;
+  transition: background-color .35s, color .35s, transform .6s var(--spring-soft); }
+.tchip:active { transform: scale(.95); }
+.tchip.on { background: var(--ink, #1f1e1d); color: var(--ink-text, #fff); }
+.tchip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--gray)); }
+.band-a { fill: var(--fill); opacity: .55; } .band-b { fill: transparent; }
+.band-line { stroke: var(--label3); stroke-dasharray: 3 3; }
+.band-label { font-weight: 600; }
+.lc-overlay { fill: none; stroke-width: 1.4; opacity: .85; }
+.nl-pos { fill: var(--blue); opacity: .75; } .nl-neg { fill: var(--orange); opacity: .75; }
+.lchart { position: relative; }
+.lc-tip { position: absolute; top: 4px; width: 160px; padding: 8px 10px; border-radius: 12px; background: var(--cell); box-shadow: 0 6px 20px rgba(0,0,0,.16), 0 0 0 .5px var(--sep);
+  display: flex; flex-direction: column; gap: 1px; font-size: 12px; line-height: 16px; color: var(--label2); pointer-events: none; font-variant-numeric: tabular-nums; }
+.lc-tip b { color: var(--label); font-size: 13px; }
+.anchor { scroll-margin-top: calc(var(--bar-bottom) + 12px); }
+.pattern { padding: 12px 12px 8px; }
+.tvchart { height: 260px; margin-top: 8px; touch-action: pan-y; }
+
+.kanban { align-items: flex-start; }
+.kcol { width: 196px; }
+.kcard-t b { font-size: 13px; }

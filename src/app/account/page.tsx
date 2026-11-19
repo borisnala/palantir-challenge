@@ -9,13 +9,13 @@ import bp from "@/data/buildpaths.json";
 import us from "@/data/users.json";
 
 export default function Account() {
-  const { get } = useApp();
+  const { get, set, user } = useApp();
   const pending = us.pending.filter((d) => !get<Record<number, string>>("dev.decided", {})[d.id]).length;
   return (
     <>
       <NavBar title="Account" back={{ href: "/", label: "Morning Digest" }} />
       <Group>
-        <Row icon={<Monogram name="DA" size={44} />} tint="transparent" title="demo.admin" subtitle="Administrator, full write access" chevron={false} />
+        <Row onClick={() => set("ui.settings", true)} icon={<Monogram name={user.name.replace("demo.", "").slice(0, 2)} size={44} />} tint="transparent" title={user.name} subtitle="Settings, clearance and appearance" />
       </Group>
       <Group header="Admin">
         <PageRow href="/account/users/" Icon={Users} tint="var(--blue)" title="Users" detail={String(us.users.length)} />
