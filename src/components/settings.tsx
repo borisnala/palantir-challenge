@@ -7,9 +7,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Activity, Bell, ChevronsUpDown, FolderCog, Info, LogOut, MonitorSmartphone, Plus, ShieldCheck, UserRound, Users, Vibrate, Waves, Compass, Eye } from "lucide-react";
+import { Activity, Bell, FolderCog, Info, LogOut, MonitorSmartphone, Plus, ShieldCheck, UserRound, Users, Vibrate, Waves, Compass, Eye } from "lucide-react";
 import { ROLE_CAN, ROLE_LABEL, ROLE_RANK, USERS, useApp, type Prefs, type Role } from "./app-state";
-import { Confirm, Group, Row, Sheet, Switch, useSheetPush } from "./ios";
+import { Confirm, Group, PullDown, Row, Sheet, Switch, useSheetPush } from "./ios";
 import { Monogram } from "./ui";
 import { Glass } from "./liquid";
 import { ALERT_KINDS, when } from "@/lib/data";
@@ -23,20 +23,10 @@ const LICENSES = [
   ["TradingView Lightweight Charts", "Apache 2.0, charts by TradingView"], ["Website cloner template", "MIT"],
 ];
 
-/** A row whose value is picked from a list, as Claude's "Open links in": the value and an up-down mark, with the
- *  phone's own picker underneath. */
+/** A row whose value is picked from a list, as Claude's "Open links in": the value and an up-down mark that opens an
+ *  iOS pull-down menu. */
 function Picker<T extends string>({ icon, title, value, options, onChange }: { icon: React.ReactNode; title: string; value: T; options: { v: T; label: string }[]; onChange: (v: T) => void }) {
-  return (
-    <Row icon={icon} title={title} chevron={false}
-      detail={
-        <label className="pick">
-          <span>{options.find((o) => o.v === value)?.label}</span><ChevronsUpDown size={15} strokeWidth={2} aria-hidden />
-          <select value={value} onChange={(e) => onChange(e.target.value as T)} aria-label={title}>
-            {options.map((o) => <option key={o.v} value={o.v}>{o.label}</option>)}
-          </select>
-        </label>
-      } />
-  );
+  return <Row icon={icon} title={title} chevron={false} detail={<PullDown label={title} value={value} options={options} onChange={onChange} />} />;
 }
 
 function Pages() {
@@ -100,7 +90,7 @@ function Pages() {
         <Row onClick={() => go("/account/build-paths/", "viewer")} icon={<FolderCog size={20} strokeWidth={1.8} />} title="Build paths" />
       </Group>
 
-      <Group header="App" footer="Point of view sets how Client 360 opens. Live prices pause or run the simulated feed.">
+      <Group header="App">
         <Picker icon={<Compass size={20} strokeWidth={1.8} />} title="Start screen" value={app.prefs.start} options={START} onChange={(v) => app.setPref("start", v)} />
         <Picker icon={<Eye size={20} strokeWidth={1.8} />} title="Point of view" value={app.prefs.pov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} onChange={(v) => app.setPref("pov", v)} />
         <Row icon={<Waves size={20} strokeWidth={1.8} />} title="Live prices" chevron={false}><Switch on={app.prefs.live} onChange={() => app.setPref("live", !app.prefs.live)} label="Live prices" /></Row>

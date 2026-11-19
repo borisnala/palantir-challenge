@@ -8,11 +8,11 @@
 // shaped from it with that client's own figures.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRightLeft, Bell, Flag, NotebookPen } from "lucide-react";
+import { ArrowRightLeft, Bell, Check, ClipboardList, Copy, Flag, Hash, NotebookPen } from "lucide-react";
 import { useApp } from "./app-state";
 import { buzz } from "@/lib/haptics";
 import { TradingPattern } from "./pattern";
-import { Chip, Confirm, Group, Metrics, Row, Segmented, Sheet, Switch } from "./ios";
+import { Chip, Confirm, Group, Metrics, Row, Segmented, Sheet, Switch, copyText, usePageMenu } from "./ios";
 import { Monogram, Pnl, Share } from "./ui";
 import meta from "@/data/client360meta.json";
 import { ALERTS, compact, day, money, num, pct, when, type Client } from "@/lib/data";
@@ -30,6 +30,8 @@ const BAND: Record<string, { label: string; tone: "green" | "orange" | "red"; co
   elevated: { label: "Elevated risk", tone: "orange", color: "var(--orange)" },
   high: { label: "High risk", tone: "red", color: "var(--red)" },
 };
+/** Why a client changes group (owner 2026-11-19): a move is never recorded without one. */
+const REASONS = ["Scalping", "Toxic flow", "News trading", "Latency arbitrage", "Equity traffic light", "Hedging between accounts", "Account review"];
 const VERDICT: Record<string, string> = { hedge: "Hedge", warehouse: "Warehouse", "insufficient-evidence": "More evidence required" };
 const STATUS: Record<Status, string> = { none: "No status", watch: "Watch", escalated: "Escalated", cleared: "Cleared" };
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -340,12 +342,15 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
   const [scrub, setScrub] = useState<number | null>(null);
   const [sheet, setSheet] = useState<null | "status" | "note" | "move" | "mg" | "sc" | "fb" | { month: string }>(null);
   const [moveTo, setMoveTo] = useState<string | null>(null);
+  const [why, setWhy] = useState<string | null>(null);
+  const [whyNote, setWhyNote] = useState("");
+  const [review, setReview] = useState(false);
   const live = useLive(p, c.login, app.prefs.live);
 
   const status = app.get<Status>(`status-${c.login}`, app.watched.has(c.login) ? "watch" : "none");
   const pinned = app.get<boolean>(`pin-${c.login}`, false);
   const note = app.get<{ text: string; at: string } | null>(`note-${c.login}`, null);
-  const moves = app.get<{ from: string; to: string; at: number }[]>(`moves-${c.login}`, []);
+  const moves = app.get<{ from: string; to: string; at: number; why?: string; by?: string }[]>(`moves-${c.login}`, []);
   const tier = moves.length ? moves[moves.length - 1].to : p.identity.group_tier;
   const [draftStatus, setDraftStatus] = useState<Status>(status);
   const [draftPin, setDraftPin] = useState(pinned);
@@ -383,11 +388,23 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
     setSheet(null); app.say(draftStatus === "none" ? "Status removed" : `Status set to ${STATUS[draftStatus]}`);
   };
   const saveNote = () => { app.set(`note-${c.login}`, draftNote.trim() ? { text: draftNote.trim(), at: new Date().toISOString() } : null); setSheet(null); app.say(draftNote.trim() ? "Note saved" : "Note removed"); };
+  const path = (t: string) => p.identity.group.replace(/[^\\]+$/, t); // DUMMY\IB\Std with the tier swapped
+  const reason = why ? (whyNote.trim() ? `${why}, ${whyNote.trim()}` : why) : "";
+  const openMove = () => { setMoveTo(null); setWhy(null); setWhyNote(""); setSheet("move"); };
   const doMove = () => {
-    if (!moveTo) return;
-    app.set(`moves-${c.login}`, [...moves, { from: tier, to: moveTo, at: nowSec() }]);
-    setMoveTo(null); setSheet(null); app.say(`Moved to ${moveTo}`);
+    if (!moveTo || !why) return;
+    app.set(`moves-${c.login}`, [...moves, { from: tier, to: moveTo, at: nowSec(), why: reason, by: app.user.name }]);
+    setReview(false); setMoveTo(null); setSheet(null); app.say(`Moved to ${moveTo}`);
   };
+  usePageMenu([
+    { icon: <Hash size={20} strokeWidth={1.9} />, label: `Copy login ${c.login}`, run: () => copyText(String(c.login), app.say, "Login") },
+    { icon: <Copy size={20} strokeWidth={1.9} />, label: "Copy group path", run: () => copyText(path(tier), app.say, "Group path") },
+    { icon: <ClipboardList size={20} strokeWidth={1.9} />, label: "Copy risk summary", run: () => copyText([
+      `${c.name}, #${c.login}`, `Group ${path(tier)}`, `Risk score ${p.toxicity.score}, ${b.label}`, `Verdict ${VERDICT[p.decision.verdict] ?? p.decision.verdict}`,
+      `Balance ${money(p.identity.balance)}, equity ${money(isLive ? live.equity : p.identity.equity)}`, `All time P&L ${money(p.windows.t_all, true)}, last 30 days ${money(p.windows.t30, true)}`,
+    ].join("\n"), app.say, "Risk summary") },
+    { icon: <ArrowRightLeft size={20} strokeWidth={1.9} />, label: "Move group", run: () => { if (app.guard("editor")) openMove(); } },
+  ], [c.login, tier, isLive ? Math.round(live.equity) : 0]);
 
   return (
     <>
@@ -403,7 +420,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
         <div className="actions">
           <button className={`action ${status !== "none" ? "action-on" : ""}`} onClick={() => { if (!app.guard("editor")) return; setDraftStatus(status); setDraftPin(pinned); setSheet("status"); }}><Flag size={20} strokeWidth={2.2} /><span>{status === "none" ? "Set status" : STATUS[status]}</span></button>
           <button className={`action ${note ? "action-on" : ""}`} onClick={() => { if (!app.guard("editor")) return; setDraftNote(note?.text ?? ""); setSheet("note"); }}><NotebookPen size={20} strokeWidth={2.2} /><span>{note ? "Edit note" : "Add note"}</span></button>
-          <button className="action" onClick={() => { if (app.guard("editor")) setSheet("move"); }}><ArrowRightLeft size={20} strokeWidth={2.2} /><span>Move group</span></button>
+          <button className="action" onClick={() => { if (app.guard("editor")) openMove(); }}><ArrowRightLeft size={20} strokeWidth={2.2} /><span>Move group</span></button>
         </div>
       </header>
 
@@ -556,7 +573,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
             <Group header="Findings">{p.findings.map((f) => <Row key={f} title={f} chevron={false} />)}</Group>
             <section id="c360-groups" className="anchor" />
             <Group header="Group history" className="timeline" footer={`Now in ${tier}. The P&L chart shows these periods with Groups on.`}>
-              {[...moves.map((m) => ({ day: m.at, title: `${m.from} to ${m.to}`, sub: "Manual move by demo.admin" })), ...p.group_changes]
+              {[...moves.map((m) => ({ day: m.at, title: `${m.from} to ${m.to}`, sub: `${m.why ? `${m.why}. ` : ""}Manual move by ${m.by ?? "demo.admin"}` })), ...p.group_changes]
                 .sort((a, z) => z.day - a.day).map((r, i) => <Row key={i} title={r.title} subtitle={r.sub} detail={day(r.day)} chevron={false} />)}
             </Group>
           </>
@@ -643,13 +660,28 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
         <button className="btn btn-blue wide" onClick={saveNote}>{draftNote.trim() ? "Save note" : note ? "Remove note" : "Save note"}</button>
       </Sheet>
 
-      <Sheet open={sheet === "move"} onClose={() => setSheet(null)} title="Move group">
-        <Group header={`Now in ${tier}`} footer="The move goes through a confirmation and is recorded in the group history.">
-          {tiersFor(tier).filter((t2) => t2 !== tier).map((t2) => <Row key={t2} onClick={() => setMoveTo(t2)} title={t2} />)}
+      <Sheet open={sheet === "move"} onClose={() => setSheet(null)} title="Move group" tall>
+        <Group header="From">
+          <Row title={tier} subtitle={path(tier)} chevron={false} />
         </Group>
+        <Group header="To">
+          {tiersFor(tier).filter((t2) => t2 !== tier).map((t2) => (
+            <Row key={t2} onClick={() => { buzz(); setMoveTo(t2); }} title={t2} subtitle={path(t2)} chevron={false}
+              detail={moveTo === t2 ? <Check size={20} strokeWidth={2.6} color="var(--blue)" /> : undefined} />
+          ))}
+        </Group>
+        <Group header="Reason" footer="Required. The reason is recorded in the group history with your name.">
+          <div className="tchips why-chips" role="radiogroup" aria-label="Reason">
+            {REASONS.map((r) => <button key={r} role="radio" aria-checked={why === r} className={`tchip ${why === r ? "on" : ""}`} onClick={() => { buzz(); setWhy(r); }}>{r}</button>)}
+          </div>
+          <textarea className="notebox why-note" value={whyNote} onChange={(e) => setWhyNote(e.target.value)} placeholder="Evidence or ticket reference, optional" rows={2} aria-label="Reason detail" />
+        </Group>
+        <button className={`btn btn-blue wide ${moveTo && why ? "" : "btn-locked"}`} disabled={!moveTo || !why} onClick={() => setReview(true)}>
+          {!moveTo ? "Choose a group" : !why ? "Choose a reason" : `Review move to ${moveTo}`}
+        </button>
       </Sheet>
-      <Confirm open={moveTo !== null} title="Confirm move" lines={[`${c.name}, #${c.login}`, `Group ${tier} to ${moveTo ?? ""}`, "Applies to new positions"]} action="Move"
-        onCancel={() => setMoveTo(null)} onConfirm={doMove} />
+      <Confirm open={review} title="Confirm move" lines={[`${c.name}, #${c.login}`, `${path(tier)} to ${path(moveTo ?? "")}`, `Reason, ${reason}`, "Applies to new positions"]} action="Move"
+        onCancel={() => setReview(false)} onConfirm={doMove} />
 
       <Sheet open={sheet === "sc"} onClose={() => setSheet(null)} title="ScalperAM">
         <Group header={p.scalper.detected ? `Caught, tier ${p.scalper.tier}` : "Clear"} footer={`Based on the last ${p.scalper.evidence.lookback} positions. Fast means held up to ${p.scalper.evidence.hold_max_seconds} s.`}>

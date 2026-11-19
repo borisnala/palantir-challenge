@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronLeft, ChevronRight, Ellipsis, Link2, Menu, Minus, Plus, RefreshCw, Share, UserRound } from "lucide-react";
+import { Bell, Check, ChevronLeft, ChevronRight, ChevronsUpDown, Ellipsis, Menu, Minus, Plus, RefreshCw, Settings } from "lucide-react";
 import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { commandSlot } from "./shell";
@@ -14,6 +14,27 @@ import { ROLE_LABEL, useApp, type Role } from "./app-state";
 import { Glass, Spring, stretch, useSpringLoop } from "./liquid";
 import { buzz } from "@/lib/haptics";
 import { ghost } from "./motion";
+
+/** What the ⋯ button offers on this screen (owner 2026-11-19, "make it tailored, what the user needs most"). A screen
+ *  registers its own items with usePageMenu; Refresh data and Settings always close the list. */
+export type MenuItem = { icon: React.ReactNode; label: string; run: () => void };
+let menuItems: MenuItem[] = [];
+const menuSubs = new Set<() => void>();
+const pageMenu = {
+  subscribe: (f: () => void) => { menuSubs.add(f); return () => { menuSubs.delete(f); }; },
+  get: () => menuItems,
+};
+export function usePageMenu(items: MenuItem[], deps: unknown[]) {
+  useEffect(() => {
+    menuItems = items; menuSubs.forEach((f) => f());
+    return () => { menuItems = []; menuSubs.forEach((f) => f()); };
+  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+/** Copy a value and say so, as the desk does with logins and groups. */
+export function copyText(text: string, say: (m: string) => void, what: string) {
+  navigator.clipboard?.writeText(text).then(() => say(`${what} copied`), () => say("Copy is not available here"));
+}
 
 /** Back goes to the screen you came from, or to the parent when the page was opened directly. */
 function BackButton({ href, label }: { href: string; label: string }) {
@@ -37,11 +58,7 @@ export function NavBar({ title, eyebrow, trailing, back }: {
   const [menu, setMenu] = useState(false);
   const slot = useSyncExternalStore(commandSlot.subscribe, commandSlot.get, () => null); // the command bar's action slot
   const [status, setStatus] = useState(false);
-  const share = async () => {
-    setMenu(false);
-    try { if (navigator.share) { await navigator.share({ title: `${title} · Risk Tool`, url: location.href }); return; } } catch { return; }
-    navigator.clipboard?.writeText(location.href).then(() => say("Link copied"), () => {});
-  };
+  const items = useSyncExternalStore(pageMenu.subscribe, pageMenu.get, () => menuItems);
   useEffect(() => { visit(path, title, eyebrow); }, [path, title]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
@@ -67,11 +84,10 @@ export function NavBar({ title, eyebrow, trailing, back }: {
           <>
             <button className="menu-scrim" aria-label="Close menu" onClick={() => setMenu(false)} />
             <Glass className="popmenu" role="menu">
-              <button role="menuitem" onClick={share}><Share size={20} strokeWidth={1.9} />Share</button>
-              <button role="menuitem" onClick={() => { setMenu(false); navigator.clipboard?.writeText(location.href).then(() => say("Link copied"), () => {}); }}><Link2 size={20} strokeWidth={1.9} />Copy link</button>
+              {items.map((it) => <button key={it.label} role="menuitem" onClick={() => { buzz(); setMenu(false); it.run(); }}>{it.icon}{it.label}</button>)}
+              {items.length > 0 && <i className="popmenu-sep" />}
               <button role="menuitem" onClick={() => { setMenu(false); ghost(760); setTimeout(() => { set("refreshedAt", new Date().toISOString()); say("Data refreshed"); }, 760); }}><RefreshCw size={20} strokeWidth={1.9} />Refresh data</button>
-              <i className="popmenu-sep" />
-              <button role="menuitem" onClick={() => { setMenu(false); set("ui.settings", true); }}><UserRound size={20} strokeWidth={1.9} />Settings</button>
+              <button role="menuitem" onClick={() => { setMenu(false); set("ui.settings", true); }}><Settings size={20} strokeWidth={1.9} />Settings</button>
             </Glass>
           </>
         )}
@@ -87,6 +103,37 @@ export function NavBar({ title, eyebrow, trailing, back }: {
         </Group>
       </Sheet>
       {trailing && slot && createPortal(<span className="cmd-action">{trailing}</span>, slot)}
+    </>
+  );
+}
+
+/** An iOS pull-down button (owner 2026-11-19, "figure 2, what is that"): the value with an up-down mark, and on tap a
+ *  glass menu that grows out of it with a check on the current choice. Never the browser's own select list. */
+export function PullDown<T extends string>({ value, options, onChange, label }: { value: T; options: { v: T; label: string }[]; onChange: (v: T) => void; label: string }) {
+  const btn = useRef<HTMLButtonElement>(null);
+  const [at, setAt] = useState<{ top: number; right: number; up: boolean } | null>(null);
+  const open = () => {
+    buzz();
+    const r = btn.current!.getBoundingClientRect();
+    const up = r.bottom + 60 * options.length + 24 > innerHeight;
+    setAt({ top: up ? r.top - 8 : r.bottom + 8, right: innerWidth - r.right, up });
+  };
+  return (
+    <>
+      <button ref={btn} type="button" className="pick" aria-haspopup="menu" aria-expanded={!!at} aria-label={`${label}, ${options.find((o) => o.v === value)?.label}`} onClick={open}>
+        <span>{options.find((o) => o.v === value)?.label}</span><ChevronsUpDown size={15} strokeWidth={2} aria-hidden />
+      </button>
+      {at && createPortal(
+        <>
+          <button className="menu-scrim pd-scrim" aria-label="Close menu" onClick={() => setAt(null)} />
+          <Glass className={`popmenu pulldown ${at.up ? "pd-up" : ""}`} role="menu" style={{ top: at.top, right: at.right }}>
+            {options.map((o) => (
+              <button key={o.v} role="menuitemradio" aria-checked={o.v === value} onClick={() => { buzz(); setAt(null); if (o.v !== value) onChange(o.v); }}>
+                <span className="pd-check">{o.v === value && <Check size={18} strokeWidth={2.4} />}</span>{o.label}
+              </button>
+            ))}
+          </Glass>
+        </>, document.body)}
     </>
   );
 }

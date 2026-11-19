@@ -100,6 +100,16 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   the full width on a phone (16 px sides), 430 px on desktop. Never write env(safe-area-*) anywhere else.
 - Pull to refresh moves only the content (--pull on main), never the bar; the spinner sits under --bar-bottom.
 - The open menu locks the page: main is inert, the page can not scroll (html.menu-open).
+- The ⋯ menu (owner 2026-11-19, "tailored, what the user needs most"): each screen registers its own items with
+  usePageMenu (ios.tsx). Client 360 offers Copy login, Copy group path, Copy risk summary, Move group. Notifications
+  offers Show unread only, Copy logins in view, Alert settings. Refresh data and Settings always close the list. No
+  Share or Copy link.
+- Pickers are iOS pull-down menus (PullDown in ios.tsx), never a native select list.
+- Notifications are laid out as iOS Mail: the unread dot in the margin by the first line, a small severity glyph before
+  the title, time and chevron on the first line, client on the second, detail under it.
+- Move group (owner 2026-11-19) needs a target group shown with its full path and a reason (REASONS in c360.tsx, plus
+  optional evidence). The Confirm lists both paths and the reason, and the group history records reason and user.
+- No light follows the pointer or the finger anywhere: rims and sheen are lit from a fixed point (owner 2026-11-19).
 - Haptics map: light tick when a choice changes (switch, segmented, stepper, page change, ⋯ menu, menu open or close)
   and when a drag passes its point (menu open or close, sheet dismiss, pull past refresh); firm double tick when an
   action completes (every confirmation toast). Never before the person has touched the page.

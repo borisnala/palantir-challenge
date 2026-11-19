@@ -11,7 +11,7 @@ in this app does what. The last section is a forecast for iOS 27, marked as one.
 | Finger lands on the segmented control | The solid gray pill lifts out of the track. It becomes clear glass, about 15% wider and 40% taller than the track, with a thin bright rim that is strongest along the top. |
 | Finger drags | The lens follows the finger. The labels under it are magnified. Where the curved ends cross a letter, the letter bends and splits into a red and a blue fringe. The lens runs past the end of the track, then resists. |
 | Finger lifts | The lens shrinks back into the track, turns solid gray again and springs into the nearest segment with a small overshoot. |
-| Finger presses the bell and search capsule | The whole capsule swells by about 12% at once. A soft light pools under the finger and slides with it. The rim brightens. |
+| Finger presses the bell and search capsule | The whole capsule swells by about 12% at once and lightens evenly. |
 | Search opens | The capsule stretches across the bar and becomes the search field. The filter chips appear under it. The control changes shape, it is not replaced. |
 
 ## 2. The physics
@@ -25,7 +25,7 @@ from the React Bits FluidGlass source, which models the same effects, and from t
 | Magnification | A convex slab enlarges what is under it. | The lens scale applied to the content under it | 1.14 wide, 1.42 tall while lifted |
 | Dispersion | Each colour bends by a slightly different amount at the rim. | Red and blue traced at IOR ± 0.06 × dispersion | A red and a blue copy, offset 1.2 px, masked to the outer 16% of the lens |
 | Fresnel reflection | Glass reflects more at grazing angles, so the rim is bright. | f0 = ((IOR − 1) / (IOR + 1))² | An inset rim, brightest along the top, 0.5 px wide |
-| Light | A light source above the glass, which moves with the finger while pressed. | Specular highlight at the touch point | A radial light at the finger, 62% white at the centre, fading to nothing at 72% of the radius |
+| Light | A light source fixed above the glass. It never follows the pointer or the finger (owner 2026-11-19). | Static sheen and rim | Sheen lit from 30% across, above the top edge, rim angle 120 degrees |
 
 Motion is what makes it liquid instead of glassy. All of it runs on springs.
 
@@ -47,10 +47,11 @@ Glass is for the control layer only. Content (rows, cards, charts, numbers) stay
 |---|---|---|
 | Round bar buttons (menu, back, bell, more) | Top bar | Swell to 1.12 under the finger and lighten evenly. No spotlight under the finger (owner 2026-11-19) |
 | Title capsule | Top bar | Swells less (1.04), opens the Data status sheet |
-| More menu | Top bar | Grows out of its button, from a circle to the menu, on a spring |
+| More menu | Top bar | Grows out of its button, from a circle to the menu, on a spring. Holds the screen's own actions (usePageMenu), then Refresh data and Settings |
+| Pull-down picker | Settings rows | A glass menu grows out of the value with a check on the current choice, never the browser's select list |
 | Segmented control | Many screens, Client 360 tabs | Lifts into a lens on touch, follows the finger, magnifies with a colour fringe at the rim, rubber-bands past the ends, sinks back on release |
-| Search circle | Bottom left | Swells and lights under the finger |
-| Action pill | Bottom right | Swells and lights under the finger. Solid black, not clear glass, because it is the main action |
+| Search capsule | Bottom | Swells and lightens evenly |
+| Action pill | Bottom right | Swells and lightens evenly. Solid black, not clear glass, because it is the main action |
 | Sheets | Everywhere | Rise on a spring, follow a drag down, close past a third of their height |
 | Side menu | Left edge | Follows the finger, settles on a spring. Glass buttons inside it behave as in the top bar |
 | Switch | Settings rows | The knob stretches like a drop while it travels |

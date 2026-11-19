@@ -156,13 +156,8 @@ a.row:active, button.row:active { background: var(--fill2); }
 .switch-on i { transform: translateX(20px); }
 
 /* Alerts: Mail-style */
-.mail .row { padding-left: 4px; }
 .unread { flex: none; width: 10px; height: 10px; border-radius: 5px; }
 .unread-on { background: var(--blue); }
-.mail .tile-icon { align-self: flex-start; margin-top: 11px; }
-.mail .row-main { align-items: flex-start; }
-.mail-top { display: flex; justify-content: space-between; gap: 8px; }
-.mail-time { flex: none; font-size: 15px; color: var(--label2); }
 
 /* Clients */
 .searchfield { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 8px; background: var(--fill); border-radius: 10px; color: var(--label2); margin-top: -14px; }
@@ -853,7 +848,6 @@ html, body { overscroll-behavior: none; }
 .sheet-tall { height: calc(100dvh - var(--bar-top) - 8px); max-height: none; }
 .sheet-tall .sheet-body { flex: 1; }
 .pick { position: relative; display: inline-flex; align-items: center; gap: 4px; color: var(--label2); font-size: 17px; }
-.pick select { position: absolute; inset: 0; opacity: 0; font-size: 16px; appearance: none; -webkit-appearance: none; }
 .link-blue { color: var(--blue); }
 .info-wrap { position: relative; justify-self: end; }
 .info-menu { right: 0; top: calc(100% + 6px); min-width: 250px; transform-origin: calc(100% - 26px) -26px; }
@@ -1045,3 +1039,36 @@ html.refreshing .cmdbar > * { opacity: .45; }
 .glassbtn.lg-press, .titlecap.lg-press { filter: brightness(1.04); }
 .lg-press::before { filter: none; }
 @media (prefers-color-scheme: dark) { .glassbtn.lg-press, .titlecap.lg-press { filter: brightness(1.18); } }
+
+/* Natural press (owner 2026-11-19, from his screen recording): no light follows the pointer or finger. The sheen and the
+   rim are lit from a fixed point above the screen, and a press only swells the control and lightens it evenly. */
+.lg-sheen { background: radial-gradient(120% 140% at 30% -50%, rgba(255,255,255,.75), transparent 60%); }
+.lg::before { background: linear-gradient(120deg, var(--rim-hi), var(--rim-lo) 32%, transparent 52%, var(--rim-lo) 72%, var(--rim-hi)); }
+.lg::after, .pillbtn::after { content: none !important; display: none !important; }
+.lg-press::before { filter: none; }
+
+/* Notifications as iOS Mail (owner 2026-11-19): the unread dot in the margin beside the first line, the severity as a
+   small glyph before the title, the time and chevron on the first line, two lines of detail under it. */
+.mailrow { display: flex; width: 100%; text-align: left; position: relative; padding-left: 26px; }
+.mailrow .unread { position: absolute; left: 9px; top: 17px; width: 10px; height: 10px; }
+.mailrow-main { flex: 1; min-width: 0; padding: 10px 16px 11px 0; display: flex; flex-direction: column; gap: 2px; }
+.grp-body > .mailrow + .mailrow .mailrow-main { box-shadow: inset 0 .5px 0 var(--sep); }
+.mailrow-top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.mailrow-title { flex: 1; min-width: 0; font-size: 17px; line-height: 22px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.mailrow-title.strong { font-weight: 600; }
+.mailrow-title svg { flex: none; }
+.mailrow-time { flex: none; font-size: 15px; color: var(--label2); }
+.mailrow-top .row-chev { margin: 0 -4px 0 0; }
+.mailrow-from { font-size: 15px; line-height: 20px; color: var(--label); }
+.mailrow-sub { font-size: 15px; line-height: 20px; color: var(--label2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mailrow:active { background: var(--fill3, rgba(120,120,128,.12)); }
+
+/* The pull-down menu of a picker row, portalled to the page and placed under (or over) its button. */
+button.pick { display: inline-flex; align-items: center; gap: 4px; color: var(--label2); font-size: 17px; min-height: 44px; }
+.pd-scrim { z-index: 90; }
+.popmenu.pulldown { position: fixed; z-index: 91; min-width: 210px; transform-origin: calc(100% - 20px) 0; }
+.popmenu.pulldown.pd-up { transform: translateY(-100%); transform-origin: calc(100% - 20px) 100%; animation: none; }
+.pd-check { width: 20px; display: inline-grid; place-items: center; margin-right: -4px; }
+.why-chips { padding: 12px 16px 4px; flex-wrap: wrap; overflow: visible; }
+.why-note { margin: 8px 16px 14px; width: calc(100% - 32px); min-height: 0; }
+.btn-locked:disabled { opacity: .45; }
