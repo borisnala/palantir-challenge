@@ -120,7 +120,7 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   need admin. Preferences live in the browser (risktool-prefs). Light or Dark is forced through data-theme:
   scripts/postcss-theme.cjs copies every prefers-color-scheme dark block for it, so write dark styles as usual.
 - Loading outlines (owner 2026-11-19, "as we did it in Autoply"): motion.tsx ghost(ms) turns the screen into its own
-  shimmering outline, on the first open of each screen in a visit and while data refreshes.
+  shimmering outline while data refreshes (pull to refresh, Refresh data). Not on plain page changes.
 - Segmented controls capture the pointer only once a drag starts: capturing on touch-down sent taps to the track and
   stopped plain taps from switching segments (2026-11-19).
 - Device fit (owner 2026-11-19, src/lib/device.ts, inline before first paint): a table of every iPhone viewport sets
