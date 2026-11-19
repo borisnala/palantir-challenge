@@ -50,7 +50,7 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 ## Gold standard (owner 2026-11-18): the Claude iOS app
 Layout follows the Claude app on iPhone: warm off-white (#f8f7f4) and soft black, a top bar of round glass buttons with
 the title in a glass capsule and a second line under it, a side menu (sections, then Recents, account at the bottom)
-instead of a tab bar, the docked command bar at the bottom with search and the screen's main action
+instead of a tab bar, the glass search capsule at the bottom with the screen's main action beside it
 (NavBar `trailing`), sentence-case gray section labels, white cards with 24 px radii, outline icons (no colored
 tiles), sheets with the X on the left, step lists drawn as a timeline (Group className="timeline"). Take the
 patterns, never Claude's logo, wordmark or brand colors.
@@ -120,15 +120,17 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   need admin. Preferences live in the browser (risktool-prefs). Light or Dark is forced through data-theme:
   scripts/postcss-theme.cjs copies every prefers-color-scheme dark block for it, so write dark styles as usual.
 - Loading outlines (owner 2026-11-19, "as we did it in Autoply"): motion.tsx ghost(ms) turns the screen into its own
-  shimmering outline while data refreshes (pull to refresh, Refresh data). Not on plain page changes.
+  shimmering outline while data refreshes (pull to refresh, Refresh data). Not on plain page changes. Each outline
+  block is as wide as its own text, never the full row.
 - Segmented controls capture the pointer only once a drag starts: capturing on touch-down sent taps to the track and
   stopped plain taps from switching segments (2026-11-19).
 - Device fit (owner 2026-11-19, src/lib/device.ts, inline before first paint): a table of every iPhone viewport sets
   --sat --sab --sal --sar, --bar-top, --dpr and --hair (one device pixel) where iOS reports no insets. No zoom at all
   (viewport, gesture and double-tap blocked, inputs 16 px). Portrait only: landscape shows the rotate notice.
-- Command bar (owner 2026-11-19, "no floating icon, the way Bloomberg would"): shell.tsx CommandBar, docked to the
-  bottom, solid with a hairline, a search command line with GO and the screen's action key (NavBar `trailing` is
-  portalled into it). Inactive while data refreshes (html.refreshing). No floating search circle or pill.
+- Bottom search bar (owner 2026-11-19, "no floating icon" then "that ain't the Apple way"): shell.tsx CommandBar, as iOS
+  26 Mail, Notes and Safari: a full-width glass search capsule 8 px above the home indicator, the screen's action
+  (NavBar `trailing`, portalled in) as a black capsule beside it, content fading out under them. No solid bar, no GO
+  key, no small floating circle. Inactive while data refreshes (html.refreshing).
 - Loading (owner 2026-11-19, "lazy loading only if it needs time"): screens with data in the page draw at once. Each
   Client 360 profile is its own file (src/data/c360/<login>.json) fetched on open behind its own outline, the trading
   chart shows its outline until the chart library loads, refresh shows the outline while it waits.

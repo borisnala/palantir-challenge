@@ -178,9 +178,9 @@ export function StageScrim() {
   return <button className="stage-scrim" aria-label="Close menu" onClick={() => { buzz(); setDrawer(false); }} style={{ opacity: 0, pointerEvents: "none" }} />;
 }
 
-/** The command bar (owner 2026-11-19, "no floating icon, do it the way Bloomberg would"): docked to the bottom edge,
- *  solid, a hairline on top. Search on the left as a command line with GO, the screen's own action on the right. It
- *  sits still while the page scrolls and goes inactive while data refreshes. */
+/** The bottom search bar, as iOS 26 Mail, Notes and Safari place it (owner 2026-11-19, "that ain't the Apple way"):
+ *  a full-width Liquid Glass search capsule floating over the content, and the screen's main action as its own capsule
+ *  beside it. Content scrolls under the glass. Inactive while data refreshes. */
 let slotEl: HTMLElement | null = null;
 const slotSubs = new Set<() => void>();
 export const commandSlot = {
@@ -191,13 +191,16 @@ export function CommandBar() {
   const path = usePathname();
   const onSearch = path.startsWith("/search");
   return (
-    <div className={`cmdbar ${onSearch ? "cmd-nofield" : ""}`} role="toolbar" aria-label="Command bar">
-      {!onSearch && (
-        <Link href="/search/" className="cmd-field" aria-label="Search clients">
-          <Search size={17} strokeWidth={2.2} aria-hidden /><span>Search clients, logins, groups</span><b className="cmd-go">GO</b>
-        </Link>
-      )}
-      <span className="cmd-slot" ref={(el) => { if (slotEl !== el) { slotEl = el; slotSubs.forEach((f) => f()); } }} />
-    </div>
+    <>
+      <div className="scroll-edge-bottom" aria-hidden />
+      <div className={`cmdbar ${onSearch ? "cmd-nofield" : ""}`} role="toolbar" aria-label="Search and actions">
+        {!onSearch && (
+          <Link href="/search/" className="glassbtn-link cmd-link" aria-label="Search clients">
+            <Glass className="cmd-field"><Search size={18} strokeWidth={2.2} aria-hidden /><span>Search clients, logins, groups</span></Glass>
+          </Link>
+        )}
+        <span className="cmd-slot" ref={(el) => { if (slotEl !== el) { slotEl = el; slotSubs.forEach((f) => f()); } }} />
+      </div>
+    </>
   );
 }

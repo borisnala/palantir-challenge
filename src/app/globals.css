@@ -1021,3 +1021,22 @@ main.screen.pull-settle > :not(.topbar):not(.scroll-edge) { transition: transfor
 .mv-bar { display: flex; gap: 2px; height: 10px; margin: 12px 0 4px; }
 .mv-bar i { border-radius: 3px; animation: grow .7s var(--spring-soft) both; transform-origin: left; }
 .mv-dot { display: block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px; }
+
+/* Bottom search bar, iOS 26 (owner 2026-11-19): no solid bar, no GO key. A glass search capsule across the width,
+   floating 8 px above the home indicator, the action as a black capsule beside it, content fading out under them. */
+:root { --dock-h: 52px; --dock-gap: 8px; }
+.cmdbar { background: none; box-shadow: none; gap: 10px; padding: 0 max(16px, var(--sar)) calc(var(--dock-gap) + var(--sab)) max(16px, var(--sal)); pointer-events: none; }
+.cmdbar > * { pointer-events: auto; }
+.cmd-link { flex: 1; min-width: 0; display: flex; }
+.cmd-field { flex: 1; min-width: 0; height: 52px; border-radius: 26px; padding: 0 20px; gap: 10px; font-size: 17px; color: var(--label2); background: var(--glass);
+  display: flex; align-items: center; box-shadow: 0 6px 24px rgba(0,0,0,.12), inset 0 0 0 .5px var(--rim-lo, rgba(0,0,0,.06)); }
+.cmd-field span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmd-go { display: none; }
+.cmd-key { height: 52px; padding: 0 22px; border-radius: 26px; background: var(--ink, #1f1e1d); color: var(--ink-text, #fff); font-size: 17px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); transition: transform .5s var(--spring-soft), opacity .2s; }
+.cmd-key:active { transform: scale(1.06); opacity: 1; transition-duration: .25s; }
+.scroll-edge-bottom { position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--sab) + var(--dock-gap) + var(--dock-h) + 22px); z-index: 19; pointer-events: none;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--bg) 88%, transparent) 55%); }
+html.refreshing .cmdbar > * { opacity: .45; }
+/* Outlines match the width of their own text, as Apple's placeholders do: a short label is a short block */
+html.ghosting main.screen > :not(.topbar):not(.scroll-edge) :is(span, b, p, h1, h2, h3, small, strong, em, label, a, button):not(:has(*)) { width: fit-content; max-width: 100%; }
