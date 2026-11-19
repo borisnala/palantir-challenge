@@ -5,7 +5,7 @@ import { FileCheck2, ShieldCheck } from "lucide-react";
 import { Chip, Group, Metrics, NavBar, Row, Segmented, Sheet } from "@/components/ios";
 import { Share } from "@/components/ui";
 import cr from "@/data/cra.json";
-import { when } from "@/lib/data";
+import { sentence, when } from "@/lib/data";
 
 type O = "all" | "High" | "Medium" | "Low";
 type A = (typeof cr.recent)[number];
@@ -50,11 +50,11 @@ export default function CraAnalysis() {
               <Row title="TPPT, terror funding" subtitle={`from ${sel.tppt.basis.replace(/_/g, " ")}${sel.tppt.overridden ? ", overridden" : ""}`} detail={<span className="stack-r"><Chip tone={tone(sel.tppt.rating)}>{sel.tppt.rating}</Chip><span className="small">{sel.tppt.score}</span></span>} chevron={false} />
             </Group>
             <Group header="Assessment">
-              <Row title="Trigger" detail={sel.trigger.replace(/_/g, " ")} chevron={false} />
+              <Row title="Trigger" detail={sentence(sel.trigger)} chevron={false} />
               <Row title="Enhanced due diligence" detail={sel.edd_required ? "Required" : "Not needed"} chevron={false} />
               <Row title="Mode" detail={sel.mode} chevron={false} />
               <Row title="Model version" detail={sel.config_version} chevron={false} />
-              {sel.flags.map((f) => <Row key={f} title={f.replace(/_/g, " ")} chevron={false} />)}
+              {sel.flags.map((f) => <Row key={f} title={sentence(f.replace(/:/g, ", "))} chevron={false} />)}
             </Group>
             {sel.previous && (
               <Group header="Before">

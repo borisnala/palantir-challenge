@@ -10,7 +10,7 @@ import { when } from "@/lib/data";
 type Dim = "region" | "profile" | "product" | "delivery_channel";
 type Score = "tppt" | "tppu";
 const M = cr.model.model;
-type Cat = { key: string; label: string; tppt: number; tppu: number };
+type Cat = { key: string; label: string; tppt: number | null; tppu: number | null };
 type Version = { version: string; note: string; created_by: string; created_at: string; status: string; changes: string[] };
 
 export default function CraModel() {
@@ -20,9 +20,9 @@ export default function CraModel() {
   const [review, setReview] = useState(false);
   const edits = get<Record<string, number>>("cra.edits", {});
   const versions = get<Version[]>("cra.versions", cr.history?.versions as Version[] ?? []);
-  const val = (k: string, base: number) => edits[k] ?? base;
+  const val = (k: string, base: number | null) => edits[k] ?? base;
   const edit = (k: string, v: number) => set("cra.edits", { ...edits, [k]: v });
-  const changes = Object.entries(edits).filter(([k, v]) => v !== baseOf(k)).map(([k, v]) => `${label(k)} ${baseOf(k)} to ${v}`);
+  const changes = Object.entries(edits).filter(([k, v]) => v !== baseOf(k)).map(([k, v]) => `${label(k)} ${baseOf(k) ?? "None"} to ${v}`);
   const hi = val("thresholds.high_above", M.thresholds.high_above);
   const med = val("thresholds.medium_from", M.thresholds.medium_from);
 
@@ -57,7 +57,7 @@ export default function CraModel() {
         {(M.dimensions[dim].categories as Cat[]).map((c) => {
           const k = `dimensions.${dim}.${c.key}.${score}`;
           const v = val(k, c[score]);
-          return <Row key={c.key} title={c.label} subtitle={<Chip tone={v > hi ? "red" : v >= med ? "orange" : "green"}>{v > hi ? "High" : v >= med ? "Medium" : "Low"}</Chip>} chevron={false}>
+          return <Row key={c.key} title={c.label} subtitle={v === null || v === undefined ? <Chip>Not scored</Chip> : <Chip tone={v > hi ? "red" : v >= med ? "orange" : "green"}>{v > hi ? "High" : v >= med ? "Medium" : "Low"}</Chip>} chevron={false}>
             <Stepper label={`${c.label} ${score.toUpperCase()}`} value={v} step={0.1} digits={1} min={M.scale.min} max={M.scale.max} onChange={(n) => edit(k, n)} />
           </Row>;
         })}
@@ -74,7 +74,7 @@ export default function CraModel() {
   );
 }
 
-function baseOf(k: string): number {
+function baseOf(k: string): number | null {
   const p = k.split(".");
   if (p[0] === "thresholds") return M.thresholds[p[1] as keyof typeof M.thresholds];
   if (p[0] === "weights") return M.aggregation.weights[p[1] as keyof typeof M.aggregation.weights];

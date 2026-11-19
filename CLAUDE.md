@@ -15,7 +15,8 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 
 ## Where things are
 - `source/payloads/*.json.gz`: the desktop portal demo's own dummy payloads. `python3 scripts/distill.py` turns them
-  into `src/data/*.json`, one small file per screen. Never hand-write numbers, change the converter instead.
+  into `src/data/*.json`, one small file per screen. Never hand-write numbers, change the converter instead. Its tidy()
+  strips colons, semicolons, em dashes and ASCII arrows from portal text. Portal codes go through sentence() on screen.
 - `src/lib/data.ts`: clients, alerts and the formatters. `src/lib/levels.ts`: traffic light labels.
 - Navigation (owner 2026-11-18): the side menu (src/components/shell.tsx) holds Today, Risk, Liquidity, Withdrawals,
   Clients and Recents (client profiles and analysis screens only, with a second line; the watchlist stands in while it is empty); the account (Users, Device access, Build paths) sits at its bottom. The bell is top right. Every portal page has a

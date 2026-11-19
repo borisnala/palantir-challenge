@@ -5,7 +5,7 @@ import { Crosshair, Gauge, NotebookPen, Rocket, Zap } from "lucide-react";
 import { Chip, Group, Metrics, NavBar, Row, Segmented, Sheet } from "@/components/ios";
 import { ClientRow } from "@/components/rows";
 import ca from "@/data/catches.json";
-import { ago, group, nameOf } from "@/lib/data";
+import { ago, group, nameOf, sentence } from "@/lib/data";
 
 type A = "all" | "mg" | "scalper" | "fbu" | "etl" | "journal";
 const LABEL: Record<string, string> = { mg: "MachineGun", scalper: "ScalperAM", fbu: "FBUv2", etl: "Equity traffic light", journal: "MT5 journal" };
@@ -13,6 +13,9 @@ const ICON = { mg: Zap, scalper: Gauge, fbu: Rocket, etl: Crosshair, journal: No
 const TINT: Record<string, string> = { mg: "var(--red)", scalper: "var(--orange)", fbu: "var(--purple)", etl: "var(--green)", journal: "var(--gray)" };
 const login = (acc: number) => 99000000 + acc;
 type K = (typeof ca)[number];
+
+const KINDS: Record<string, string> = { mg: "MachineGun", etl: "ETL", scalper: "ScalperAM", auto_direct: "Auto direct", promote: "Promote", manual: "Manual", intraday: "Intraday", other: "Other" };
+const kindLabel = (k: string) => KINDS[k] ?? sentence(k);
 
 export default function Catches() {
   const [a, setA] = useState<A>("all");
@@ -32,7 +35,7 @@ export default function Catches() {
           return (
             <Row key={i} onClick={() => { setSel(x); setOpen(true); }} icon={<I size={17} strokeWidth={2.4} />} tint={TINT[x.algo]}
               title={nameOf(login(x.acc))} subtitle={x.reason ?? `${group(x.from_group)} to ${group(x.to_group)}`}
-              detail={<span className="stack-r"><span className="small">{x.seen_ago_min !== null && x.seen_ago_min !== undefined ? ago(x.seen_ago_min) : ""}</span><Chip>{x.kind.replace(/_/g, " ")}</Chip></span>} />
+              detail={<span className="stack-r"><span className="small">{x.seen_ago_min !== null && x.seen_ago_min !== undefined ? ago(x.seen_ago_min) : ""}</span><Chip>{kindLabel(x.kind)}</Chip></span>} />
           );
         })}
       </Group>
@@ -42,7 +45,7 @@ export default function Catches() {
           <>
             <Group><ClientRow login={login(sel.acc)} /></Group>
             <Group header="Event details">
-              <Row title="Kind" detail={sel.kind.replace(/_/g, " ")} />
+              <Row title="Kind" detail={kindLabel(sel.kind)} />
               <Row title="From" detail={group(sel.from_group)} />
               <Row title="To" detail={group(sel.to_group)} />
               {sel.reason && <Row title={<span className="wrap">{sel.reason}</span>} chevron={false} />}

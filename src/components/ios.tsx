@@ -386,14 +386,17 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   );
 }
 
-/** The iOS stepper: minus and plus in one capsule, the value beside it. */
-export function Stepper({ value, onChange, step = 1, min = -Infinity, max = Infinity, digits = 0, label }: {
-  value: number; onChange: (v: number) => void; step?: number; min?: number; max?: number; digits?: number; label: string;
+/** The iOS stepper: minus and plus in one capsule, the value beside it. A value the portal never set shows as None and
+ *  the first press starts it from the lowest allowed value. */
+export function Stepper({ value: raw, onChange, step = 1, min = -Infinity, max = Infinity, digits = 0, label }: {
+  value: number | null; onChange: (v: number) => void; step?: number; min?: number; max?: number; digits?: number; label: string;
 }) {
   const set = (v: number) => onChange(Math.min(max, Math.max(min, Number(v.toFixed(Math.max(digits, 2))))));
+  const unset = raw === null || raw === undefined || Number.isNaN(raw);
+  const value = unset ? (Number.isFinite(min) ? min : 0) : raw;
   return (
     <span className="stepper-wrap">
-      <span className="stepper-val num">{value.toFixed(digits)}</span>
+      <span className={`stepper-val num ${unset ? "muted" : ""}`}>{unset ? "None" : value.toFixed(digits)}</span>
       <span className="stepper" role="group" aria-label={label}>
         <button aria-label={`Lower ${label}`} onClick={() => set(value - step)} disabled={value - step < min}><Minus size={16} strokeWidth={2.6} /></button>
         <i aria-hidden />

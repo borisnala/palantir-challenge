@@ -9,6 +9,7 @@ Every value here is dummy: logins 99000001.., "Demo Client N", groups under DUMM
 import gzip
 import json
 import os
+import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "source", "payloads")
@@ -21,9 +22,11 @@ def load(name):
 
 
 def tidy(v):
-    """The owner's style on screen: no semicolons or em dashes. Portal text such as screening reasons uses them."""
+    """The owner's style on screen: no colons, semicolons, em dashes or ASCII arrows. Portal text such as screening
+    reasons and tier transitions uses them. Times (08:53) and paths (C:\\) keep theirs: only a colon before a space goes."""
     if isinstance(v, str):
-        return v.replace("; ", ", ").replace(";", ",").replace(" \u2014 ", ", ").replace("\u2014", ", ")
+        v = v.replace("; ", ", ").replace(";", ",").replace(" \u2014 ", ", ").replace("\u2014", ", ")
+        return re.sub(r"(?<=[A-Za-z)]): ", ", ", v.replace(" -> ", " to ").replace("->", " to "))
     if isinstance(v, list):
         return [tidy(x) for x in v]
     if isinstance(v, dict):

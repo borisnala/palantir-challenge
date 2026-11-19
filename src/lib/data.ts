@@ -86,3 +86,5 @@ export const day = (ts: number | null | undefined) => (ts ? when(new Date(ts * 1
 export const group = (g: string | null | undefined) => (g ? g.replace(/^DUMMY\d?\\/, "").replace(/^DEMO\\?/, "").replace(/\\/g, " ") : "None");
 
 export const title = (s: string) => s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+/** Sentence case for portal codes on screen (owner register): promoted_confirmed to "Promoted confirmed". */
+export const sentence = (s: string) => { const t = s.replace(/_/g, " ").toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); };

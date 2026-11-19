@@ -70,10 +70,10 @@ export default function Top10() {
       <Group>
         {(!bd || (bd[v] ?? []).length === 0) && <Row title="No accounts on this board" subtitle="No account in this book met the activity threshold for the period." chevron={false} />}
         {v === "winners" || v === "losers" ? bd?.[v].map((r, i) => (
-          <ClientRow key={r.login} login={r.login} name={`${i + 1}. ${r.name}`}
-            sub={`${r.deals} deals · win ${pct(r.win_rate, 0)}${r.prev_rank ? ` · was ${r.prev_rank}` : " · new"}`} value={r.pl} />
+          <ClientRow key={r.login} login={r.login} name={r.name}
+            sub={`Rank ${i + 1} · ${r.deals} deals · win ${pct(r.win_rate, 0)}${r.prev_rank ? ` · was ${r.prev_rank}` : " · new"}`} value={r.pl} />
         )) : v === "volume" ? bd?.volume.map((r, i) => (
-          <ClientRow key={r.login} login={r.login} name={`${i + 1}. ${r.name}`} sub={`${r.deals} deals · ${num(r.avg_lot, 2)} lots each`} detail={`${num(r.lots, 1)} lots`} />
+          <ClientRow key={r.login} login={r.login} name={r.name} sub={`Rank ${i + 1} · ${r.deals} deals · ${num(r.avg_lot, 2)} lots each`} detail={`${num(r.lots, 1)} lots`} />
         )) : bd?.groups.map((g) => (
           <Row key={g.group} title={group(g.group) === "" ? g.group : g.group} subtitle={`${g.accounts} accounts · ${g.deals} deals`} detail={<Pnl v={g.total ?? g.pl} short />} />
         ))}

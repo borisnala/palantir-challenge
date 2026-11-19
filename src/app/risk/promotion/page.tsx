@@ -3,7 +3,7 @@
 import { Chip, Group, Metrics, NavBar, Row } from "@/components/ios";
 import { Share } from "@/components/ui";
 import pr from "@/data/promotion.json";
-import { group, when } from "@/lib/data";
+import { group, sentence, when } from "@/lib/data";
 
 export default function Promotion() {
   const { population: p, promo_targets: t, expiry: e, operations: o, tier_guard: g } = pr;
@@ -13,7 +13,7 @@ export default function Promotion() {
       <Metrics label="Population" items={[{ k: "Accounts", v: p.accounts }, { k: "Promoted", v: p.promotion_landed, tone: "pos" }, { k: "Never landed", v: p.never_landed, tone: "warn" }]} />
 
       <Group header="By status">
-        {p.by_status.map((x) => <Row key={x.status} title={<span className="row-text">{x.status.replace(/_/g, " ").toLowerCase()}<Share v={x.count} of={p.accounts} /></span>} detail={x.count} chevron={false} />)}
+        {p.by_status.map((x) => <Row key={x.status} title={<span className="row-text">{sentence(x.status)}<Share v={x.count} of={p.accounts} /></span>} detail={x.count} chevron={false} />)}
       </Group>
 
       <Group header={`Promo segments · ${t.distinct_moves} moves`}>

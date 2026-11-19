@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { FolderTree, RefreshCw } from "lucide-react";
+import { FolderTree } from "lucide-react";
 import { useApp } from "@/components/app-state";
 import { BarButton, Chip, Confirm, Group, Metrics, NavBar, Row, Segmented, Sheet } from "@/components/ios";
 import hc from "@/data/housecleaning.json";
-import { when } from "@/lib/data";
+import { sentence, when } from "@/lib/data";
 
 type F = "review" | "cutlist" | "active" | "all";
 type G = (typeof hc.groups)[number];
@@ -39,7 +39,7 @@ export default function HouseCleaning() {
   return (
     <>
       <NavBar title="HouseCleaning" eyebrow={`Snapshot ${when(snap)} UTC`} back={{ href: "/risk/", label: "Risk Management" }}
-        trailing={<BarButton onClick={() => { set("hc.snapshot", new Date().toISOString()); say("Snapshot refreshed"); }}><RefreshCw size={16} strokeWidth={2.4} /></BarButton>} />
+        trailing={<BarButton onClick={() => { set("hc.snapshot", new Date().toISOString()); say("Snapshot refreshed"); }}>Refresh</BarButton>} />
 
       <Metrics label="Groups" items={[{ k: "Groups", v: s.total_groups }, { k: "Cutlist", v: hc.groups.filter(isCut).length }, { k: "Reinstate", v: s.reinstate, tone: "neg" }, { k: "Review", v: s.cutlist_empty_review + s.cutlist_unknown, tone: "warn" }]} />
 
@@ -71,7 +71,7 @@ export default function HouseCleaning() {
               <Row title="Accounts in this group" detail={sel.direct_accounts} />
               <Row title="Accounts below it" detail={sel.descendant_accounts} />
               <Row title="Last activity" detail={sel.last_activity_at ? when(sel.last_activity_at) : "Unknown"} />
-              <Row title="Activity source" detail={sel.last_activity_source.replace(/_/g, " ").toLowerCase()} />
+              <Row title="Activity source" detail={sentence(sel.last_activity_source.replace(/^CFG_/, "Config "))} />
               <Row title="On the cutlist" detail={isCut(sel) ? "Yes" : "No"} />
             </Group>
             <button className={`btn ${isCut(sel) ? "btn-gray" : "btn-blue"}`} onClick={() => toggleCut(sel)}>{isCut(sel) ? "Remove from cutlist" : "Add to cutlist"}</button>
