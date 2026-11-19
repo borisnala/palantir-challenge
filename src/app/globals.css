@@ -46,7 +46,7 @@ h1, h2, p { margin: 0; }
 
 .screen {
   max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;
-  padding: 0 max(16px, env(safe-area-inset-right)) calc(var(--sab) + 108px) max(16px, env(safe-area-inset-left));
+  padding: 0 max(16px, var(--sar)) calc(var(--sab) + 108px) max(16px, var(--sal));
 }
 
 /* Navigation bar: transparent over the large title, glass with a hairline once scrolled */
@@ -423,9 +423,9 @@ body { letter-spacing: -0.2px; }
 .navbar, .largetitle { display: none; }
 
 /* Bottom: search circle left, the screen's action pill right */
-.searchdock { position: fixed; left: max(16px, env(safe-area-inset-left)); bottom: calc(var(--sab) + 14px); z-index: 20; }
+.searchdock { position: fixed; left: max(16px, var(--sal)); bottom: calc(var(--sab) + 14px); z-index: 20; }
 .glassbtn.round.big { width: 60px; height: 60px; }
-.dock { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(var(--sab) + 14px); z-index: 20; display: flex; gap: 10px; }
+.dock { position: fixed; right: max(16px, var(--sar)); bottom: calc(var(--sab) + 14px); z-index: 20; display: flex; gap: 10px; }
 .pillbtn { display: inline-flex; align-items: center; gap: 8px; height: 60px; padding: 0 28px; border-radius: 30px; background: var(--ink); color: var(--ink-text);
   font-size: 17px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.18); transition: transform .35s var(--spring); }
 .pillbtn:active { transform: scale(.96); }
@@ -579,12 +579,12 @@ body { letter-spacing: -0.2px; }
 
 /* ===== 2026-11-18 layout system: one set of values for where the bars sit and where every page ends ===== */
 :root {
-  --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
+  --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px);
   --bar-top: max(8px, calc(var(--sat) - 10px), min(calc(var(--sat) + 6px), 46px)); --bar-h: 52px; --bar-bottom: calc(var(--bar-top) + var(--bar-h));
   --dock-gap: 14px; --dock-h: 60px; --dock-top-from-bottom: calc(var(--sab) + var(--dock-gap) + var(--dock-h));
   --page-x: 16px;
 }
-.screen { max-width: none; padding: 0 max(var(--page-x), env(safe-area-inset-right)) calc(var(--dock-top-from-bottom) + 24px) max(var(--page-x), env(safe-area-inset-left)); }
+.screen { max-width: none; padding: 0 max(var(--page-x), var(--sar)) calc(var(--dock-top-from-bottom) + 24px) max(var(--page-x), var(--sal)); }
 @media (min-width: 700px) { .screen { max-width: 430px; } }
 .topbar { padding: var(--bar-top) 0 14px; min-height: calc(var(--bar-bottom) + 14px); }
 .scroll-edge { height: calc(var(--bar-bottom) + 18px); }
@@ -937,3 +937,87 @@ html.ghosting main.screen > :not(.topbar):not(.scroll-edge) .tile-icon:has(.mono
 .kanban { align-items: flex-start; }
 .kcol { width: 196px; }
 .kcard-t b { font-size: 13px; }
+
+/* Device fit (owner 2026-11-19): device.ts writes the insets and bar position per iPhone; these keep the fallbacks for
+   a browser without the script. No zoom: double tap does nothing, inputs are 16 px or more so focus never zooms. */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
+input, select, textarea { font-size: max(16px, 1em); }
+.hairline { height: var(--hair, .5px); background: var(--sep); }
+/* Portrait only: a phone on its side sees a notice in place of the app */
+.rotate { display: none; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .rotate { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    background: var(--bg); color: var(--label); text-align: center; }
+  .rotate b { font-size: 20px; } .rotate span { color: var(--label2); font-size: 15px; }
+  .rotate svg { animation: tilt 2.4s var(--spring-soft) infinite; }
+  @keyframes tilt { 0%, 30% { transform: rotate(0deg); } 60%, 100% { transform: rotate(-90deg); } }
+  html, body { overflow: hidden; }
+}
+
+/* Per-artifact outlines (owner 2026-11-19): only what really waits shows one. A Client 360 profile while its file
+   loads, the trading chart while the chart library loads. Shapes follow the real layout. */
+.bone { display: block; border-radius: 8px; background: linear-gradient(100deg, var(--fill) 30%, color-mix(in srgb, var(--fill) 35%, transparent) 50%, var(--fill) 70%);
+  background-size: 200% 100%; animation: bone 1.2s linear infinite; }
+.c360-outline { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 0; }
+.bone-row { display: flex; gap: 8px; width: 100%; } .bone-row.c { justify-content: center; }
+.b-face-lg { width: 64px; height: 64px; border-radius: 50%; }
+.b-title-c { width: 58%; height: 30px; } .b-line-c { width: 44%; height: 16px; }
+.b-chip { width: 76px; height: 24px; border-radius: 10px; }
+.b-act { flex: 1; height: 64px; border-radius: var(--r-cell); }
+.b-seg-w { width: 100%; height: 40px; border-radius: 20px; margin-top: 6px; }
+.b-card { width: 100%; height: 230px; border-radius: var(--r-cell); } .b-card.short { height: 140px; }
+.tv-bone { height: 260px; margin-top: 8px; border-radius: 14px; }
+.tvchart.tv-wait { position: absolute; visibility: hidden; }
+.pattern { position: relative; }
+@media (prefers-reduced-motion: reduce) { .bone { animation: none; } }
+
+/* Command bar (owner 2026-11-19, "no floating icon, the way Bloomberg would"): docked, solid, full width, a hairline
+   on top. A command-line search with a GO key, the screen's action as a rectangular key. Pages end the bar's height
+   plus 24 px above it, so the last row always clears it. */
+:root { --dock-gap: 0px; --dock-h: 58px; }
+.cmdbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; align-items: center; gap: 8px;
+  padding: 8px max(12px, var(--sar)) calc(8px + var(--sab)) max(12px, var(--sal)); background: var(--bg);
+  box-shadow: 0 calc(-1 * var(--hair, .5px)) 0 var(--sep); }
+.cmd-nofield:not(:has(.cmd-action)) { display: none; }
+.cmd-field { flex: 1; min-width: 0; height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 12px; border-radius: 10px;
+  background: var(--fill); color: var(--label2); font-size: 15px; transition: background-color .2s; }
+.cmd-field:active { background: var(--fill2); }
+.cmd-field span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmd-go { flex: none; height: 30px; min-width: 40px; padding: 0 8px; display: grid; place-items: center; border-radius: 7px; background: var(--label); color: var(--bg);
+  font: 700 12px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .06em; }
+.cmd-slot { display: contents; }
+.cmd-action { display: flex; gap: 8px; }
+.cmd-key { height: 42px; padding: 0 16px; border-radius: 10px; background: var(--label); color: var(--bg); font-size: 15px; font-weight: 600; white-space: nowrap;
+  transition: transform .25s ease-out, opacity .2s; }
+.cmd-key:active { transform: scale(.96); opacity: .85; }
+.cmd-nofield .cmd-action { margin-left: auto; }
+html.refreshing .cmdbar { pointer-events: none; }
+html.refreshing .cmdbar > * { opacity: .45; transition: opacity .2s; }
+html.ghosting .cmdbar { pointer-events: none; }
+.searchdock, .dock { display: none !important; }
+.toast { bottom: calc(var(--sab) + var(--dock-h) + 14px); }
+
+/* Pull to refresh: the spinner is centred by its translate alone (its old transform shifted it 14 px left), turns
+   at Apple's pace, and the page settles back quickly. */
+.ptr { transform: none; }
+.ptr.spin { animation: ptrspin .8s steps(12) infinite; }
+main.screen.pull-settle > :not(.topbar):not(.scroll-edge) { transition: transform .26s cubic-bezier(.25,.8,.25,1); }
+
+/* Motion, quicker and smoother (owner 2026-11-19, "cranky and slow"): page changes move only the content under the
+   bar, never the glass bar itself, on the GPU. Presses spring in 0.25 s and back in 0.5 s, menus open in 0.45 s. */
+@media (prefers-reduced-motion: no-preference) {
+  main.enter-push, main.enter-pop, main.enter-tab { animation: none; }
+  main.enter-push > :not(.topbar):not(.scroll-edge) { animation: epush .28s cubic-bezier(.25,.8,.25,1); }
+  main.enter-pop > :not(.topbar):not(.scroll-edge) { animation: epop .26s cubic-bezier(.25,.8,.25,1); }
+  main.enter-tab > :not(.topbar):not(.scroll-edge) { animation: etab .2s ease-out; }
+}
+@keyframes epush { from { transform: translate3d(28%, 0, 0); opacity: .4; } }
+@keyframes epop { from { transform: translate3d(-18%, 0, 0); opacity: .4; } }
+.glassbtn, .titlecap, .searchorb, .pillbtn { transition: transform .5s var(--spring-soft), filter .35s ease-out; }
+.glassbtn.lg-press, .titlecap.lg-press, .pillbtn.lg-press { transition: transform .25s var(--spring-soft), filter .15s; }
+.popmenu { animation: morphopen .45s var(--spring-soft) both; }
+.popmenu > * { animation: fadein .22s .1s both; }
+.c360-tab { animation: etab .22s ease-out; }
+.mv-bar { display: flex; gap: 2px; height: 10px; margin: 12px 0 4px; }
+.mv-bar i { border-radius: 3px; animation: grow .7s var(--spring-soft) both; transform-origin: left; }
+.mv-dot { display: block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px; }

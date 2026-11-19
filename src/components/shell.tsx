@@ -178,12 +178,26 @@ export function StageScrim() {
   return <button className="stage-scrim" aria-label="Close menu" onClick={() => { buzz(); setDrawer(false); }} style={{ opacity: 0, pointerEvents: "none" }} />;
 }
 
-export function SearchOrb() {
+/** The command bar (owner 2026-11-19, "no floating icon, do it the way Bloomberg would"): docked to the bottom edge,
+ *  solid, a hairline on top. Search on the left as a command line with GO, the screen's own action on the right. It
+ *  sits still while the page scrolls and goes inactive while data refreshes. */
+let slotEl: HTMLElement | null = null;
+const slotSubs = new Set<() => void>();
+export const commandSlot = {
+  subscribe: (f: () => void) => { slotSubs.add(f); return () => { slotSubs.delete(f); }; },
+  get: () => slotEl,
+};
+export function CommandBar() {
   const path = usePathname();
-  if (path.startsWith("/search")) return null;
+  const onSearch = path.startsWith("/search");
   return (
-    <Link href="/search/" className="glassbtn-link searchdock" aria-label="Search clients">
-      <Glass className="glassbtn round big"><Search size={22} strokeWidth={2} /></Glass>
-    </Link>
+    <div className={`cmdbar ${onSearch ? "cmd-nofield" : ""}`} role="toolbar" aria-label="Command bar">
+      {!onSearch && (
+        <Link href="/search/" className="cmd-field" aria-label="Search clients">
+          <Search size={17} strokeWidth={2.2} aria-hidden /><span>Search clients, logins, groups</span><b className="cmd-go">GO</b>
+        </Link>
+      )}
+      <span className="cmd-slot" ref={(el) => { if (slotEl !== el) { slotEl = el; slotSubs.forEach((f) => f()); } }} />
+    </div>
   );
 }

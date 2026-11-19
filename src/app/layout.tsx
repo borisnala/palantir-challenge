@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { RotateCcw } from "lucide-react";
+import { DEVICE_SCRIPT } from "@/lib/device";
 import { AppState } from "@/components/app-state";
-import { Drawer, SearchOrb, StageScrim } from "@/components/shell";
+import { CommandBar, Drawer, StageScrim } from "@/components/shell";
 import { DeviceFrame, LaunchReady, PullToRefresh, Transitions } from "@/components/motion";
 import { Launch } from "@/components/brand";
 import { LightSource } from "@/components/liquid";
@@ -16,7 +18,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  width: "device-width", initialScale: 1, viewportFit: "cover",
+  // One CSS px per point, no zoom (owner 2026-11-19): the layout is measured for each iPhone and must stay at 1x
+  width: "device-width", initialScale: 1, minimumScale: 1, maximumScale: 1, userScalable: false, viewportFit: "cover",
   themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f8f7f4" }, { media: "(prefers-color-scheme: dark)", color: "#1c1b1a" }],
 };
 
@@ -24,6 +27,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className="launching">
       <body>
+        <script dangerouslySetInnerHTML={{ __html: DEVICE_SCRIPT }} />
+        <div className="rotate" role="alert" aria-live="polite"><RotateCcw size={34} strokeWidth={1.6} aria-hidden /><b>Turn your phone upright</b><span>Risk Tool is built for portrait.</span></div>
         <Launch />
         <LightSource />
         <AppState>
@@ -36,7 +41,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <LaunchReady />
             <PullToRefresh />
             <DeviceFrame />
-            <SearchOrb />
+            <CommandBar />
             <StageScrim />
           </div>
         </AppState>

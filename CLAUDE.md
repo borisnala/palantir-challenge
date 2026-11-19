@@ -41,14 +41,16 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   even logins are flat. The P&L chart has Realized P&L or Portfolio growth, Linear or Log, Groups bands, compare price
   and net lots bars, like the desktop panel. Trading holds the trading pattern on TradingView Lightweight Charts 5.2.1
   (pattern.tsx): simulated daily candles with the client's own buys and sells as arrows.
-- Morning Digest opens with a board (profit change, flagged in and out, movement columns of client cards), not prose.
+- Morning Digest (owner 2026-11-19, "columns won't scale to hundreds"): the profit change, one stacked bar of movement
+  counts, the kinds as filter chips with counts, and a dense table of the largest moves (8 here, the rest in a sheet
+  with a search field). Never columns of cards.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 
 ## Gold standard (owner 2026-11-18): the Claude iOS app
 Layout follows the Claude app on iPhone: warm off-white (#f8f7f4) and soft black, a top bar of round glass buttons with
 the title in a glass capsule and a second line under it, a side menu (sections, then Recents, account at the bottom)
-instead of a tab bar, a search circle bottom left and the screen's main action as a black pill bottom right
+instead of a tab bar, the docked command bar at the bottom with search and the screen's main action
 (NavBar `trailing`), sentence-case gray section labels, white cards with 24 px radii, outline icons (no colored
 tiles), sheets with the X on the left, step lists drawn as a timeline (Group className="timeline"). Take the
 patterns, never Claude's logo, wordmark or brand colors.
@@ -121,6 +123,17 @@ Register (owner 2026-11-18, "this is professional risk tooling"): formal desk la
   shimmering outline, on the first open of each screen in a visit and while data refreshes.
 - Segmented controls capture the pointer only once a drag starts: capturing on touch-down sent taps to the track and
   stopped plain taps from switching segments (2026-11-19).
+- Device fit (owner 2026-11-19, src/lib/device.ts, inline before first paint): a table of every iPhone viewport sets
+  --sat --sab --sal --sar, --bar-top, --dpr and --hair (one device pixel) where iOS reports no insets. No zoom at all
+  (viewport, gesture and double-tap blocked, inputs 16 px). Portrait only: landscape shows the rotate notice.
+- Command bar (owner 2026-11-19, "no floating icon, the way Bloomberg would"): shell.tsx CommandBar, docked to the
+  bottom, solid with a hairline, a search command line with GO and the screen's action key (NavBar `trailing` is
+  portalled into it). Inactive while data refreshes (html.refreshing). No floating search circle or pill.
+- Loading (owner 2026-11-19, "lazy loading only if it needs time"): screens with data in the page draw at once. Each
+  Client 360 profile is its own file (src/data/c360/<login>.json) fetched on open behind its own outline, the trading
+  chart shows its outline until the chart library loads, refresh shows the outline while it waits.
+- Motion: page changes move only the content under the glass bar (never the bar), 0.26 to 0.28 s; presses 0.25 s in,
+  0.5 s out; menus 0.45 s.
 - Launch (as the Autoply app): the plus shows from the first frame and breathes, then gathers and bursts open into the
   app through a plus-shaped window, once per load only (brand.tsx Launch, motion.tsx LaunchReady). No glow, no
   gradients.

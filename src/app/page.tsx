@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowDownUp, Bell, ChevronRight, Newspaper, TrendingUp, Waves } from "lucide-react";
+import { ArrowDownUp, Bell, ChevronRight, Newspaper, Search, TrendingUp, Waves } from "lucide-react";
+import { useState } from "react";
+import { buzz } from "@/lib/haptics";
 import { useApp } from "@/components/app-state";
-import { Group, NavBar, Row } from "@/components/ios";
+import { Group, NavBar, Row, Sheet } from "@/components/ios";
 import { ClientRow } from "@/components/rows";
-import { ChangePill, Monogram } from "@/components/ui";
+import { ChangePill } from "@/components/ui";
 import digest from "@/data/digest.json";
 import newsData from "@/data/news.json";
-import { compact, day, hasProfile, pct, when } from "@/lib/data";
+import { compact, day, hasProfile, when } from "@/lib/data";
 
 // Health "Summary" card: tinted label row, big rounded value.
 function SummaryCard({ href, Icon, color, label, time, value, unit, note }: {
@@ -31,52 +33,83 @@ function SummaryCard({ href, Icon, color, label, time, value, unit, note }: {
 }
 
 type R = Record<string, unknown> & { login: number; name: string };
+const S = digest.sections as unknown as Record<string, R[]>;
+const n = (v: unknown) => (typeof v === "number" ? v : 0);
 
-/** The digest as a board (owner 2026-11-19, "so lame, showcase as a chart or kanban"): the profit change first, the
- *  flagged count as in and out, then one column per kind of movement with its clients as cards, swiped sideways. */
+/** The digest's movement (owner 2026-11-19: columns of cards do not scale to hundreds of clients). One stacked bar
+ *  of counts by kind, the kinds as filters with their counts, and a dense table of the biggest moves, as a terminal
+ *  lists them. The first 8 rows show here, the rest in a sheet with a search field. */
+type Kind = "new" | "worse" | "better" | "up" | "swing" | "left";
+const KIND: Record<Kind, { label: string; tone: string }> = {
+  new: { label: "Entered", tone: "var(--orange)" }, worse: { label: "Worse tier", tone: "var(--red)" }, better: { label: "Better tier", tone: "var(--green)" },
+  up: { label: "Profit up", tone: "var(--purple)" }, swing: { label: "Floating swing", tone: "var(--blue)" }, left: { label: "Left", tone: "var(--gray)" },
+};
+type Move = { kind: Kind; login: number; name: string; what: string; size: number; fig: React.ReactNode };
+function movesOf(): Move[] {
+  const tm = S.tier_moves;
+  return [
+    ...S.new_flagged.map((r) => ({ kind: "new" as Kind, login: r.login, name: r.name, what: `Tier ${r.pg} ${r.tier}`, size: Math.abs(n(r.t30)), fig: compact(n(r.t30)) })),
+    ...tm.filter((r) => r.direction === "worse").map((r) => ({ kind: "worse" as Kind, login: r.login, name: r.name, what: `${r.pg_before} to ${r.pg_now}`, size: Math.abs(n(r.t30)), fig: compact(n(r.t30)) })),
+    ...tm.filter((r) => r.direction !== "worse").map((r) => ({ kind: "better" as Kind, login: r.login, name: r.name, what: `${r.pg_before} to ${r.pg_now}`, size: Math.abs(n(r.t30)), fig: compact(n(r.t30)) })),
+    ...S.exposure_up.map((r) => ({ kind: "up" as Kind, login: r.login, name: r.name, what: "Client profit up", size: Math.abs(n(r.t30_delta)), fig: <ChangePill v={n(r.t30_delta)} /> })),
+    ...S.floating_swing.map((r) => ({ kind: "swing" as Kind, login: r.login, name: r.name, what: "Floating swing", size: Math.abs(n(r.fpl_delta)), fig: <ChangePill v={n(r.fpl_delta)} /> })),
+    ...S.left_book.map((r) => ({ kind: "left" as Kind, login: r.login, name: r.name, what: `Was ${r.pg}`, size: Math.abs(n(r.t30)), fig: compact(n(r.t30)) })),
+  ].sort((x, y) => y.size - x.size);
+}
+const MOVES = movesOf();
+
+function MoveRow({ m }: { m: Move }) {
+  return (
+    <Row href={hasProfile(m.login) ? `/clients/${m.login}/` : undefined} icon={<i className="mv-dot" style={{ background: KIND[m.kind].tone }} />} tint="transparent"
+      title={m.name} subtitle={`${KIND[m.kind].label} · ${m.what}`} detail={m.fig} />
+  );
+}
+
+function AllMoves({ kind }: { kind: Kind | "all" }) {
+  const [q, setQ] = useState("");
+  const list = MOVES.filter((m) => (kind === "all" || m.kind === kind) && (!q || `${m.name} ${m.login}`.toLowerCase().includes(q.toLowerCase())));
+  return (
+    <>
+      <label className="searchfield"><Search size={17} strokeWidth={2.4} aria-hidden /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name or login" aria-label="Filter moves" /></label>
+      <Group header={`${list.length} ${list.length === 1 ? "move" : "moves"}`}>
+        {list.length === 0 && <Row title="No match" chevron={false} />}
+        {list.map((m, i) => <MoveRow key={`${m.kind}-${m.login}-${i}`} m={m} />)}
+      </Group>
+    </>
+  );
+}
+
 function Board() {
   const t = digest.totals;
-  const tm = S.tier_moves;
-  const cols: { k: string; title: string; tone: string; rows: R[]; fig: (r: R) => React.ReactNode }[] = [
-    { k: "new", title: "Entered", tone: "var(--orange)", rows: S.new_flagged, fig: (r) => `Tier ${r.pg} ${r.tier}` },
-    { k: "worse", title: "Worse tier", tone: "var(--red)", rows: tm.filter((r) => r.direction === "worse"), fig: (r) => `${r.pg_before} to ${r.pg_now}` },
-    { k: "better", title: "Better tier", tone: "var(--green)", rows: tm.filter((r) => r.direction !== "worse"), fig: (r) => `${r.pg_before} to ${r.pg_now}` },
-    { k: "up", title: "Profit up", tone: "var(--purple)", rows: S.exposure_up, fig: (r) => compact(n(r.t30_delta), true) },
-    { k: "swing", title: "Floating swing", tone: "var(--blue)", rows: S.floating_swing, fig: (r) => compact(n(r.fpl_delta), true) },
-    { k: "left", title: "Left", tone: "var(--gray)", rows: S.left_book, fig: (r) => `Was ${r.pg}` },
-  ];
-  const inN = S.new_flagged.length, outN = S.left_book.length;
+  const [kind, setKind] = useState<Kind | "all">("all");
+  const [all, setAll] = useState(false);
+  const counts = (Object.keys(KIND) as Kind[]).map((k) => ({ k, n: MOVES.filter((m) => m.kind === k).length }));
+  const total = MOVES.length;
+  const list = MOVES.filter((m) => kind === "all" || m.kind === kind);
   return (
     <section className="board" aria-label="Book movement">
       <div className="board-head">
         <span className="eyebrow">Client profit, flagged book</span>
         <b className={`board-big ${t.t30_delta >= 0 ? "neg" : "pos"}`}>{compact(t.t30_delta, true)}</b>
-        <span className="row-sub">30 days {compact(t.t30_before)} to {compact(t.t30_now)}. Client profit is a cost to the book.</span>
-        <div className="board-flow" aria-label={`Flagged accounts ${t.flagged_before} to ${t.flagged_now}`}>
-          <span className="bf-n">{t.flagged_before}</span>
-          <span className="bf-bars"><i className="bf-in" style={{ flex: inN }}>+{inN} in</i><i className="bf-out" style={{ flex: outN }}>−{outN} out</i></span>
-          <span className="bf-n">{t.flagged_now}</span>
+        <span className="row-sub">30 days {compact(t.t30_before)} to {compact(t.t30_now)}. Flagged accounts {t.flagged_before} to {t.flagged_now}.</span>
+        <span className="mv-bar" role="img" aria-label={counts.map((c) => `${c.n} ${KIND[c.k].label}`).join(", ")}>
+          {counts.filter((c) => c.n).map((c) => <i key={c.k} style={{ flex: c.n, background: KIND[c.k].tone }} />)}
+        </span>
+        <div className="tchips" role="radiogroup" aria-label="Kind of move">
+          <button role="radio" aria-checked={kind === "all"} className={`tchip ${kind === "all" ? "on" : ""}`} onClick={() => { buzz(); setKind("all"); }}>All {total}</button>
+          {counts.filter((c) => c.n).map((c) => (
+            <button key={c.k} role="radio" aria-checked={kind === c.k} className={`tchip ${kind === c.k ? "on" : ""}`} style={{ ["--c" as string]: KIND[c.k].tone }} onClick={() => { buzz(); setKind(c.k); }}><i />{KIND[c.k].label} {c.n}</button>
+          ))}
         </div>
       </div>
-      <div className="kanban">
-        {cols.map((c) => (
-          <div key={c.k} className="kcol" style={{ ["--tone" as string]: c.tone }}>
-            <span className="kcol-head"><i />{c.title}<b>{c.rows.length}</b></span>
-            {c.rows.length === 0 && <span className="kempty">None</span>}
-            {c.rows.map((r) => {
-              const body = (<><Monogram name={String(r.name)} size={28} /><span className="kcard-t"><b>{String(r.name)}</b><small>{c.fig(r)}</small></span></>);
-              return hasProfile(r.login)
-                ? <Link key={r.login} href={`/clients/${r.login}/`} className="kcard">{body}</Link>
-                : <span key={r.login} className="kcard">{body}</span>;
-            })}
-          </div>
-        ))}
-      </div>
+      <Group header={kind === "all" ? "Largest moves" : KIND[kind].label} footer="Sorted by size. Profit and swings show the change, the rest show 30 day client P&L.">
+        {list.slice(0, 8).map((m, i) => <MoveRow key={`${m.kind}-${m.login}-${i}`} m={m} />)}
+        {list.length > 8 && <Row onClick={() => setAll(true)} title={<span className="link-blue">Show all {list.length}</span>} chevron={false} />}
+      </Group>
+      <Sheet open={all} onClose={() => setAll(false)} title={kind === "all" ? "All moves" : KIND[kind].label}><AllMoves kind={kind} /></Sheet>
     </section>
   );
 }
-const S = digest.sections as unknown as Record<string, R[]>;
-const n = (v: unknown) => (typeof v === "number" ? v : 0);
 
 export default function Today() {
   const { pending, unread } = useApp();
@@ -114,29 +147,6 @@ export default function Today() {
           <ClientRow key={r.login} login={r.login} name={r.name} sub={String(r.watchlist_note ?? "").replace(/^DUMMY note: /, "")}
             detail={<span className="stack-r"><ChangePill v={n(r.t30_delta)} /><span className="small">T30 change</span></span>} />
         ))}
-      </Group>
-
-      <Group header={`New flagged · ${S.new_flagged.length}`}>
-        {S.new_flagged.map((r) => <ClientRow key={r.login} login={r.login} name={r.name} sub={`Tier ${r.pg} ${r.tier} · win ${pct(n(r.win_rate_pct))}`} value={n(r.t30)} />)}
-      </Group>
-
-      <Group header={`Tier moves · ${S.tier_moves.length}`} footer="A downgrade widens the client's spreads.">
-        {S.tier_moves.map((r) => (
-          <ClientRow key={r.login} login={r.login} name={r.name} sub={`${r.pg_before} to ${r.pg_now}`}
-            detail={<span className={r.direction === "worse" ? "neg" : "pos"}>{r.direction === "worse" ? "Worse" : "Better"}</span>} />
-        ))}
-      </Group>
-
-      <Group header={`Client profit up · ${S.exposure_up.length}`}>
-        {S.exposure_up.map((r) => <ClientRow key={r.login} login={r.login} name={r.name} sub={`T30 ${compact(n(r.t30_before))} to ${compact(n(r.t30_now))}`} detail={<ChangePill v={n(r.t30_delta)} />} />)}
-      </Group>
-
-      <Group header={`Floating P&L swing · ${S.floating_swing.length}`}>
-        {S.floating_swing.map((r) => <ClientRow key={r.login} login={r.login} name={r.name} sub={`Floating ${compact(n(r.fpl_before))} to ${compact(n(r.fpl_now))}`} detail={<ChangePill v={n(r.fpl_delta)} />} />)}
-      </Group>
-
-      <Group header={`Left the flagged book · ${S.left_book.length}`}>
-        {S.left_book.map((r) => <ClientRow key={r.login} login={r.login} name={r.name} sub={`Was tier ${r.pg} ${r.tier}`} value={n(r.t30)} />)}
       </Group>
 
       <Group header="Upcoming high impact releases">

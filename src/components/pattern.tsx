@@ -9,11 +9,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Group, Row } from "./ios";
 import { Pnl } from "./ui";
 import { buzz } from "@/lib/haptics";
-import c3 from "@/data/client360.json";
+import meta from "@/data/client360meta.json";
 import { num, pct } from "@/lib/data";
 
 type Trade = [number, number, number, number]; // day, side (1 buy, -1 sell), lots, P&L
-const PRICES = c3.prices as unknown as Record<string, [number, number]>;
+const PRICES = meta.prices as unknown as Record<string, [number, number]>;
 const DAY = 86400;
 
 /** Daily candles, Monday to Friday, from a seeded walk: the same symbol always draws the same chart. */
@@ -41,6 +41,7 @@ export function TradingPattern({ trades, asOf }: { trades: Record<string, Trade[
   const syms = Object.keys(trades).filter((s) => trades[s].length);
   const [sym, setSym] = useState(syms[0]);
   const box = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false); // the chart library loads on demand; until then the chart's outline shows
   const list = useMemo(() => trades[sym] ?? [], [trades, sym]);
 
   useEffect(() => {
@@ -73,6 +74,7 @@ export function TradingPattern({ trades, asOf }: { trades: Record<string, Trade[
         size: Math.min(1.6, 0.7 + lots * 1.2), // the arrow grows with the trade size; no labels, so nothing overlaps
       })) as never);
       chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, bars.length - 45), to: bars.length + 2 });
+      setReady(true);
       cleanup = () => chart.remove();
     });
     return () => { gone = true; cleanup(); };
@@ -92,7 +94,8 @@ export function TradingPattern({ trades, asOf }: { trades: Record<string, Trade[
           <div className="tchips" role="radiogroup" aria-label="Symbol">
             {syms.map((s) => <button key={s} role="radio" aria-checked={sym === s} className={`tchip ${sym === s ? "on" : ""}`} onClick={() => { buzz(); setSym(s); }}>{s}</button>)}
           </div>
-          <div ref={box} className="tvchart" aria-label={`${sym} daily candles with the client's buys and sells`} />
+          {!ready && <span className="bone tv-bone" aria-label="Loading chart" />}
+          <div ref={box} className={`tvchart ${ready ? "" : "tv-wait"}`} aria-label={`${sym} daily candles with the client's buys and sells`} />
         </div>
       </Group>
       <Group header={`${sym} · ${list.length} trading days`}>

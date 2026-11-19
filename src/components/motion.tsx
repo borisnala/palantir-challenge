@@ -27,7 +27,6 @@ export function ghost(ms: number) {
   if (ghostTimer) clearTimeout(ghostTimer);
   ghostTimer = setTimeout(() => document.documentElement.classList.remove("ghosting"), ms);
 }
-const seenScreens = new Set<string>();
 
 export function Transitions() {
   const path = usePathname();
@@ -44,7 +43,7 @@ export function Transitions() {
     main.classList.remove("enter-push", "enter-pop", "enter-tab");
     void (main as HTMLElement).offsetWidth;
     main.classList.add(`enter-${kind}`);
-    if (!seenScreens.has(path)) { seenScreens.add(path); ghost(520); }
+    // no outline on a plain page change: the screen's data is already here, so it draws at once (owner 2026-11-19)
   }, [path]);
   return null;
 }
@@ -64,6 +63,7 @@ export function PullToRefresh() {
       ptr.style.opacity = d > 0 ? "1" : "0";
       ptr.style.translate = `-50% ${Math.max(0, (Math.min(d, 90) - 28) / 2)}px`;
       ptr.classList.toggle("spin", spinning);
+      document.documentElement.classList.toggle("refreshing", spinning); // the command bar is inactive while data loads
       main.style.setProperty("--pull", `${d}px`);
     };
     const start = (e: TouchEvent) => {

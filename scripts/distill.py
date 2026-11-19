@@ -33,7 +33,7 @@ def tidy(v):
 
 def save(name, data):
     data = tidy(data)
-    os.makedirs(OUT, exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.join(OUT, name + ".json")), exist_ok=True)
     with open(os.path.join(OUT, name + ".json"), "w", encoding="utf-8") as f:
         json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
     return os.path.getsize(os.path.join(OUT, name + ".json"))
@@ -526,8 +526,11 @@ profiles = {}
 real = real_profile()
 for c in out["clients"]:
     profiles[str(c["login"])] = with_trades(real if c["login"] == c3["login"] else variant(c, real), c["login"])
-out["client360"] = {"as_of": AS_OF, "real_login": c3["login"], "profiles": profiles,
-                    "prices": {k: [v[0], v[2]] for k, v in PRICE.items()}}
+# One file per client, loaded when that profile opens (owner 2026-11-19, lazy loading per artifact), and a small shared
+# file with the snapshot time and the price table
+out["client360meta"] = {"as_of": AS_OF, "real_login": c3["login"], "prices": {k: [v[0], v[2]] for k, v in PRICE.items()}}
+for login, prof in profiles.items():
+    out[f"c360/{login}"] = prof
 
 # ---- Admin: users, devices, build paths ----
 out["users"] = load("users")

@@ -7,7 +7,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronLeft, ChevronRight, Ellipsis, Link2, Menu, Minus, Plus, RefreshCw, Share, UserRound } from "lucide-react";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+import { commandSlot } from "./shell";
 import { ROLE_LABEL, useApp, type Role } from "./app-state";
 import { Glass, Spring, stretch, useSpringLoop } from "./liquid";
 import { buzz } from "@/lib/haptics";
@@ -33,6 +35,7 @@ export function NavBar({ title, eyebrow, trailing, back }: {
   const { unread, setDrawer, visit, wdRows, pending, say, set } = useApp();
   const path = usePathname();
   const [menu, setMenu] = useState(false);
+  const slot = useSyncExternalStore(commandSlot.subscribe, commandSlot.get, () => null); // the command bar's action slot
   const [status, setStatus] = useState(false);
   const share = async () => {
     setMenu(false);
@@ -83,14 +86,14 @@ export function NavBar({ title, eyebrow, trailing, back }: {
           <Row title="Mode" detail="Shadow, read only" chevron={false} />
         </Group>
       </Sheet>
-      {trailing && <div className="dock">{trailing}</div>}
+      {trailing && slot && createPortal(<span className="cmd-action">{trailing}</span>, slot)}
     </>
   );
 }
 
 /** The screen's main action, as the black "New session" pill of the Claude app. */
 export function BarButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return <button className="pillbtn" onClick={onClick}>{children}</button>;
+  return <button className="cmd-key" onClick={() => { buzz(); onClick(); }}>{children}</button>;
 }
 
 export function Group({ header, footer, children, className = "" }: { header?: React.ReactNode; footer?: React.ReactNode; children: React.ReactNode; className?: string }) {
@@ -237,7 +240,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   const thumb = useRef<HTMLSpanElement>(null);
   const copy = useRef<HTMLSpanElement>(null);
   const sx = useRef(new Spring(-1, 300, 24));
-  const lift = useRef(new Spring(0, 260, 19)); // slower lift and sink, a small overshoot (owner: "way too fast")
+  const lift = useRef(new Spring(0, 340, 22)); // slower lift and sink, a small overshoot (owner: "way too fast")
   const drag = useRef<{ off: number; x0: number; last: number; t: number; moved: boolean } | null>(null);
   const skipClick = useRef(false);
   const unit = () => { const el = track.current; return el ? (el.clientWidth - 4) / options.length : 0; };

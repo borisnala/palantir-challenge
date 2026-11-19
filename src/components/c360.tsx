@@ -14,16 +14,16 @@ import { buzz } from "@/lib/haptics";
 import { TradingPattern } from "./pattern";
 import { Chip, Confirm, Group, Metrics, Row, Segmented, Sheet, Switch } from "./ios";
 import { Monogram, Pnl, Share } from "./ui";
-import c3 from "@/data/client360.json";
+import meta from "@/data/client360meta.json";
 import { ALERTS, compact, day, money, num, pct, when, type Client } from "@/lib/data";
 
-type Profile = (typeof c3.profiles)[keyof typeof c3.profiles];
+// Each client's data is its own file, fetched when the profile opens (owner 2026-11-19: load lazily what takes time)
+type Profile = typeof import("@/data/c360/99000001.json");
+const loadProfile = (login: number) => import(`@/data/c360/${login}.json`).then((m) => m.default as Profile);
 type Tab = "overview" | "trading" | "risk" | "account";
 type Pov = "client" | "broker";
 type Status = "none" | "watch" | "escalated" | "cleared";
 
-const PROFILES = c3.profiles as Record<string, Profile>;
-export const profileOf = (login: number) => PROFILES[String(login)];
 
 const BAND: Record<string, { label: string; tone: "green" | "orange" | "red"; color: string }> = {
   low: { label: "Low risk", tone: "green", color: "var(--green)" },
@@ -279,7 +279,7 @@ const fmt = (v: number, d: number) => v.toLocaleString("en-US", { minimumFractio
 /** Months of trading days, Monday to Friday, each day green or red, as a Fitness month grid. */
 function monthsOf(daily: number[][]) {
   const byDay = new Map(daily.map(([d, v]) => [new Date(d * 1000).toISOString().slice(0, 10), v]));
-  const first = new Date(daily[0][0] * 1000), last = new Date(c3.as_of * 1000);
+  const first = new Date(daily[0][0] * 1000), last = new Date(meta.as_of * 1000);
   const months: { key: string; y: number; m: number; cells: (null | { d: string; v: number | undefined })[]; total: number; days: number }[] = [];
   for (let y = first.getUTCFullYear(), m = first.getUTCMonth(); y < last.getUTCFullYear() || (y === last.getUTCFullYear() && m <= last.getUTCMonth()); m === 11 ? (y++, m = 0) : m++) {
     const cells: (null | { d: string; v: number | undefined })[] = [];
@@ -309,8 +309,31 @@ function nowSec() { return Math.floor(Date.now() / 1000); }
 
 const tiersFor = (tier: string) => (/^D\d/.test(tier) ? ["D1", "D2", "D3", "D4", "D5"] : /^F\d/.test(tier) ? ["F1", "F2", "F3", "F4", "F5"] : ["Std", "Premium", "VIP1", "MVIP"]);
 
+/** The profile's own outline while its file loads: the header, the actions, the tabs and the first cards, in grey. */
+function C360Outline() {
+  return (
+    <div className="c360-outline" aria-busy="true" aria-label="Loading client">
+      <span className="bone b-face-lg" /><span className="bone b-title-c" /><span className="bone b-line-c" />
+      <span className="bone-row c"><span className="bone b-chip" /><span className="bone b-chip" /><span className="bone b-chip" /></span>
+      <span className="bone-row"><span className="bone b-act" /><span className="bone b-act" /><span className="bone b-act" /></span>
+      <span className="bone b-seg-w" />
+      <span className="bone b-card" />
+      <span className="bone b-card short" />
+    </div>
+  );
+}
+
 export function Client360({ c }: { c: Client }) {
-  const p = profileOf(c.login);
+  const [p, setP] = useState<Profile | null>(null);
+  useEffect(() => {
+    let live = true;
+    loadProfile(c.login).then((x) => { if (live) setP(x); });
+    return () => { live = false; };
+  }, [c.login]);
+  return p ? <Client360Body c={c} p={p} /> : <C360Outline />;
+}
+
+function Client360Body({ c, p }: { c: Client; p: Profile }) {
   const app = useApp();
   const [tab, setTab] = useState<Tab>("overview");
   const [pov, setPov] = useState<Pov>(app.prefs.pov);
@@ -466,7 +489,7 @@ export function Client360({ c }: { c: Client }) {
         {tab === "trading" && (
           <>
             <Segmented label="Point of view" value={pov} onChange={setPov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} />
-            <TradingPattern trades={p.trades as unknown as Record<string, [number, number, number, number][]>} asOf={c3.as_of} />
+            <TradingPattern trades={p.trades as unknown as Record<string, [number, number, number, number][]>} asOf={meta.as_of} />
 
             <Group header="By trading day" footer={`Each square is a trading day, green for ${pov} profit, red for loss. Select a month for its days.`}>
               <div className="calgrid">
