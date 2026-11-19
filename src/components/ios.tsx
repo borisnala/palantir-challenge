@@ -4,7 +4,7 @@
 // a floating glass sheet you can drag down, a liquid switch and a segmented control with a liquid thumb.
 // Sizes follow Apple's type ramp (17 body, 15 subhead, 13 footnote) and 44 pt minimum touch targets.
 
-import Link from "next/link";
+import Link from "@/components/nav-link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, Check, ChevronLeft, ChevronRight, ChevronsUpDown, Ellipsis, Menu, Minus, Plus, RefreshCw, Settings } from "lucide-react";
 import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -42,7 +42,7 @@ function BackButton({ href, label }: { href: string; label: string }) {
   const { backPath } = useApp();
   return (
     <button className="glassbtn-link" aria-label={`Back to ${label}`}
-      onClick={() => { buzz(); router.push(backPath() ?? href); }}>
+      onClick={() => { buzz(); router.push(backPath() ?? href, { transitionTypes: ["pop"] }); }}>
       <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.2} /></Glass>
     </button>
   );

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ViewTransition } from "react";
 import "./globals.css";
 import { RotateCcw } from "lucide-react";
 import { DEVICE_SCRIPT } from "@/lib/device";
@@ -35,7 +36,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Drawer />
           <SettingsSheet />
           <div className="stage">
-            <main className="screen">{children}</main>
+            <ViewTransition update={{ push: "vt-push", pop: "vt-pop", tab: "vt-tab", default: "none" }} default="none"><main className="screen">{children}</main></ViewTransition>
             <Toast />
             <Transitions />
             <LaunchReady />

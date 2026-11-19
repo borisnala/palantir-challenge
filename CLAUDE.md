@@ -149,6 +149,17 @@ the screen ("Touch and drag", "Select an account" are cut). "Action required",
   chart shows its outline until the chart library loads, refresh shows the outline while it waits.
 - Motion: page changes move only the content under the glass bar (never the bar), 0.26 to 0.28 s; presses 0.25 s in,
   0.5 s out; menus 0.45 s.
+- Page changes (owner 2026-11-19, "the animation still looks total crap"): React ViewTransition around main
+  (layout.tsx), the type set by every link (src/components/nav-link.tsx, always import Link from there, never from
+  next/link). Push: the new screen slides in from the right edge over the old one, which drifts 30% left and dims,
+  0.42 s. Pop runs it backwards (BackButton passes "pop"). Between sections a 0.2 s crossfade. Links in the side menu
+  pass "menu": no transition, the new page is already under the card as it springs closed. Top bar, bottom bar and
+  scroll edges have their own view-transition-name and hold still, the title crossfades.
+- Menus (⋯ and pull-downs) scale up out of their button on a spring with their rows in place, 0.34 s.
+- Side menu (owner 2026-11-19, "maximise it"): Recents then the watchlist fill the list down to the foot, and the
+  foot is one glass capsule with the signed-in user (opens Settings) on the bottom bar's line. Its search finds
+  features and settings from src/lib/features.ts, never clients (Client 360 has its own search). Add every new
+  screen, tab or setting to that index.
 - Launch (as the Autoply app): the plus shows from the first frame and breathes, then gathers and bursts open into the
   app through a plus-shaped window, once per load only (brand.tsx Launch, motion.tsx LaunchReady). No glow, no
   gradients.

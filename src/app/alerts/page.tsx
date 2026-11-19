@@ -3,7 +3,7 @@
 // Notifications as iOS Mail (owner 2026-11-19, "make all this Apple layout"): the unread dot in the margin, the alert as
 // the bold first line with its time and chevron, the client on the second line, the detail under it.
 
-import Link from "next/link";
+import Link from "@/components/nav-link";
 import { useState } from "react";
 import { BellRing, ChevronRight, CircleAlert, Copy, Info, ListFilter, TriangleAlert } from "lucide-react";
 import { useApp } from "@/components/app-state";

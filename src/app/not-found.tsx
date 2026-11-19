@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/nav-link";
 
 // Shown for an address the app does not have, inside the app's own frame, with a way back.
 export default function NotFound() {

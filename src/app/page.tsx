@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/nav-link";
 import { ArrowDownUp, Bell, ChevronRight, Newspaper, Search, TrendingUp, Waves } from "lucide-react";
 import { useState } from "react";
 import { buzz } from "@/lib/haptics";

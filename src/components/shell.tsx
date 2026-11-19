@@ -3,12 +3,13 @@
 // The app shell, after the Claude iOS app: a side menu instead of a tab bar (every section, then Recents), and a
 // search circle at the bottom left. The menu slides on a spring and follows the finger when dragged closed.
 
-import Link from "next/link";
+import Link from "@/components/nav-link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
-import { ArrowDownUp, Droplets, Eye, House, Search, ShieldAlert, UserRound, Users } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowDownUp, Bell, Droplets, Eye, House, Search, Settings, ShieldAlert, SlidersHorizontal, UserRound, Users } from "lucide-react";
 import { hasProfile, nameOf } from "@/lib/data";
-import { useApp } from "./app-state";
+import { ROLE_LABEL, useApp } from "./app-state";
+import { FEATURES, findFeatures, type Feature } from "@/lib/features";
 import { Glass, Spring, useSpringLoop } from "./liquid";
 import { buzz } from "@/lib/haptics";
 import { Wordmark } from "./brand";
@@ -32,6 +33,8 @@ const NAV = [
   { href: "/withdrawals/", label: "WD Approvals", Icon: ArrowDownUp },
   { href: "/search/", label: "Client 360", Icon: Users },
 ];
+
+const AREA_ICON: Record<string, typeof House> = { Today: House, Bell, Risk: ShieldAlert, Liquidity: Droplets, Withdrawals: ArrowDownUp, Clients: Users, Account: UserRound };
 
 /** The Claude app's side menu: it sits under the page, and opening it pushes the whole page to the right, where the
  *  page stays visible as a dimmed card with rounded corners. Swipe from the left edge to open, swipe left or tap the
@@ -114,59 +117,96 @@ export function Drawer() {
     return () => { removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); removeEventListener("touchcancel", end); };
   }, [drawer, setDrawer, kick]);
 
+  // The menu's search finds features (lib/features.ts), never clients: Client 360 has its own search.
+  const [typed, setQ] = useState<string | null>(null);
+  const q = drawer ? typed : null; // closing the menu ends the search
+  const found = q ? findFeatures(q) : [];
+  const openFeature = (f: Feature) => { buzz(); setQ(null); if (f.settings) { setDrawer(false); set("ui.settings", true); } };
+
   const badge = (href: string) => (href === "/withdrawals/" ? pending.length : href === "/alerts/" ? unread.size : 0);
 
   return (
     <nav ref={panel} className="drawer" aria-label="Sections" aria-hidden={!drawer}>
       <div className="drawer-head">
-        <Wordmark />
-        <Link href="/search/" className="glassbtn-link" aria-label="Search clients"><Glass className="glassbtn round"><Search size={20} strokeWidth={2} /></Glass></Link>
+        {q === null ? (
+          <>
+            <Wordmark />
+            <button className="glassbtn-link" aria-label="Search features" onClick={() => { buzz(); setQ(""); }}><Glass className="glassbtn round"><Search size={20} strokeWidth={2} /></Glass></button>
+          </>
+        ) : (
+          <div className="drawer-search">
+            <label className="drawer-field"><Search size={18} strokeWidth={2.2} aria-hidden />
+              <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search features and settings" aria-label="Search features and settings" enterKeyHint="search" />
+            </label>
+            <button className="drawer-cancel" onClick={() => { buzz(); setQ(null); }}>Cancel</button>
+          </div>
+        )}
       </div>
       <div className="drawer-scroll">
+      {q !== null ? (
+        <div className="drawer-nav">
+          {found.map((f) => {
+            const I = f.settings ? SlidersHorizontal : AREA_ICON[f.where] ?? AREA_ICON[FEATURES.find((x) => x.title === f.where)?.where ?? ""] ?? House;
+            const body = <><I size={20} strokeWidth={1.8} /><span className="ellip"><b>{f.title}</b><small>{f.where}</small></span></>;
+            return f.href
+              ? <Link key={f.title + f.where} href={f.href} transitionTypes={["menu"]} className="drawer-item drawer-two" onClick={() => { buzz(); setQ(null); }}>{body}</Link>
+              : <button key={f.title + f.where} className="drawer-item drawer-two" onClick={() => openFeature(f)}>{body}</button>;
+          })}
+          {q.trim() !== "" && found.length === 0 && <p className="drawer-empty">No feature matches {"\u201c"}{q.trim()}{"\u201d"}.</p>}
+          {q.trim() === "" && <p className="drawer-empty">{FEATURES.length} features and settings indexed.</p>}
+        </div>
+      ) : (<>
       <div className="drawer-nav">
         {NAV.map(({ href, label, Icon }) => {
           const on = href === "/" ? path === "/" : path.startsWith(href.replace(/\/$/, "")) || (href === "/search/" && path.startsWith("/clients"));
           return (
-            <Link key={href} href={href} className={`drawer-item ${on ? "drawer-on" : ""}`} aria-current={on ? "page" : undefined}>
+            <Link key={href} href={href} transitionTypes={["menu"]} className={`drawer-item ${on ? "drawer-on" : ""}`} aria-current={on ? "page" : undefined}>
               <Icon size={22} strokeWidth={1.8} /><span>{label}</span>{badge(href) > 0 && <b className="drawer-badge">{badge(href)}</b>}
             </Link>
           );
         })}
       </div>
       {(() => {
-        // Recents holds the clients and analysis screens opened lately. Until there are any, the watchlist stands in.
-        const list = recents.filter((r) => r.path !== path).slice(0, 6);
-        if (list.length) return (
+        // Recents (clients and analysis screens opened lately) and the watchlist share the space down to the foot.
+        const list = recents.filter((r) => r.path !== path).slice(0, 5);
+        const seen = new Set(list.map((r) => r.path));
+        const watch = [...watched].filter((l) => hasProfile(l) && !seen.has(`/clients/${l}/`)).slice(0, 12);
+        return (
           <>
-            <p className="drawer-label">Recents</p>
-            <div className="drawer-nav">
-              {list.map((r) => {
-                const { sub, Icon } = recentLine(r.path);
-                return (
-                  <Link key={r.path} href={r.path} className="drawer-item drawer-two"><Icon size={20} strokeWidth={1.8} />
-                    <span className="ellip"><b>{r.title}</b>{sub && <small>{sub}</small>}</span></Link>
-                );
-              })}
-            </div>
-          </>
-        );
-        const watch = [...watched].filter(hasProfile).slice(0, 5);
-        return watch.length > 0 && (
-          <>
-            <p className="drawer-label">Watchlist</p>
-            <div className="drawer-nav">
-              {watch.map((l) => (
-                <Link key={l} href={`/clients/${l}/`} className="drawer-item drawer-two"><Eye size={20} strokeWidth={1.8} />
-                  <span className="ellip"><b>{nameOf(l)}</b><small>#{l}</small></span></Link>
-              ))}
-            </div>
+            {list.length > 0 && <p className="drawer-label">Recents</p>}
+            {list.length > 0 && (
+              <div className="drawer-nav">
+                {list.map((r) => {
+                  const { sub, Icon } = recentLine(r.path);
+                  return (
+                    <Link key={r.path} href={r.path} transitionTypes={["menu"]} className="drawer-item drawer-two"><Icon size={20} strokeWidth={1.8} />
+                      <span className="ellip"><b>{r.title}</b>{sub && <small>{sub}</small>}</span></Link>
+                  );
+                })}
+              </div>
+            )}
+            {watch.length > 0 && <p className="drawer-label">Watchlist</p>}
+            {watch.length > 0 && (
+              <div className="drawer-nav">
+                {watch.map((l) => (
+                  <Link key={l} href={`/clients/${l}/`} transitionTypes={["menu"]} className="drawer-item drawer-two"><Eye size={20} strokeWidth={1.8} />
+                    <span className="ellip"><b>{nameOf(l)}</b><small>#{l}</small></span></Link>
+                ))}
+              </div>
+            )}
           </>
         );
       })()}
+      </>)}
       </div>
       <div className="drawer-foot">
-        <button className="glassbtn-link" aria-label={`Settings, ${user.name}`} onClick={() => { buzz(); set("ui.settings", true); }}><Glass className="glassbtn round avatar-orb">{user.name.replace("demo.", "").slice(0, 2).toUpperCase()}</Glass></button>
-        <Link href="/withdrawals/" className="pillbtn">{pending.length ? `Review ${pending.length} withdrawals` : "WD Approvals"}</Link>
+        <button className="glassbtn-link drawer-me" aria-label={`Settings, ${user.name}`} onClick={() => { buzz(); set("ui.settings", true); }}>
+          <Glass className="drawer-me-cap">
+            <span className="avatar-orb">{user.name.replace("demo.", "").slice(0, 2).toUpperCase()}</span>
+            <span className="ellip"><b>{user.name}</b><small>{ROLE_LABEL[user.role]}</small></span>
+            <Settings size={20} strokeWidth={1.9} aria-hidden />
+          </Glass>
+        </button>
       </div>
     </nav>
   );
