@@ -117,6 +117,18 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   time), daily bars a finger scrubs, the summary against the previous period, breakdowns that filter the bars, and
   the hours in WIB. distill.py build_history() writes src/data/history.json, the last day equal to today's figure.
   Wired on WD Approvals, Catches, Open Lots and CLTL. Add a key there before adding a figure.
+- Page changes slide, never scroll (owner 2026-11-20): the View Transition group of the page does not animate (it
+  would move the page box from the old scroll offset to the top), and the old snapshot is held at --vt-y, the scroll
+  position device.ts records on every click.
+- No text selection or iOS callout anywhere except inputs (owner 2026-11-20). Copying goes through Copy actions only.
+- The app inside the desktop frame clips itself to the 44 px screen radius (html.inframe body clip-path), so sheet
+  backdrops follow the bezel.
+- Chip rows that scroll sideways set overflow-y hidden with 8 px padding, so the chips' tap areas never make the row
+  scroll vertically (it once cut the Book View row in half on the iPhone).
+- Monthly history (owner 2026-11-20, the portal's MONTHLY HISTORY panel "as a pop up"): Client 360, Trading, a row
+  opens src/components/monthly.tsx in a sheet. Lifetime figures, asset mix, one row a month with its mix bar, a month
+  pushes its figures and symbols. distill.py monthly(): 99000001 from the portal's months, others from their own
+  daily P&L and trades, balance run forward from deposits and never negative.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 
