@@ -10,6 +10,7 @@ import { Launch } from "@/components/brand";
 import { LightSource } from "@/components/liquid";
 import { Toast } from "@/components/ios";
 import { SettingsSheet } from "@/components/settings";
+import { Welcome } from "@/components/welcome";
 
 export const metadata: Metadata = {
   title: "Risk Tool",
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <AppState>
           <Drawer />
           <SettingsSheet />
+          <Welcome />
           <div className="stage">
             <ViewTransition update={{ push: "vt-push", pop: "vt-pop", tab: "vt-tab", default: "none" }} default="none"><main className="screen">{children}</main></ViewTransition>
             <Toast />

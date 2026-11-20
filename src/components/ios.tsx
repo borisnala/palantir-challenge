@@ -449,18 +449,45 @@ export function Toast() {
 }
 
 /** Confirm sheet for anything that changes a setting: says what will change, then Cancel or the action. */
-export function Confirm({ open, title, lines, action, destructive, onCancel, onConfirm, need = "editor" }: {
+/** A short code a person types back before a change that can not be undone by accident (owner 2026-11-20, "more
+ *  security layer"): the first six characters of a SHA-256 of what is being changed and the moment the sheet opened,
+ *  in capitals, without the easily confused 0, O, 1 and I. A new code each time the sheet opens. */
+async function changeCode(seed: string) {
+  const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${seed}|${Date.now()}`)));
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from(bytes.slice(0, 6), (b) => A[b % A.length]).join("");
+}
+
+export function Confirm({ open, title, lines, action, destructive, onCancel, onConfirm, need = "editor", code }: {
   open: boolean; title: string; lines: string[]; action: string; destructive?: boolean; onCancel: () => void; onConfirm: () => void; need?: Role;
+  /** what is being changed: when given, the person types the code before the action unlocks */
+  code?: string;
 }) {
   // Every change in the app passes through here, so this is where clearance is checked (Settings, Clearance level)
   const { can, guard, user } = useApp();
   const ok = can(need);
+  const [expect, setExpect] = useState<string | null>(null);
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    if (!open || !code) return;
+    let live = true;
+    changeCode(code).then((c) => { if (live) { setExpect(c); setTyped(""); } });
+    return () => { live = false; };
+  }, [open, code]);
+  const matched = !code || (expect !== null && typed.trim().toUpperCase() === expect);
   return (
     <Sheet open={open} onClose={onCancel} title={title}>
       <Group footer={ok ? undefined : `Signed in as ${user.name}, ${ROLE_LABEL[user.role]}. This change requires ${ROLE_LABEL[need]} clearance.`}>{lines.map((l, i) => <Row key={i} title={l} chevron={false} />)}</Group>
+      {code && ok && (
+        <Group header="Confirmation code" footer="Type the code to unlock the change. A new code is issued each time.">
+          <div className="code-show" aria-label={`Code ${expect ?? ""}`}>{(expect ?? "······").split("").map((ch, i) => <b key={i}>{ch}</b>)}</div>
+          <label className="field"><span>Code</span><input value={typed} onChange={(e) => setTyped(e.target.value.toUpperCase().slice(0, 6))} autoCapitalize="characters" autoComplete="off" spellCheck={false} inputMode="text" placeholder="6 characters" aria-label="Confirmation code" className="mono" /></label>
+        </Group>
+      )}
       <div className="sheet-actions">
         <button className="btn btn-gray" onClick={onCancel}>Cancel</button>
-        <button className={`btn ${destructive ? "btn-red" : "btn-blue"} ${ok ? "" : "btn-locked"}`} onClick={() => { if (guard(need)) onConfirm(); }}>{ok ? action : "Not permitted"}</button>
+        <button className={`btn ${destructive ? "btn-red" : "btn-blue"} ${ok && matched ? "" : "btn-locked"}`} disabled={ok && !matched}
+          onClick={() => { if (!matched) return; if (guard(need)) onConfirm(); }}>{!ok ? "Not permitted" : action}</button>
       </div>
     </Sheet>
   );

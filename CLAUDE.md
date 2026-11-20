@@ -76,6 +76,17 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   curve), so Portfolio growth never shows a negative balance.
 - CLTL is a level board: symbols grouped Red, Orange, Yellow, Basic, three tiles a row with spread, day move and the
   leading light, the detail in the sheet.
+- First open (owner 2026-11-20, src/components/welcome.tsx): a sheet on what Risk Tool is (Palantir design challenge,
+  Lens B, Boris Nala) and what the data is, then Add to Home Screen, iPhone or Android, four drawn steps. Once per
+  browser (localStorage risktool-welcome), skipped in the Home Screen app, again from Settings, i, About this demo or
+  Add to Home Screen. Test scripts set risktool-welcome so the sheet does not cover the page.
+- Bottom search (owner 2026-11-20, "search through there directly"): the capsule is a real field. Typing shows client
+  results over the page between the bars, a round X closes, only a chosen client navigates. The bar rides on the
+  keyboard (--kb from visualViewport). The menu search field and Cancel are 52 px, the round buttons' height.
+- Confirmation code (owner 2026-11-20, "more security layer"): Confirm's `code` prop asks for six characters from a
+  SHA-256 of the change and the moment the sheet opened (no 0, O, 1, I), new each time. Used for Move group, Remove
+  user, Group Spread, Manual Level, PG Markups and the CRA mode.
+- Chart range row as Stocks: full width, equal 36 px segments; compare chips 34 px with 8 px gaps.
 - Desktop frame: the wordmark and "Palantir design challenge, Lens B" and "Boris Nala" left of the phone, the QR code
   with "Built for mobile" on the right.
 - Filter chip rows directly in the page scroll sideways in one line to the screen edges (iOS Mail, Photos). Chips in

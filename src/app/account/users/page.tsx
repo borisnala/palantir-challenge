@@ -65,7 +65,7 @@ export default function UsersPage() {
       <Confirm need="admin" open={reset} title="Reset password" action="Reset" onCancel={() => setReset(false)}
         onConfirm={() => { if (sel) say(`Temporary password issued to ${sel.username}`); setReset(false); }}
         lines={sel ? [`${sel.username} signs in with a temporary password`, "The current password stops working at once"] : []} />
-      <Confirm need="admin" open={del} title="Remove user" action="Remove" destructive onCancel={() => setDel(false)}
+      <Confirm need="admin" open={del} code={`remove ${sel?.username}`} title="Remove user" action="Remove" destructive onCancel={() => setDel(false)}
         onConfirm={() => { if (sel) { set("users.removed", [...removed, sel.id]); say(`${sel.username} removed`); } setDel(false); setOpen(false); }}
         lines={sel ? [`${sel.username} loses access to the portal and this app.`] : []} />
     </>

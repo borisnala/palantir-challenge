@@ -74,6 +74,8 @@ export const FEATURES: Feature[] = [
   T("Haptic feedback", "Settings", "vibration haptics"),
   T("Appearance", "Settings", "theme dark light mode system"),
   T("Sign out", "Settings", "log out logout"),
+  T("About this demo", "Settings", "palantir challenge boris nala demonstration data what is this"),
+  T("Add to Home Screen", "Settings", "install app home screen iphone android pwa"),
   S("Sign in", "Account", "/login/", "login log in password view only"),
   S("Request access", "Account", "/access/", "device access approval new device"),
 ];

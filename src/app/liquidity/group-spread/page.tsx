@@ -57,7 +57,7 @@ export default function GroupSpread() {
         )}
       </Sheet>
 
-      <Confirm open={review} title="Apply tier" action="Apply" onCancel={() => setReview(false)}
+      <Confirm open={review} code="group spread tier" title="Apply tier" action="Apply" onCancel={() => setReview(false)}
         onConfirm={() => { if (sel) { set("gs.applied", { ...applied, [sel.name]: tier }); say(`${grp(sel.name)} set to ${tier}`); } setReview(false); setOpen(false); }}
         lines={sel ? diffs(sel, tier).map((p) => `${sym(p)} ${nowOf(sel)[p].sd} to ${EXP[tier][p].sd} pts`) : []} />
     </>

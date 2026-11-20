@@ -98,7 +98,7 @@ export default function CraModel() {
           detail={<Chip tone={v.status === "active" ? "green" : v.status.startsWith("pending") ? "orange" : "gray"}>{sentence(v.status)}</Chip>} chevron={v.status !== "active"} />)}
       </Group>
 
-      <Confirm open={mode !== null} title="Change mode" action={mode === "enforce" ? "Enforce" : "Shadow"} need="admin" onCancel={() => setMode(null)}
+      <Confirm open={mode !== null} code="cra mode" title="Change mode" action={mode === "enforce" ? "Enforce" : "Shadow"} need="admin" onCancel={() => setMode(null)}
         onConfirm={() => { set("cra.mode", mode); say(`CRA in ${mode} mode`); setMode(null); }}
         lines={[`Mode ${effective} to ${mode ?? ""}`, mode === "enforce" ? "Ratings start to act on onboarding and reviews" : "Ratings are recorded only"]} />
       <Confirm open={signing} title="Sign off" action="Sign off" onCancel={() => setSigning(false)}

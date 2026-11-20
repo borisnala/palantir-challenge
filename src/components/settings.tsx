@@ -134,6 +134,8 @@ function NotifyPage() {
 /** The i menu: build, data and the open-source licences, as in the Claude app. */
 function InfoMenu() {
   const [open, setOpen] = useState(false);
+  const app = useApp();
+  const show = (which: "about" | "install") => { setOpen(false); app.set("ui.settings", false); app.set("ui.welcome", which); };
   const push = useSheetPush();
   return (
     <span className="info-wrap">
@@ -144,7 +146,10 @@ function InfoMenu() {
         <>
           <button className="menu-scrim" aria-label="Close menu" onPointerDown={(e) => e.stopPropagation()} onClick={() => setOpen(false)} />
           <Glass className="popmenu info-menu" role="menu" onPointerDown={(e: React.PointerEvent) => e.stopPropagation()}>
-            <p className="info-build">Risk Tool 1.0<br /><span className="muted">Build 2026.11.19, demonstration data</span></p>
+            <p className="info-build">Risk Tool 1.0<br /><span className="muted">Build 2026.11.20, demonstration data</span></p>
+            <i className="popmenu-sep" />
+            <button role="menuitem" onClick={() => show("about")}>About this demo</button>
+            <button role="menuitem" onClick={() => show("install")}>Add to Home Screen</button>
             <i className="popmenu-sep" />
             <button role="menuitem" onClick={() => { setOpen(false); push?.("Data", (
               <Group footer="Global Risk Portal demo, snapshot 13 Nov 2026. Logins 99000001 onward.">

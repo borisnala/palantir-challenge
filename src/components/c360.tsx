@@ -737,7 +737,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
           {!moveTo ? "Choose a group" : !why ? "Choose a reason" : `Review move to ${moveTo}`}
         </button>
       </Sheet>
-      <Confirm open={review} title="Confirm move" lines={[`${c.name}, #${c.login}`, `${path(tier)} to ${path(moveTo ?? "")}`, `Reason, ${reason}`, "Applies to new positions"]} action="Move"
+      <Confirm open={review} code={`move ${c.login} ${tier} ${moveTo}`} title="Confirm move" lines={[`${c.name}, #${c.login}`, `${path(tier)} to ${path(moveTo ?? "")}`, `Reason, ${reason}`, "Applies to new positions"]} action="Move"
         onCancel={() => setReview(false)} onConfirm={doMove} />
 
       <Sheet open={sheet === "sc"} onClose={() => setSheet(null)} title="ScalperAM">

@@ -60,7 +60,7 @@ export default function ManualLevel() {
         )}
       </Sheet>
 
-      <Confirm open={review} title="Apply levels" action="Apply" onCancel={() => setReview(false)}
+      <Confirm open={review} code="manual level" title="Apply levels" action="Apply" onCancel={() => setReview(false)}
         onConfirm={() => { set("ml.assets", draft); setReview(false); say(`${changes.length} level ${changes.length === 1 ? "change" : "changes"} applied`); }} lines={changes} />
     </>
   );

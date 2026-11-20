@@ -66,7 +66,7 @@ export default function PgMarkups() {
         ) : null)}
       </Group>
 
-      <Confirm open={review} title="Apply changes" action={sim ? "Apply in simulation" : "Apply to MT5"} onCancel={() => setReview(false)} onConfirm={apply} lines={changes} />
+      <Confirm open={review} code="pg markups" title="Apply changes" action={sim ? "Apply in simulation" : "Apply to MT5"} onCancel={() => setReview(false)} onConfirm={apply} lines={changes} />
     </>
   );
 }

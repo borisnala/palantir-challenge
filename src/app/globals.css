@@ -1260,3 +1260,53 @@ main.screen > .tchips > .tchip { flex: none; }
 .lvl-basic .lvl-top i { display: none; }
 .lc-range { color: var(--label); }
 .lc-range button { height: 32px; padding: 0 14px; border-radius: 16px; }
+
+/* Search in place from the bottom capsule (owner 2026-11-20): the capsule is a real field, the results fill the screen
+   between the top bar and the bar, the round X closes, the bar rides on top of the keyboard (--kb). */
+.cmd-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: 17px; color: var(--label); height: 100%; }
+.cmd-field input::placeholder { color: var(--label2); }
+.cmdbar { transform: translateY(calc(-1 * var(--kb, 0px))); transition: transform .25s cubic-bezier(.32,.72,0,1); }
+.cmd-close { width: 52px; height: 52px; }
+.cmd-results { position: fixed; left: 0; right: 0; top: var(--bar-bottom, 110px); bottom: calc(var(--kb, 0px) + var(--dock-gap) + var(--sab) + var(--dock-h) + 8px); z-index: 19;
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; background: var(--bg); padding: 4px max(16px, var(--sal)) 24px max(16px, var(--sar));
+  display: flex; flex-direction: column; gap: 22px; animation: fadein .2s ease-out both; }
+html.searching body { overflow: hidden; }
+html.searching .scroll-edge-bottom { opacity: 1; }
+/* Menu search: the field is a 52 px glass-height capsule like the round buttons beside it, Cancel centred on it */
+.drawer-search { height: var(--bar-h, 52px); }
+.drawer-field { height: var(--bar-h, 52px); border-radius: calc(var(--bar-h, 52px) / 2); padding: 0 16px; gap: 10px; }
+.drawer-cancel { height: var(--bar-h, 52px); display: inline-flex; align-items: center; padding: 0 6px 0 2px; font-weight: 500; }
+/* The confirmation code: six large characters to read, a field to type them */
+.code-show { display: flex; justify-content: center; gap: 6px; padding: 16px 12px 8px; }
+.code-show b { width: 38px; height: 46px; display: grid; place-items: center; border-radius: 10px; background: var(--fill); font: 600 24px ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0; }
+/* Chart range as Stocks draws it (owner 2026-11-20, "cramped"): one row across the chart's full width, each range an
+   equal share and a 36 px target, the chosen one in a soft capsule. Compare chips get the same 36 px height and air. */
+.lc-range { display: flex; width: 100%; margin: 12px 0 4px; padding: 0; gap: 4px; background: none; }
+.lc-range button { flex: 1; height: 36px; padding: 0; border-radius: 18px; font-size: 14px; font-weight: 600; color: var(--label2); }
+.lc-range button.on { background: var(--fill2); color: var(--label); box-shadow: none; }
+.chartcard .tchips { gap: 8px; row-gap: 8px; margin-top: 10px; }
+.chartcard .tchip { height: 34px; padding: 0 14px; font-size: 14px; }
+.chartcard .tlabel { width: 100%; font-size: 13px; color: var(--label2); }
+
+/* First open: what this is, then the Home Screen steps, each with its drawing (src/components/welcome.tsx) */
+.welcome-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; padding: 4px 0 2px; }
+.welcome-hero .gate-mark { width: 76px; height: 76px; margin-bottom: 10px; border-radius: 19px; }
+.welcome-hero b { font-size: 22px; font-weight: 700; letter-spacing: .2px; }
+.welcome-hero span { font-size: 15px; color: var(--label2); }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.step { display: flex; align-items: center; gap: 16px; padding: 10px 14px; border-radius: 22px; background: var(--cell); animation: fadein .3s ease-out both; }
+.step-art { flex: none; width: 54px; height: 90px; }
+.sa-body { fill: var(--bg); stroke: var(--label3); stroke-width: 2; }
+.sa-ink { fill: var(--label3); }
+.sa-bar { fill: var(--fill); }
+.sa-line { fill: var(--fill2); }
+.sa-hit > :not(.sa-glyph) { fill: var(--blue); }
+.sa-glyph { fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sa-hit { animation: hitpulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes hitpulse { 50% { transform: scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .sa-hit { animation: none; } }
+.step-text { display: grid; grid-template-columns: 26px 1fr; column-gap: 8px; row-gap: 2px; align-items: center; }
+.step-text i { grid-row: span 2; width: 26px; height: 26px; border-radius: 13px; background: var(--fill2); display: grid; place-items: center; font-style: normal; font-size: 14px; font-weight: 600; }
+.step-text b { font-size: 17px; font-weight: 600; }
+.step-text small { grid-column: 2; font-size: 14px; color: var(--label2); line-height: 18px; }
+.drawer-search { min-width: 0; } .drawer-field { min-width: 0; } .drawer-field input { width: 100%; } .drawer-cancel { flex: none; }
