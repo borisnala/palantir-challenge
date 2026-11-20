@@ -7,7 +7,7 @@
 import Link from "@/components/nav-link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, Check, ChevronLeft, ChevronRight, ChevronsUpDown, Ellipsis, Menu, Minus, Plus, RefreshCw, Settings } from "lucide-react";
-import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { commandSlot } from "./shell";
 import { ROLE_LABEL, useApp, type Role } from "./app-state";
@@ -182,12 +182,32 @@ const SheetNav = createContext<((title: string, node: React.ReactNode) => void) 
 /** Inside a sheet: push a detail page, as the Claude app does when a step row is tapped. */
 export const useSheetPush = () => useContext(SheetNav);
 
+/** Open sheets, oldest first (owner 2026-11-20, "one popup window at a time"): only the newest shows. One opened from
+ *  another sheet hides the one beneath it and shows a back button instead of the X. Closing it brings the one beneath back. */
+let sheetIds: string[] = [];
+const sheetSubs = new Set<() => void>();
+const sheetStack = {
+  subscribe: (f: () => void) => { sheetSubs.add(f); return () => { sheetSubs.delete(f); }; },
+  get: () => sheetIds,
+  set: (next: string[]) => { sheetIds = next; sheetSubs.forEach((f) => f()); },
+};
+
 export function Sheet({ open, onClose, title, children, trailing, tall }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; trailing?: React.ReactNode; tall?: boolean }) {
   // mounted keeps the sheet in the DOM while it slides out. The slide runs on a spring, and a drag on the top bar
   // pulls the sheet with the finger. Let go past a third of its height, or flick down, and it closes. Otherwise it
   // springs back with a little overshoot.
   const [mounted, setMounted] = useState(open);
   const [stack, setStack] = useState<SheetPage[]>([]);
+  const id = useId();
+  const ids = useSyncExternalStore(sheetStack.subscribe, sheetStack.get, () => sheetIds);
+  useEffect(() => {
+    if (!open) return;
+    sheetStack.set([...sheetStack.get().filter((x) => x !== id), id]);
+    return () => sheetStack.set(sheetStack.get().filter((x) => x !== id));
+  }, [open, id]);
+  const pos = ids.indexOf(id);
+  const under = pos >= 0 && pos < ids.length - 1; // another sheet is open over this one
+  const child = pos > 0; // this one opened over another: back, not close
   if (open && !mounted) setMounted(true);
   if (!open && stack.length) setStack([]);
   const panel = useRef<HTMLDivElement>(null);
@@ -244,7 +264,7 @@ export function Sheet({ open, onClose, title, children, trailing, tall }: { open
 
   if (!mounted) return null;
   return (
-    <div className="sheet-wrap">
+    <div className={`sheet-wrap ${under ? "sheet-under" : ""}`} aria-hidden={under || undefined}>
       <button ref={scrim} className="sheet-scrim" aria-label="Close" onClick={onClose} />
       <SheetNav.Provider value={(t, node) => { buzz(); setStack((x) => [...x, { title: t, node }]); }}>
       <div ref={panel} className={`sheet ${tall ? "sheet-tall" : ""}`} role="dialog" aria-modal="true" aria-label={title} style={{ transform: "translateY(100%)" }}>
@@ -256,8 +276,8 @@ export function Sheet({ open, onClose, title, children, trailing, tall }: { open
                 <Glass className="glassbtn round"><ChevronLeft size={24} strokeWidth={2.2} /></Glass>
               </button>
             ) : (
-              <button className="glassbtn-link" onPointerDown={(e) => e.stopPropagation()} onClick={onClose} aria-label="Close">
-                <Glass className="glassbtn round"><span className="xmark" aria-hidden /></Glass>
+              <button className="glassbtn-link" onPointerDown={(e) => e.stopPropagation()} onClick={() => { buzz(); onClose(); }} aria-label={child ? "Back" : "Close"}>
+                <Glass className="glassbtn round">{child ? <ChevronLeft size={24} strokeWidth={2.2} /> : <span className="xmark" aria-hidden />}</Glass>
               </button>
             )}
             <span className="nav-title">{stack.length ? stack[stack.length - 1].title : title}</span>

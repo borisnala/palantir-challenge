@@ -13,7 +13,7 @@ import { useApp } from "./app-state";
 import { buzz } from "@/lib/haptics";
 import { TradingPattern } from "./pattern";
 import { Chip, Confirm, Group, Metrics, Row, Segmented, Sheet, Switch, copyText, usePageMenu } from "./ios";
-import { Monogram, Pnl, Share } from "./ui";
+import { DivBar, Monogram, Pnl } from "./ui";
 import meta from "@/data/client360meta.json";
 import { ALERTS, compact, day, money, num, pct, when, type Client } from "@/lib/data";
 
@@ -91,13 +91,55 @@ function priceIndex(sym: string, n: number) {
 /** P&L and exposure, as the portal's desktop chart: a line with a y axis on the right, a linear or log scale, group
  *  periods as shaded bands, compare-price lines, and net lots per day as bars under it. A finger scrubs through the
  *  days and a tag shows the day's figures. */
-function ExposureChart({ days, values, net, scale, bands, overlays, onScrub, tip }: {
+const RANGES: { k: string; d: number }[] = [{ k: "1M", d: 31 }, { k: "3M", d: 92 }, { k: "6M", d: 183 }, { k: "1Y", d: 366 }, { k: "All", d: 0 }];
+
+/** The P&L chart with zoom (owner 2026-11-20, "zoom in, zoom out"): range buttons as in Stocks, a pinch on the chart,
+ *  or the scroll wheel on a computer. The window is a slice of the series; scrub and tip keep the full series' index. */
+function ExposureChart({ days: allDays, values: allValues, net: allNet, scale, bands, overlays, onScrub, tip }: {
   days: number[]; values: number[]; net: number[]; scale: Scale; bands: Band[]; overlays: string[];
   onScrub: (i: number | null) => void; tip: (i: number) => React.ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [w, setW] = useState(320);
   const [at, setAt] = useState<number | null>(null);
+  const n = allValues.length;
+  const [win, setWin] = useState<[number, number]>([0, n - 1]);
+  const [lo, hi] = [Math.max(0, Math.min(win[0], n - 2)), Math.min(n - 1, Math.max(win[1], 1))];
+  const days = allDays.slice(lo, hi + 1), values = allValues.slice(lo, hi + 1), net = allNet.slice(lo, hi + 1);
+  const pinch = useRef<{ d0: number; a: number; b: number; mid: number } | null>(null);
+  const zoomTo = (span: number, center: number) => {
+    const sp = Math.max(10, Math.min(n - 1, Math.round(span)));
+    let a = Math.round(center - sp / 2); a = Math.max(0, Math.min(n - 1 - sp, a));
+    setAt(null); onScrub(null); // the cursor belongs to the old window
+    setWin([a, a + sp]);
+  };
+  const range = (d: number) => {
+    buzz();
+    setAt(null); onScrub(null);
+    if (!d) { setWin([0, n - 1]); return; }
+    const from = allDays[n - 1] - d * 86400; const a = Math.max(0, allDays.findIndex((x) => x >= from));
+    setWin([Math.min(a, n - 11), n - 1]);
+  };
+  const activeRange = lo === 0 && hi === n - 1 ? "All" : RANGES.find((r) => r.d && lo === Math.min(Math.max(0, allDays.findIndex((x) => x >= allDays[n - 1] - r.d * 86400)), n - 11) && hi === n - 1)?.k;
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const fracAt = (cx: number) => { const r = el.getBoundingClientRect(); return Math.max(0, Math.min(1, (cx - r.left) / Math.max(1, r.width - 52))); };
+    const start = (e: TouchEvent) => { if (e.touches.length === 2) { pinch.current = { d0: dist(e.touches), a: lo, b: hi, mid: fracAt((e.touches[0].clientX + e.touches[1].clientX) / 2) }; setAt(null); onScrub(null); } };
+    const move = (e: TouchEvent) => {
+      const pc = pinch.current; if (!pc || e.touches.length !== 2) return;
+      e.preventDefault();
+      const k = pc.d0 / Math.max(10, dist(e.touches));
+      zoomTo((pc.b - pc.a) * k, pc.a + (pc.b - pc.a) * pc.mid);
+    };
+    const end = (e: TouchEvent) => { if (e.touches.length < 2 && pinch.current) { pinch.current = null; buzz(); } };
+    const wheel = (e: WheelEvent) => { e.preventDefault(); const c = lo + (hi - lo) * fracAt(e.clientX); zoomTo((hi - lo) * (e.deltaY > 0 ? 1.15 : 0.87), c); };
+    el.addEventListener("touchstart", start, { passive: true });
+    el.addEventListener("touchmove", move, { passive: false });
+    el.addEventListener("touchend", end);
+    el.addEventListener("wheel", wheel, { passive: false });
+    return () => { el.removeEventListener("touchstart", start); el.removeEventListener("touchmove", move); el.removeEventListener("touchend", end); el.removeEventListener("wheel", wheel); };
+  }); // re-bound each render so the handlers read the current window
   useEffect(() => {
     const el = box.current; if (!el) return;
     const ro = new ResizeObserver(() => setW(el.clientWidth));
@@ -108,7 +150,10 @@ function ExposureChart({ days, values, net, scale, bands, overlays, onScrub, tip
   // the scale: linear, or a symmetric log so a P&L that crosses zero still has a log axis
   const f = (v: number) => (scale === "log" ? Math.sign(v) * Math.log10(1 + Math.abs(v) / 100) : v);
   const fi = (u: number) => (scale === "log" ? Math.sign(u) * (10 ** Math.abs(u) - 1) * 100 : u);
-  const lo0 = Math.min(0, ...values), hi0 = Math.max(0, ...values);
+  // the whole history keeps zero in view, a zoomed window scales to its own range as Stocks does
+  const zoomed = lo > 0 || hi < n - 1;
+  const vmin = Math.min(...values), vmax = Math.max(...values), vpad = (vmax - vmin) * 0.08 || Math.abs(vmax) * 0.05 || 1;
+  const lo0 = zoomed && scale === "linear" ? vmin - vpad : Math.min(0, vmin), hi0 = zoomed && scale === "linear" ? vmax + vpad : Math.max(0, vmax);
   let t: number[];
   if (scale === "log") {
     const cand = [0, 100, 300, 1000, 3000, 10000, 30000, 100000, 300000, 1000000].flatMap((v) => (v ? [v, -v] : [0]));
@@ -118,22 +163,27 @@ function ExposureChart({ days, values, net, scale, bands, overlays, onScrub, tip
   const x = (i: number) => (i / Math.max(1, values.length - 1)) * cw;
   const y = (v: number) => top + (1 - (f(v) - y0) / (y1 - y0 || 1)) * (H - top - bottom);
   const d = values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
-  const zero = y(0);
+  const zero = Math.max(top, Math.min(H - bottom, y(0))); // the fill runs to zero, or to the edge when zero is off the chart
   const xOf = (day: number) => { const k = days.findIndex((dd) => dd >= day); return x(k < 0 ? days.length - 1 : k); };
   const nmax = Math.max(0.01, ...net.map(Math.abs));
-  const months = useMemo(() => {
+  // x labels: months for a long window, dates for a zoomed one
+  const months = (() => {
+    if (days[days.length - 1] - days[0] < 75 * 86400) {
+      return [0, 1, 2, 3].map((q) => Math.round((q / 3) * (days.length - 1))).map((i) => { const dt = new Date(days[i] * 1000); return { i, label: `${dt.getUTCDate()} ${MONTHS[dt.getUTCMonth()]}` }; });
+    }
     const seen: { i: number; label: string }[] = [];
     days.forEach((dd, i) => { const m = new Date(dd * 1000).getUTCMonth(); if (!seen.length || new Date(days[seen[seen.length - 1].i] * 1000).getUTCMonth() !== m) seen.push({ i, label: MONTHS[m] }); });
     return seen.filter((_, k, arr) => k % Math.ceil(arr.length / 4) === 0);
-  }, [days]);
+  })();
   const lines = overlays.map((sym) => {
-    const idx = priceIndex(sym, values.length), mn = Math.min(...idx), mx = Math.max(...idx);
+    const idx = priceIndex(sym, n).slice(lo, hi + 1), mn = Math.min(...idx), mx = Math.max(...idx);
     return idx.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${(top + (1 - (v - mn) / (mx - mn || 1)) * (H - top - bottom)).toFixed(1)}`).join("");
   });
   const pick = (clientX: number) => {
     const r = box.current?.getBoundingClientRect(); if (!r) return;
+    if (pinch.current) return;
     const i = Math.round(Math.max(0, Math.min(1, (clientX - r.left) / cw)) * (values.length - 1));
-    setAt(i); onScrub(i);
+    setAt(i); onScrub(lo + i);
   };
   const end = () => { setAt(null); onScrub(null); };
   const up = values[values.length - 1] >= 0;
@@ -144,7 +194,7 @@ function ExposureChart({ days, values, net, scale, bands, overlays, onScrub, tip
       onPointerUp={end} onPointerCancel={end} onPointerLeave={(e) => { if (e.pointerType === "mouse") end(); }}>
       <svg width={w} height={H + NB + 16} role="img" aria-label="P&L and net lots chart">
         <defs><linearGradient id="lfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".2" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient></defs>
-        {bands.map((bd, k) => (
+        {bands.filter((bd) => bd.to >= days[0] && bd.from <= days[days.length - 1]).map((bd) => ({ ...bd, from: Math.max(bd.from, days[0]) })).map((bd, k) => (
           <g key={k}>
             <rect x={xOf(bd.from)} y={top - 12} width={Math.max(1, xOf(bd.to) - xOf(bd.from))} height={H - top - bottom + 12} className={k % 2 ? "band-b" : "band-a"} />
             {k > 0 && <line x1={xOf(bd.from)} x2={xOf(bd.from)} y1={top - 12} y2={H - bottom} className="band-line" />}
@@ -167,14 +217,18 @@ function ExposureChart({ days, values, net, scale, bands, overlays, onScrub, tip
           <rect key={i} x={x(i) - 1} width="2.2" y={v > 0 ? H + NB / 2 + 8 - (v / nmax) * (NB / 2) : H + NB / 2 + 8} height={Math.max(1, (Math.abs(v) / nmax) * (NB / 2))} className={v > 0 ? "nl-pos" : "nl-neg"} />
         ) : null)}
         {months.map((m) => <text key={m.i} x={Math.min(cw - 20, x(m.i))} y={H + NB + 14} className="lc-label">{m.label}</text>)}
-        {at !== null && (
+        {at !== null && at < values.length && (
           <g>
             <line x1={x(at)} x2={x(at)} y1={top} y2={H + NB + 8} className="lc-cursor" />
             <circle cx={x(at)} cy={y(values[at])} r="5.5" className="lc-dot" />
           </g>
         )}
       </svg>
-      {at !== null && <div className="lc-tip" style={{ left: Math.min(Math.max(0, x(at) - 80), cw - 160) }}>{tip(at)}</div>}
+      {at !== null && at < values.length && <div className="lc-tip" style={{ left: Math.min(Math.max(0, x(at) - 80), cw - 160) }}>{tip(lo + at)}</div>}
+      <span className="tseg lc-range" role="radiogroup" aria-label="Range" onPointerDown={(e) => e.stopPropagation()}>
+        {RANGES.map((r) => <button key={r.k} role="radio" aria-checked={activeRange === r.k} className={activeRange === r.k ? "on" : ""} onClick={() => range(r.d)}>{r.k}</button>)}
+        {!activeRange && <button role="radio" aria-checked className="on" onClick={() => range(0)}>Zoomed</button>}
+      </span>
       <span hidden>{fi(0)}</span>
     </div>
   );
@@ -375,8 +429,11 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
   const month = sheet && typeof sheet === "object" ? months.find((m) => m.key === sheet.month) : undefined;
   const alerts = ALERTS.filter((a) => a.login === c.login);
   const fbMet = Object.values(p.force_buildup.conditions).filter(Boolean).length;
-  const maxSession = Math.max(...p.sessions.map((s) => Math.abs(s.net_pl)));
-  const maxHold = Math.max(...p.holding.map((h) => h.trades));
+  // Client or Broker P&L for every split: the broker's figure is the client's with the sign turned
+  const sg = pov === "client" ? 1 : -1;
+  const symPl = (s: { pl: number | null; hpov?: number | null }) => (pov === "client" ? s.pl ?? 0 : s.hpov ?? -(s.pl ?? 0));
+  // one scale for sessions, symbols and holding time, so equal amounts draw equal bars across the three
+  const plMax = Math.max(1, ...p.sessions.map((s) => Math.abs(s.net_pl)), ...p.symbols.map((s) => Math.abs(s.pl ?? 0)), ...p.holding.map((h) => Math.abs(h.total_pl)));
   const w = p.windows, x = p.exposure.totals, wd = p.withdrawals;
   const isLive = p.exposure.symbols.length > 0;
 
@@ -495,7 +552,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
             <Group header="At a glance">
               <Row onClick={() => setTab("trading")} title="Trades" detail={num(p.behaviour.trade_count)} />
               <Row onClick={() => setTab("trading")} title="Top symbol" detail={`${p.symbols[0].symbol}, ${pct(p.symbols[0].pct, 0)}`} />
-              <Row onClick={() => setTab("trading")} title="Best session" detail={[...p.sessions].sort((a, z) => z.net_pl - a.net_pl)[0].session} />
+              <Row onClick={() => setTab("trading")} title="Best session" detail={[...p.sessions].sort((a, z) => sg * (z.net_pl - a.net_pl))[0].session} />
               <Row onClick={() => setTab("account")} title="Balance" detail={money(p.identity.balance)} />
               <Row onClick={() => jump("risk", "c360-groups")} title="Group history" detail={`${num(p.group_changes.length + moves.length)} changes`} />
               <Row onClick={() => jump("account", "c360-wd")} title="Withdrawal velocity" detail={`${wd.withdrawal_count} withdrawals`} />
@@ -506,7 +563,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
         {tab === "trading" && (
           <>
             <Segmented label="Point of view" value={pov} onChange={setPov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} />
-            <TradingPattern trades={p.trades as unknown as Record<string, [number, number, number, number][]>} asOf={meta.as_of} />
+            <TradingPattern trades={p.trades as unknown as Record<string, [number, number, number, number][]>} asOf={meta.as_of} sign={sg} />
 
             <Group header="By trading day" footer={`One square per trading day. Green ${pov} profit, red loss.`}>
               <div className="calgrid">
@@ -520,22 +577,22 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               </div>
             </Group>
 
-            <Group header="Profit by session" footer="UTC, all time. Client view.">
+            <Group header="Profit by session" footer={`UTC, all time. ${pov === "client" ? "Client" : "Broker"} P&L. Sessions, symbols and holding time share one scale.`}>
               {p.sessions.map((s) => (
                 <div key={s.session} className="barrow">
-                  <span className="barrow-top"><b>{s.session}</b><Pnl v={s.net_pl} /></span>
-                  <Share v={Math.abs(s.net_pl)} of={maxSession} tone={s.net_pl >= 0 ? "var(--pos)" : "var(--neg)"} />
+                  <span className="barrow-top"><b>{s.session}</b><Pnl v={sg * s.net_pl} /></span>
+                  <DivBar v={sg * s.net_pl} max={plMax} />
                   <span className="row-sub">{s.trades} {s.trades === 1 ? "trade" : "trades"}, win {pct(s.win_rate, 0)}</span>
                 </div>
               ))}
             </Group>
 
-            <Group header="Top symbols" footer="Share of total lots.">
+            <Group header="Top symbols" footer="Percent is the share of total lots. Bars on the session scale.">
               {p.symbols.map((s) => (
                 <div key={s.symbol} className="barrow">
-                  <span className="barrow-top"><b>{s.symbol}</b><span className="muted">{pct(s.pct, 1)}</span></span>
-                  <Share v={s.pct} of={p.symbols[0].pct} />
-                  <span className="barrow-top row-sub"><span>{num(s.lots, 2)} lots{s.trades ? `, ${s.trades} trades, win ${pct(s.win, 0)}` : ""}</span>{s.pl !== null && s.pl !== undefined && <Pnl v={pov === "client" ? s.pl : (s.hpov ?? -s.pl)} short />}</span>
+                  <span className="barrow-top"><b>{s.symbol}</b>{s.pl !== null && s.pl !== undefined && <Pnl v={symPl(s)} />}</span>
+                  <DivBar v={symPl(s)} max={plMax} />
+                  <span className="row-sub">{pct(s.pct, 1)} of lots, {num(s.lots, 2)} lots{s.trades ? `, ${s.trades} trades, win ${pct(s.win, 0)}` : ""}</span>
                 </div>
               ))}
             </Group>
@@ -543,8 +600,8 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
             <Group header="Holding time" footer={`Median hold ${p.behaviour.median_hold_label}. ${pct(p.behaviour.overnight_pct, 0)} of positions held overnight.`}>
               {p.holding.map((h) => (
                 <div key={h.bucket} className="barrow">
-                  <span className="barrow-top"><b>{h.bucket.replace("<", "Under ").replace(">", "Over ")}</b><Pnl v={h.total_pl} short /></span>
-                  <Share v={h.trades} of={maxHold} tone="var(--purple)" />
+                  <span className="barrow-top"><b>{h.bucket.replace("<", "Under ").replace(">", "Over ")}</b><Pnl v={sg * h.total_pl} /></span>
+                  <DivBar v={sg * h.total_pl} max={plMax} />
                   <span className="row-sub">{h.trades} trades, {pct(h.trade_share_pct, 0)} of all, win {pct(h.win_rate, 0)}</span>
                 </div>
               ))}

@@ -61,6 +61,23 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   becomes a scatter or quadrant grid, a weekday by hour grid a heatmap, a time series a line, a before and after a
   bar triplet, a filter with more than four values horizontal chips, a choice among two to four a segmented control,
   a detail a sheet, a change a Confirm sheet.
+- Sheets (owner 2026-11-20): one at a time. A sheet opened from another (a Confirm from a user sheet) hides the one
+  beneath (ios.tsx sheetStack) and shows a back chevron instead of the X; closing it brings the one beneath back. Every
+  sheet has the grabber bar on top to pull it down. Sheets float 8 px from the bottom and sides with corners the
+  screen's radius less 8 (--screen-r per iPhone in src/lib/device.ts, 44 inside the desktop frame).
+- Notifications (owner 2026-11-20, "enrich"): distill.py builds src/data/alerts.json from the portal's 16 news profit
+  notifications (kit mock SPECS), the Morning Digest changes, today's algorithm moves and pending withdrawals. Six kinds
+  (news, algo, tier, swing, book, wd), each switchable in Settings, grouped by day as iOS Mail, kind chips on top.
+- Client 360 point of view: Client P&L or Broker P&L flips every P&L figure (chart, calendar, sessions, symbols,
+  holding time, trading pattern). Sessions, symbols and holding time draw diverging bars on one shared scale (ui.tsx
+  DivBar). Balance and equity are account facts and never flip. The P&L chart zooms: 1M 3M 6M 1Y All, pinch on a phone,
+  the wheel on a computer; a zoomed window scales its y axis to its own range.
+- Variant clients' deposits, P&L and withdrawals add up to the balance (distill.py rebuilds withdrawals from the P&L
+  curve), so Portfolio growth never shows a negative balance.
+- CLTL is a level board: symbols grouped Red, Orange, Yellow, Basic, three tiles a row with spread, day move and the
+  leading light, the detail in the sheet.
+- Desktop frame: the wordmark and "Palantir design challenge, Lens B" and "Boris Nala" left of the phone, the QR code
+  with "Built for mobile" on the right.
 - Filter chip rows directly in the page scroll sideways in one line to the screen edges (iOS Mail, Photos). Chips in
   a card or sheet wrap. Tags (Chip) always read in sentence case.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.

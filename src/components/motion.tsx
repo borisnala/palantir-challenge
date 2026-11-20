@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { readPrefs, useApp } from "./app-state";
 import { buzz, listenForChoices } from "@/lib/haptics";
+import { Wordmark } from "./brand";
 
 const SECTIONS = ["/risk", "/liquidity", "/withdrawals", "/search", "/clients", "/alerts", "/account"];
 const depth = (p: string) => p.split("/").filter(Boolean).length;
@@ -150,11 +151,15 @@ export function DeviceFrame() {
   return createPortal(
     <div className="device-canvas">
       <iframe className="device" src={src} title="Risk Tool" />
+      <aside className="device-credit" aria-label="About">
+        <Wordmark />
+        <p><b>Palantir design challenge</b>Lens B, make it click</p>
+        <p><b>Boris Nala</b>The Global Risk Portal, rebuilt for a phone</p>
+      </aside>
       <aside className="device-qr" aria-label="Open on a phone">
         {svg && <div className="qr" dangerouslySetInnerHTML={{ __html: svg }} />}
-        <p>Scan to open on a phone.</p>
+        <p><b>Built for mobile</b>Scan to open on a phone.</p>
       </aside>
-      <p className="device-note">Built for mobile.</p>
     </div>,
     document.body,
   );

@@ -37,7 +37,7 @@ function candles(sym: string, from: number, to: number) {
 
 const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || undefined;
 
-export function TradingPattern({ trades, asOf }: { trades: Record<string, Trade[]>; asOf: number }) {
+export function TradingPattern({ trades, asOf, sign = 1 }: { trades: Record<string, Trade[]>; asOf: number; sign?: 1 | -1 }) {
   const syms = Object.keys(trades).filter((s) => trades[s].length);
   const [sym, setSym] = useState(syms[0]);
   const box = useRef<HTMLDivElement>(null);
@@ -82,8 +82,8 @@ export function TradingPattern({ trades, asOf }: { trades: Record<string, Trade[
 
   if (!syms.length) return null;
   const buys = list.filter((t) => t[1] > 0), sells = list.filter((t) => t[1] < 0);
-  const pl = list.reduce((a, t) => a + t[3], 0);
-  const wins = list.filter((t) => t[3] > 0).length;
+  const pl = sign * list.reduce((a, t) => a + t[3], 0);
+  const wins = list.filter((t) => sign * t[3] > 0).length;
   const lots = list.reduce((a, t) => a + t[2], 0) / Math.max(1, list.length);
   const lean = buys.length >= sells.length ? `Buys on ${pct((buys.length / list.length) * 100, 0)} of trading days` : `Sells on ${pct((sells.length / list.length) * 100, 0)} of trading days`;
 
@@ -103,7 +103,7 @@ export function TradingPattern({ trades, asOf }: { trades: Record<string, Trade[
         <Row title="Buys and sells" detail={`${buys.length} buys, ${sells.length} sells`} chevron={false} />
         <Row title="Winning days" detail={pct((wins / Math.max(1, list.length)) * 100, 0)} chevron={false} />
         <Row title="Average size" detail={`${num(lots, 2)} lots`} chevron={false} />
-        <Row title="P&L on the symbol" detail={<Pnl v={pl} />} chevron={false} />
+        <Row title={sign > 0 ? "Client P&L on the symbol" : "Broker P&L on the symbol"} detail={<Pnl v={pl} />} chevron={false} />
       </Group>
     </>
   );

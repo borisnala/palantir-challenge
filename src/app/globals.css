@@ -1213,3 +1213,50 @@ main.screen > .tchips { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 20px), transparent); mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 20px), transparent); }
 main.screen > .tchips::-webkit-scrollbar { display: none; }
 main.screen > .tchips > .tchip { flex: none; }
+
+/* Desktop frame credit (owner 2026-11-20): who made it on the left of the phone, how to open it on a phone on the right */
+.device-credit { position: absolute; top: 50%; right: calc(50% + 201px + 56px); transform: translateY(-50%); width: 220px; display: flex; flex-direction: column;
+  gap: 16px; text-align: right; align-items: flex-end; font-size: 13px; line-height: 18px; color: #6e6e73; }
+.device-credit .wordmark { font-size: 26px; color: #1d1d1f; }
+.device-credit p, .device-qr p { margin: 0; }
+.device-credit b, .device-qr b { display: block; font-size: 15px; font-weight: 600; color: #1d1d1f; margin-bottom: 2px; }
+.device-note { display: none; }
+@media (max-width: 1000px) { .device-credit { display: none; } }
+@media (prefers-color-scheme: dark) { .device-credit, .device-credit p { color: #98989f; } .device-credit b, .device-qr b, .device-credit .wordmark { color: #f5f5f7; } }
+
+/* Floating sheets sit concentric to the screen (owner 2026-11-20, "fit the round and the bottom value"): 8 px from the
+   bottom and sides, corners the screen's own radius less that gap (--screen-r from src/lib/device.ts), the home
+   indicator's space taken inside the sheet instead of below it. A phone with square corners keeps a 32 px radius. */
+.sheet { margin: 0 8px 8px; border-radius: max(32px, calc(var(--screen-r, 48px) - 8px)); padding-bottom: max(6px, calc(var(--sab) - 8px)); }
+/* One sheet at a time: a sheet with another open over it steps away, and comes back when that one closes */
+.sheet-wrap { transition: opacity .22s ease-out; }
+.sheet-wrap.sheet-under { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .16s ease-in, visibility 0s .16s; }
+/* The grabber, the bar at the top of every sheet that pulls it down to close */
+.sheet-grip { display: flex; flex-direction: column; }
+.sheet .grabber { display: block; flex: none; width: 36px; height: 5px; border-radius: 3px; margin: 7px auto 0; background: var(--label2); opacity: .45; }
+.mailrow-wa { color: var(--label2); }
+.divbar { position: relative; display: block; height: 8px; border-radius: 4px; background: var(--fill); margin: 6px 0 4px; }
+.divbar::after { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--label3); }
+.divbar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; animation: grow .7s var(--spring-soft) both; }
+.divbar .dv-pos { background: var(--pos); transform-origin: left; } .divbar .dv-neg { background: var(--neg); transform-origin: right; }
+.lc-range { display: flex; width: fit-content; margin: 8px auto 0; } .lchart { touch-action: pan-y; }
+
+/* CLTL level board: three tiles a row, grouped by light, the level number in the corner */
+.lvl-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; }
+.lvl-tile { display: flex; flex-direction: column; gap: 2px; padding: 10px 10px 9px; border-radius: 16px; text-align: left; min-height: 78px;
+  background: var(--fill); position: relative; transition: transform .25s var(--spring); }
+.lvl-tile:active { transform: scale(.96); }
+.lvl-top { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; }
+.lvl-top b { font-size: 14px; font-weight: 600; letter-spacing: -.2px; }
+.lvl-top i { font-style: normal; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; padding: 0 5px; color: #fff; background: var(--lvl); }
+.lvl-num { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 24px; }
+.lvl-num small { font-size: 12px; font-weight: 500; color: var(--label2); }
+.lvl-sub { display: flex; justify-content: space-between; gap: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.lvl-sub em { font-style: normal; color: var(--label2); }
+.lvl-red { --lvl: var(--red); background: color-mix(in srgb, var(--red) 12%, var(--cell)); }
+.lvl-orange { --lvl: var(--orange); background: color-mix(in srgb, var(--orange) 12%, var(--cell)); }
+.lvl-yellow { --lvl: #d6a400; background: color-mix(in srgb, #ffcc00 14%, var(--cell)); }
+.lvl-basic { --lvl: var(--green); background: var(--fill); }
+.lvl-basic .lvl-top i { display: none; }
+.lc-range { color: var(--label); }
+.lc-range button { height: 32px; padding: 0 14px; border-radius: 16px; }

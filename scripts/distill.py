@@ -478,6 +478,33 @@ def variant(c, base):
     wsum = sum(h["amount"] for h in hist)
     tnet = r2(T + comm + swap)
     deps = max(1000.0, round((bal - tnet + wsum) / 500) * 500)
+    # Deposits, P&L and withdrawals must add up to the balance (owner 2026-11-20, a negative balance on the growth
+    # chart). When the client's P&L is larger than the balance can hold, the profit left as withdrawals: they are
+    # rebuilt from the P&L curve, taken out in round amounts once the account holds them, so the balance never dips
+    # below zero on the way.
+    need = r2(deps + tnet - bal)
+    if need > wsum + 1:
+        hist, cum, taken = [], 0.0, 0.0
+        chunk = max(500.0, round(need / min(8, max(1, int(need // 2500) + 1)) / 100) * 100)
+        for dday, v in daily:
+            cum += v
+            while need - taken > 1 and deps + cum - taken - min(chunk, need - taken) > 300:
+                amt = r2(min(chunk, need - taken))
+                hist.append({"epoch": dday + 86400 * rng.randint(1, 3), "amount": amt}); taken += amt
+        if need - taken > 1:
+            hist.append({"epoch": daily[-1][0], "amount": r2(need - taken)})
+        # a loss after a withdrawal can still take the curve under zero: deposit more at the start and take the same
+        # amount out on the last day, so the curve lifts and the balance today stays the same
+        cum, low = 0.0, 0.0
+        for dday, v in daily:
+            cum += v
+            low = min(low, deps + cum - sum(h["amount"] for h in hist if h["epoch"] <= dday))
+        if low < 300:
+            lift = float(round((300 - low) / 500 + 0.5) * 500)
+            deps += lift
+            hist.append({"epoch": daily[-1][0], "amount": lift})
+        hist = sorted(hist, key=lambda h: -h["epoch"])
+        w_n, wsum = len(hist), r2(sum(h["amount"] for h in hist))
     fpl_pos = r2(fpl + rng.choice([0, 0, rng.uniform(-12, 12)]))
     tier = (c["group_now"] or "").split("\\")[-1]
     changes = [{"day": wib_epoch(m["time_wib"]), "title": f"{m['from_tier']} to {m['to_tier']}", "sub": f"{m['source']} move"} for m in (c.get("pg_moves") or [])]
@@ -561,6 +588,56 @@ for login, prof in profiles.items():
 # ---- Admin: users, devices, build paths ----
 out["users"] = load("users")
 out["buildpaths"] = load("build_paths")
+
+# ---- Notifications (owner 2026-11-20, "enrich the notification lists") ----
+# The bell gathers what the desk is told during a day: the portal's own news profit notifications (the 16 rows its
+# shared mock builds, kit/mock.js SPECS, as notify.py produces them), the Morning Digest changes, today's algorithm
+# moves from Catches and the withdrawals waiting for Risk. Minutes are before the snapshot.
+NEWS_EV = [["Non-Farm Employment Change", "USD"], ["CPI m/m", "USD"], ["ECB Main Refinancing Rate", "EUR"],
+           ["BOE Official Bank Rate", "GBP"], ["Unemployment Rate", "USD"], ["BOJ Policy Rate", "JPY"]]
+NEWS_SPECS = [[4, "critical", 12, 5420, 0, 3.2, 4, "XAUUSD +5,210, EURUSD +210", "pending"], [38, "warn", 7, 1380, 0, 1.5, 3, "XAUUSD +1,380", "pending"],
+              [95, "warn", 3, 1105, 0, 0.8, 2, "XAUUSD +1,105", "pending"], [190, "warn", 21, 1840, 1, 2.0, 5, "EURUSD +1,260, GBPUSD +580", "sent"],
+              [260, "info", 0, 0, 1, 0, 0, "", "none"], [1480, "critical", 9, 6210, 2, 4.1, 6, "EURUSD +4,100, EURGBP +2,110", "sent"],
+              [1560, "warn", 14, 1520, 2, 1.2, 2, "EURUSD +1,520", "sent"], [2950, "warn", 5, 1210, 3, 1.0, 3, "GBPUSD +1,210", "sent"],
+              [4335, "critical", 18, 5980, 4, 2.6, 4, "XAUUSD +5,000, USDJPY +980", "sent"], [4365, "warn", 2, 1075, 4, 0.6, 2, "XAUUSD +1,075", "sent"],
+              [8645, "warn", 30, 1330, 5, 1.1, 2, "USDJPY +1,330", "sent"], [13160, "critical", 11, 7050, 0, 5.0, 8, "XAUUSD +6,900, TECH100 +150", "sent"],
+              [17310, "warn", 25, 1160, 1, 0.9, 2, "EURUSD +1,160", "none"], [21690, "warn", 8, 1290, 3, 1.4, 3, "GBPUSD +1,290", "none"],
+              [30250, "info", 0, 0, 5, 0, 0, "", "none"], [40375, "critical", 16, 5600, 2, 3.0, 5, "EURUSD +5,600", "none"]]
+alerts = []
+def alert(mins, sev, login, title, detail, kind, wa="none", extra=None):
+    alerts.append({"minutesAgo": mins, "severity": sev, "login": login, "title": title, "detail": detail, "kind": kind, "wa": wa} | (extra or {}))
+for m, sev, acc, net, ev, lots, trades, syms, wa in NEWS_SPECS:
+    name, cur = NEWS_EV[ev]
+    if sev == "info":
+        alert(m, "info", None, "News profit, no account above threshold", f"{name} ({cur}), 0 accounts above $1,000", "news", wa)
+    else:
+        alert(m, sev, 99000000 + acc, f"News profit +${net:,}", f"{name} ({cur}) · {syms} · {lots} lots, {trades} trades", "news", wa)
+dg = out["digest"]["sections"] if "digest" in out else load("morning_digest")["sections"]
+for i, x in enumerate(dg.get("tier_moves", [])):
+    worse = x["direction"] == "worse"
+    alert(41 + i * 37, "warn" if worse else "info", x["login"], f"Moved to a {'worse' if worse else 'better'} tier",
+          f"{x['pg_before']} to {x['pg_now']}, {x['tier_before']} to {x['tier_now']}", "tier")
+for i, x in enumerate(dg.get("floating_swing", [])):
+    alert(66 + i * 29, "warn", x["login"], "Floating P&L swing", f"{'+' if x['fpl_delta'] >= 0 else '-'}${abs(x['fpl_delta']):,.0f} since the prior snapshot, now {'-' if x['fpl_now'] < 0 else ''}${abs(x['fpl_now']):,.0f}", "swing")
+for i, x in enumerate(dg.get("exposure_up", [])):
+    alert(118 + i * 23, "warn", x["login"], "Client profit up", f"30 day P&L {'-' if x['t30_before'] < 0 else ''}${abs(x['t30_before']):,.0f} to {'-' if x['t30_now'] < 0 else ''}${abs(x['t30_now']):,.0f}", "swing")
+for i, x in enumerate(dg.get("new_flagged", [])):
+    alert(95 + i * 31, "info", x["login"], "New flagged account", f"Tier {x['pg']}, {x['tier']}, balance ${x['balance']:,.0f}", "book")
+for i, x in enumerate(dg.get("left_book", [])):
+    alert(140 + i * 33, "info", x["login"], "Left the flagged book", f"Was {x['pg']}, back to the normal group", "book")
+ALGO = {"mg": "MachineGun", "fbu": "FBUv2", "scalper": "ScalperAM", "etl": "Equity traffic light"}
+for x in out["catches"]:
+    if x["day"] == 0 and x["algo"] in ALGO and x["seen_ago_min"] is not None:
+        frm = (x["from_group"] or "").split("\\")[-1]; to = (x["to_group"] or "").split("\\")[-1]
+        alert(x["seen_ago_min"], "warn" if x["algo"] in ("mg", "fbu") else "info", 99000000 + x["acc"], f"{ALGO[x['algo']]} move",
+              x["reason"] or f"{frm} to {to}", "algo")
+for i, r in enumerate([r for r in out["withdrawals"]["rows"] if r["status"] == "pending"]):
+    alert(12 + i * 47, "warn", r["ta_id"], "Withdrawal pending", f"${r['amount']:,.2f} · {r['request_id']} · {(r.get('reason_code') or 'manual review').replace('_', ' ').lower()}", "wd")
+alerts.sort(key=lambda a: a["minutesAgo"])
+for i, a in enumerate(alerts):
+    a["id"] = i + 1
+    a["unread"] = i < 9
+out["alerts"] = alerts
 
 total = 0
 for name, data in out.items():

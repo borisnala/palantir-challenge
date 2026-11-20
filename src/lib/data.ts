@@ -3,6 +3,7 @@
 
 import clientsJson from "@/data/clients.json";
 import watchJson from "@/data/watchlist.json";
+import alertsJson from "@/data/alerts.json";
 
 export interface Client {
   login: number; name: string; group_now: string; balance: number; credit: number; equity: number;
@@ -22,29 +23,23 @@ export const nameOf = (login: number) => NAMES.get(login) ?? `Account ${login}`;
 export const hasProfile = (login: number) => CLIENTS.some((c) => c.login === login);
 
 export type Severity = "critical" | "warn" | "info";
-export interface Alert { id: number; minutesAgo: number; severity: Severity; login: number; title: string; detail: string; unread: boolean }
+export type AlertKind = "news" | "tier" | "swing" | "book" | "algo" | "wd";
+export interface Alert { id: number; minutesAgo: number; severity: Severity; login: number | null; title: string; detail: string; unread: boolean; kind: AlertKind; wa: string }
 
-// The desktop demo builds its notifications in its shared mock: news profit alerts and book changes.
-export const ALERTS: Alert[] = [
-  { id: 1, minutesAgo: 4, severity: "critical", login: 99000012, title: "News profit +$5,420", detail: "Non-Farm Employment Change (USD)", unread: true },
-  { id: 2, minutesAgo: 18, severity: "critical", login: 99000003, title: "News profit +$3,180", detail: "CPI m/m (USD)", unread: true },
-  { id: 3, minutesAgo: 41, severity: "warn", login: 99000002, title: "Moved to a worse tier", detail: "F1 to F3", unread: true },
-  { id: 4, minutesAgo: 66, severity: "warn", login: 99000002, title: "Floating P&L swing", detail: "+$2,100 since the prior snapshot", unread: true },
-  { id: 5, minutesAgo: 95, severity: "info", login: 99000011, title: "New flagged account", detail: "Tier F3, VX", unread: true },
-  { id: 6, minutesAgo: 140, severity: "info", login: 99000013, title: "Left the flagged book", detail: "Back to the normal group", unread: false },
-  { id: 7, minutesAgo: 210, severity: "warn", login: 99000010, title: "Moved to a worse tier", detail: "F3 to F5", unread: false },
-];
+// What the desk is told during a day (distill.py, alerts): the portal's own news profit notifications, the Morning
+// Digest changes, today's algorithm moves and the withdrawals waiting for Risk.
+export const ALERTS = alertsJson as Alert[];
 
-/** The four kinds of alert, so Settings can switch each kind on or off. */
-export type AlertKind = "news" | "tier" | "swing" | "book";
+/** The kinds of alert, so Settings can switch each kind on or off. */
 export const ALERT_KINDS: { k: AlertKind; label: string; sub: string }[] = [
+  { k: "algo", label: "Algorithm moves", sub: "MachineGun, FBUv2, ScalperAM and equity traffic light moves" },
+  { k: "wd", label: "Withdrawals", sub: "A withdrawal waits for Risk" },
   { k: "news", label: "News profit", sub: "Client profit around a high impact release" },
   { k: "tier", label: "Tier moves", sub: "A client moves to a worse or better tier" },
   { k: "swing", label: "Floating swings", sub: "A large change in floating P&L" },
   { k: "book", label: "Flagged book", sub: "A client enters or leaves the flagged book" },
 ];
-export const alertKind = (a: Alert): AlertKind =>
-  /news/i.test(a.title) ? "news" : /tier/i.test(a.title) ? "tier" : /swing/i.test(a.title) ? "swing" : "book";
+export const alertKind = (a: Alert): AlertKind => a.kind;
 
 /* ---------- formatters ---------- */
 

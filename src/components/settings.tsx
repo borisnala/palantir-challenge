@@ -7,7 +7,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Activity, Bell, FolderCog, Info, LogOut, MonitorSmartphone, Plus, ShieldCheck, UserRound, Users, Vibrate, Waves, Compass, Eye } from "lucide-react";
+import { Activity, Bell, FolderCog, Info, LogOut, MonitorSmartphone, Plus, ShieldCheck, UserRound, Users, Vibrate, ChartCandlestick, Compass, Eye } from "lucide-react";
 import { ROLE_CAN, ROLE_LABEL, ROLE_RANK, USERS, useApp, type Prefs, type Role } from "./app-state";
 import { Confirm, Group, PullDown, Row, Sheet, Switch, useSheetPush } from "./ios";
 import { Monogram } from "./ui";
@@ -76,7 +76,7 @@ function Pages() {
   return (
     <>
       <Group>
-        <Row icon={<Monogram name={app.user.name.replace("demo.", "").slice(0, 2)} size={44} />} tint="transparent" title={app.user.name} subtitle={`${ROLE_LABEL[app.user.role]} · Demo desk`} chevron={false} />
+        <Row icon={<Monogram name={app.user.name.replace("demo.", "").slice(0, 2)} size={44} />} tint="transparent" title={app.user.name} subtitle={`${ROLE_LABEL[app.user.role]} · Risk desk`} chevron={false} />
         <Row onClick={switchUser} icon={<Plus size={20} strokeWidth={2} />} tint="var(--blue)" title={<span className="link-blue">Switch user</span>} chevron={false} />
       </Group>
 
@@ -93,7 +93,7 @@ function Pages() {
       <Group header="App">
         <Picker icon={<Compass size={20} strokeWidth={1.8} />} title="Start screen" value={app.prefs.start} options={START} onChange={(v) => app.setPref("start", v)} />
         <Picker icon={<Eye size={20} strokeWidth={1.8} />} title="Point of view" value={app.prefs.pov} options={[{ v: "client", label: "Client P&L" }, { v: "broker", label: "Broker P&L" }]} onChange={(v) => app.setPref("pov", v)} />
-        <Row icon={<Waves size={20} strokeWidth={1.8} />} title="Live prices" chevron={false}><Switch on={app.prefs.live} onChange={() => app.setPref("live", !app.prefs.live)} label="Live prices" /></Row>
+        <Row icon={<ChartCandlestick size={20} strokeWidth={1.8} />} title="Live prices" chevron={false}><Switch on={app.prefs.live} onChange={() => app.setPref("live", !app.prefs.live)} label="Live prices" /></Row>
         <Row icon={<Vibrate size={20} strokeWidth={1.8} />} title="Haptic feedback" chevron={false}><Switch on={app.prefs.haptics} onChange={() => app.setPref("haptics", !app.prefs.haptics)} label="Haptic feedback" /></Row>
       </Group>
 

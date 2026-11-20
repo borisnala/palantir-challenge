@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "@/components/nav-link";
-import { ArrowDownUp, Bell, ChevronRight, Newspaper, Search, TrendingUp, Waves } from "lucide-react";
+import { ArrowDownUp, Bell, ChartCandlestick, ChevronRight, Newspaper, Search, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { buzz } from "@/lib/haptics";
 import { useApp } from "@/components/app-state";
@@ -135,7 +135,7 @@ export default function Today() {
         <div className="hgrid">
           <SummaryCard href="/liquidity/book/" Icon={TrendingUp} color="var(--green)" label="Client P&L" value={compact(t.t30_now)} unit="30 days"
             note={`${compact(t.t30_delta, true)} since ${day(Date.parse(digest.previous_taken_at) / 1000)}`} />
-          <SummaryCard href="/risk/open-lots/" Icon={Waves} color="var(--blue)" label="Floating" value={compact(t.fpl_now)}
+          <SummaryCard href="/risk/open-lots/" Icon={ChartCandlestick} color="var(--blue)" label="Floating" value={compact(t.fpl_now)}
             note={`${compact(t.fpl_delta, true)} since ${day(Date.parse(digest.previous_taken_at) / 1000)}`} />
         </div>
         <SummaryCard href="/risk/watchlist/" Icon={TrendingUp} color="var(--purple)" label="Flagged accounts" value={String(t.flagged_now)}

@@ -11,12 +11,20 @@ import { levelLabel, levelTone } from "@/lib/levels";
 
 type S = (typeof cl.symbols)[number];
 type F = "all" | "alert";
+// The board (owner 2026-11-20, "make all complex data compact"): symbols grouped by their light, worst first, each a
+// small tile with the three figures a dealer reads at a glance, spread, day move and what leads the light.
+const BANDS = [
+  { k: "red", label: "Red", rx: /^RED/i }, { k: "orange", label: "Orange", rx: /^ORANGE/i },
+  { k: "yellow", label: "Yellow", rx: /^YELLOW/i }, { k: "basic", label: "Basic", rx: /./ },
+] as const;
+const bandOf = (l?: string | null) => BANDS.find((b) => b.rx.test(l ?? "BASIC"))!.k;
 
 export default function Cltl() {
   const [f, setF] = useState<F>("all");
   const [sel, setSel] = useState<S | null>(null);
   const [open, setOpen] = useState(false);
   const list = cl.symbols.filter((s) => f === "all" || levelTone(s.effective_level) !== "green");
+  const groups = BANDS.map((b) => ({ ...b, items: list.filter((s) => bandOf(s.effective_level) === b.k).sort((x, y) => (y.effective_level ?? "").localeCompare(x.effective_level ?? "")) })).filter((g) => g.items.length);
 
   return (
     <>
@@ -24,13 +32,20 @@ export default function Cltl() {
       <Metrics label="Symbols" items={[{ k: "Symbols", v: cl.symbols.length }, { k: "Red", v: cl.symbols.filter((s) => levelTone(s.effective_level) === "red").length, tone: "neg" }, { k: "Orange", v: cl.symbols.filter((s) => /ORANGE/.test(s.effective_level ?? "")).length, tone: "warn" }]} />
       <Segmented label="Show" value={f} onChange={setF} options={[{ v: "all", label: "All symbols" }, { v: "alert", label: "On alert" }]} />
 
-      <Group footer="The light is the higher of the candle light (M1, M5, daily range) and the liquidity light (spread). Higher lights widen client spreads.">
-        {list.map((s) => (
-          <Row key={s.symbol} onClick={() => { setSel(s); setOpen(true); }} title={s.symbol}
-            subtitle={`Spread ${s.spread_points} pts · day ${pct(s.daily_pct, 2)} · led by ${s.live_leader ?? (s.sources ?? []).join(", ")}`}
-            detail={<Chip tone={levelTone(s.effective_level)}>{levelLabel(s.effective_level)}</Chip>} />
-        ))}
-      </Group>
+      {groups.map((g) => (
+        <Group key={g.k} header={`${g.label} · ${g.items.length}`}>
+          <div className="lvl-board">
+            {g.items.map((sy) => (
+              <button key={sy.symbol} className={`lvl-tile lvl-${g.k}`} onClick={() => { setSel(sy); setOpen(true); }} aria-label={`${sy.symbol}, ${levelLabel(sy.effective_level)}, spread ${sy.spread_points} points`}>
+                <span className="lvl-top"><b>{sy.symbol}</b><i>{levelLabel(sy.effective_level).replace(/^\w+ /, "")}</i></span>
+                <span className="lvl-num">{sy.spread_points}<small> pts</small></span>
+                <span className={`lvl-sub ${sy.daily_pct >= 0 ? "pos" : "neg"}`}>{sy.daily_pct >= 0 ? "+" : ""}{num(sy.daily_pct, 2)}%<em>{sy.live_leader ?? (sy.sources ?? [])[0] ?? ""}</em></span>
+              </button>
+            ))}
+          </div>
+        </Group>
+      ))}
+      <p className="caption">The light is the higher of the candle light (M1, M5, daily range) and the liquidity light (spread). Higher lights widen client spreads.</p>
 
       <Group header="Level changes">
         {cl.events.map((e, i) => (

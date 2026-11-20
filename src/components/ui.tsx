@@ -59,3 +59,14 @@ export function Bars({ data, tone = "var(--blue)" }: { data: { label: string; v:
 export function Share({ v, of, tone = "var(--blue)" }: { v: number; of: number; tone?: string }) {
   return <span className="hbar" aria-hidden><i style={{ width: `${of ? Math.max(2, (v / of) * 100) : 0}%`, background: tone }} /></span>;
 }
+
+/** P&L as a bar either side of a zero line, on a scale the caller shares across rows and groups, so the same dollar
+ *  amount draws the same length everywhere (owner 2026-11-20, "at scale level toward each other"). */
+export function DivBar({ v, max }: { v: number; max: number }) {
+  const w = max ? Math.min(50, (Math.abs(v) / max) * 50) : 0;
+  return (
+    <span className="divbar" aria-hidden>
+      <i className={v >= 0 ? "dv-pos" : "dv-neg"} style={{ width: `${Math.max(w, v ? 0.8 : 0)}%`, [v >= 0 ? "left" : "right"]: "50%" }} />
+    </span>
+  );
+}

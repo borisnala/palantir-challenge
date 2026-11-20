@@ -32,10 +32,10 @@ export interface Prefs {
   live: boolean;
   notify: Record<AlertKind, boolean>;
 }
-export const DEFAULT_PREFS: Prefs = { theme: "system", haptics: true, start: "/", pov: "client", live: true, notify: { news: true, tier: true, swing: true, book: true } };
+export const DEFAULT_PREFS: Prefs = { theme: "system", haptics: true, start: "/", pov: "client", live: true, notify: { news: true, tier: true, swing: true, book: true, algo: true, wd: true } };
 const PREFS_KEY = "risktool-prefs";
 export function readPrefs(): Prefs {
-  try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return DEFAULT_PREFS; }
+  try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); return { ...DEFAULT_PREFS, ...p, notify: { ...DEFAULT_PREFS.notify, ...(p.notify ?? {}) } }; } catch { return DEFAULT_PREFS; }
 }
 /** Applies the theme to the page: data-theme on html and the browser's theme color. */
 export function applyTheme(theme: Prefs["theme"]) {
