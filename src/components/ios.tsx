@@ -492,7 +492,7 @@ export function Confirm({ open, title, lines, action, destructive, onCancel, onC
     <Sheet open={open} onClose={onCancel} title={title}>
       <Group footer={ok ? undefined : `Signed in as ${user.name}, ${ROLE_LABEL[user.role]}. This change requires ${ROLE_LABEL[need]} clearance.`}>{lines.map((l, i) => <Row key={i} title={l} chevron={false} />)}</Group>
       {code && ok && (
-        <Group header="Confirmation code" footer="Type the code to unlock the change. A new code is issued each time.">
+        <Group header="Confirmation code" footer="Type the code to unlock the change.">
           <div className="code-show" aria-label={`Code ${expect ?? ""}`}>{(expect ?? "······").split("").map((ch, i) => <b key={i}>{ch}</b>)}</div>
           <label className="field"><span>Code</span><input value={typed} onChange={(e) => setTyped(e.target.value.toUpperCase().slice(0, 6))} autoCapitalize="characters" autoComplete="off" spellCheck={false} inputMode="text" placeholder="6 characters" aria-label="Confirmation code" className="mono" /></label>
         </Group>

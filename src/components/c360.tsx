@@ -8,12 +8,13 @@
 // shaped from it with that client's own figures.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRightLeft, Bell, Check, ClipboardList, Copy, Flag, Hash, NotebookPen } from "lucide-react";
+import { ArrowRightLeft, Bell, CalendarRange, Check, ClipboardList, Copy, Flag, Hash, NotebookPen } from "lucide-react";
 import { useApp } from "./app-state";
 import { buzz } from "@/lib/haptics";
 import { TradingPattern } from "./pattern";
 import { Chip, Confirm, Group, Metrics, Row, Segmented, Sheet, Switch, copyText, usePageMenu } from "./ios";
 import { DivBar, Monogram, Pnl } from "./ui";
+import { MonthlyHistory, type Monthly } from "./monthly";
 import meta from "@/data/client360meta.json";
 import { ALERTS, compact, day, money, num, pct, when, type Client } from "@/lib/data";
 
@@ -227,7 +228,6 @@ function ExposureChart({ days: allDays, values: allValues, net: allNet, scale, b
       {at !== null && at < values.length && <div className="lc-tip" style={{ left: Math.min(Math.max(0, x(at) - 80), cw - 160) }}>{tip(lo + at)}</div>}
       <span className="tseg lc-range" role="radiogroup" aria-label="Range" onPointerDown={(e) => e.stopPropagation()}>
         {RANGES.map((r) => <button key={r.k} role="radio" aria-checked={activeRange === r.k} className={activeRange === r.k ? "on" : ""} onClick={() => range(r.d)}>{r.k}</button>)}
-        {!activeRange && <button role="radio" aria-checked className="on" onClick={() => range(0)}>Zoomed</button>}
       </span>
       <span hidden>{fi(0)}</span>
     </div>
@@ -394,7 +394,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
   const [tab, setTab] = useState<Tab>("overview");
   const [pov, setPov] = useState<Pov>(app.prefs.pov);
   const [scrub, setScrub] = useState<number | null>(null);
-  const [sheet, setSheet] = useState<null | "status" | "note" | "move" | "mg" | "sc" | "fb" | { month: string }>(null);
+  const [sheet, setSheet] = useState<null | "status" | "note" | "move" | "mg" | "sc" | "fb" | "monthly" | { month: string }>(null);
   const [moveTo, setMoveTo] = useState<string | null>(null);
   const [why, setWhy] = useState<string | null>(null);
   const [whyNote, setWhyNote] = useState("");
@@ -575,6 +575,11 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                   </button>
                 ))}
               </div>
+            </Group>
+
+            <Group>
+              <Row onClick={() => setSheet("monthly")} icon={<CalendarRange size={17} strokeWidth={2.2} />} tint="var(--blue)" title="Monthly history"
+                subtitle={`${(p.monthly as Monthly).months.length} months, lots, trades, win rate, balance, asset mix`} />
             </Group>
 
             <Group header="Profit by session" footer={`UTC, all time. ${pov === "client" ? "Client" : "Broker"} P&L. Sessions, symbols and holding time share one scale.`}>
@@ -758,6 +763,9 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
         <Group header={`${fbMet} of 4 conditions met`} footer={`Largest ticket ${num(p.force_buildup.evidence.max_ticket_lots, 2)} lots. Peak exposure in 15 min ${num(p.force_buildup.evidence.peak_15m_exposure_lots, 2)} lots.`}>
           {Object.entries(p.force_buildup.conditions).map(([k, v]) => <Row key={k} title={COND[k] ?? k} detail={v ? <Chip tone="orange">Met</Chip> : <Chip>Not met</Chip>} chevron={false} />)}
         </Group>
+      </Sheet>
+      <Sheet open={sheet === "monthly"} onClose={() => setSheet(null)} title="Monthly history" tall>
+        <MonthlyHistory data={p.monthly as Monthly} sg={sg} />
       </Sheet>
       <Sheet open={!!month} onClose={() => setSheet(null)} title={month ? `${FULL[month.m]} ${month.y}` : ""}>
         {month && (

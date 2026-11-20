@@ -575,10 +575,75 @@ def with_trades(prof, login):
     return prof
 
 
+def monthly(prof, login):
+    """Monthly history over the account's life, the portal's MONTHLY HISTORY panel (owner 2026-11-20, "page 5, make
+    this a pop up"). 99000001 from the portal's own months, every other client rolled up from its own daily P&L and
+    trades, month-end balance walked back from today's balance, so each month adds up to the profile."""
+    import datetime, random
+    mon = lambda t: datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%Y-%m")
+    if login == c3["login"]:
+        mh = cp["monthly_history"]
+        keep = ("month", "open_lot", "close_lot", "trades", "win_rate", "net_exposure", "hold_days", "pl", "balance", "equity")
+        return {"months": [{**{k: m.get(k) for k in keep}, "assets": [a for a in m["assets"] if a["pct"] > 0],
+                            "symbols": [{k: x.get(k) for k in ("symbol", "trades", "lots", "net_exposure", "pl", "win_rate", "hold_days")} for x in m["symbols"]]}
+                           for m in mh["months"]],
+                "total": {k: mh["total"].get(k) for k in keep if k != "month"} | {"assets": mh["total"]["assets"]}}
+    rng = random.Random(login * 13 + 5)
+    pl, days, wins = {}, {}, {}
+    for d, v in prof["daily"]:
+        m = mon(d); pl[m] = pl.get(m, 0) + v; days[m] = days.get(m, 0) + 1; wins[m] = wins.get(m, 0) + (v > 0)
+    sym = {}
+    for sy, rows in prof["trades"].items():
+        for d, side, lots, pnl in rows:
+            x = sym.setdefault(mon(d), {}).setdefault(sy, {"symbol": sy, "trades": 0, "lots": 0.0, "net_exposure": 0.0, "pl": 0.0, "w": 0})
+            n = rng.randint(1, 3)
+            x["trades"] += n; x["lots"] += lots; x["net_exposure"] += side * lots * rng.uniform(0, 0.3); x["pl"] += pnl; x["w"] += n if pnl > 0 else rng.randint(0, n - 1)
+    out_m, bal = [], prof["identity"]["balance"]
+    wd = prof["withdrawals"]["history"]
+    for m in sorted(pl, reverse=True):
+        rows = list(sym.get(m, {}).values())
+        raw = sum(x["pl"] for x in rows) or 1
+        for x in rows:
+            x["pl"] = r2(pl[m] * x["pl"] / raw); x["lots"] = r2(x["lots"]); x["net_exposure"] = r2(x["net_exposure"])
+            x["win_rate"] = r2(100 * x.pop("w") / max(1, x["trades"])); x["hold_days"] = r2(rng.uniform(0, 1.2))
+        rows.sort(key=lambda x: -x["lots"])
+        lots = sum(x["lots"] for x in rows) or 1
+        n = sum(x["trades"] for x in rows)
+        out_m.append({"month": m, "open_lot": r2(lots), "close_lot": r2(lots * rng.uniform(0.97, 1.0)), "trades": n,
+                      "win_rate": r2(100 * sum(x["trades"] * x["win_rate"] / 100 for x in rows) / max(1, n)),
+                      "net_exposure": r2(sum(x["net_exposure"] for x in rows)), "hold_days": r2(rng.uniform(0.1, 1.0)),
+                      "pl": r2(pl[m]),
+                      "assets": [{"symbol": x["symbol"], "pct": round(100 * x["lots"] / lots)} for x in rows], "symbols": rows})
+    out_m.reverse()
+    # Balance runs forward from the deposits, P&L in and withdrawals out each month. Commission and swap are spread
+    # evenly, so the last month lands on today's balance.
+    run, fw = prof["windows"].get("lifetime_deposits") or 0, []
+    for m in out_m:
+        run += m["pl"] - sum(w["amount"] for w in wd if mon(w["epoch"]) == m["month"]); fw.append(run)
+    res = bal - fw[-1] if fw else 0
+    for i, m in enumerate(out_m):
+        c = res * (i + 1) / len(out_m) if i < len(out_m) - 1 else res
+        m["balance"] = r2(fw[i] + max(c, -0.85 * max(fw[i], 0))); m["equity"] = m["balance"]
+    if out_m:
+        out_m[-1]["equity"] = r2(prof["identity"]["equity"])
+    tl = sum(m["open_lot"] for m in out_m) or 1
+    agg_ = {}
+    for m in out_m:
+        for x in m["symbols"]:
+            agg_[x["symbol"]] = agg_.get(x["symbol"], 0) + x["lots"]
+    nt = sum(m["trades"] for m in out_m)
+    return {"months": out_m, "total": {"open_lot": r2(tl), "close_lot": r2(sum(m["close_lot"] for m in out_m)), "trades": nt,
+            "pl": r2(sum(m["pl"] for m in out_m)), "hold_days": r2(sum(m["hold_days"] for m in out_m) / max(1, len(out_m))),
+            "win_rate": r2(sum(m["trades"] * m["win_rate"] for m in out_m) / max(1, nt)),
+            "net_exposure": r2(sum(m["net_exposure"] for m in out_m)), "balance": prof["identity"]["balance"], "equity": prof["identity"]["equity"],
+            "assets": sorted([{"symbol": k, "pct": round(100 * v / tl)} for k, v in agg_.items()], key=lambda a: -a["pct"])}}
+
+
 profiles = {}
 real = real_profile()
 for c in out["clients"]:
     profiles[str(c["login"])] = with_trades(real if c["login"] == c3["login"] else variant(c, real), c["login"])
+    profiles[str(c["login"])]["monthly"] = monthly(profiles[str(c["login"])], c["login"])
 # One file per client, loaded when that profile opens (owner 2026-11-19, lazy loading per artifact), and a small shared
 # file with the snapshot time and the price table
 out["client360meta"] = {"as_of": AS_OF, "real_login": c3["login"], "prices": {k: [v[0], v[2]] for k, v in PRICE.items()}}

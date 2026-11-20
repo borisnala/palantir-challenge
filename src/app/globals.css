@@ -1427,3 +1427,39 @@ html.searching .cmd-link { opacity: 0; }
 .hb-plot i { opacity: .55; }
 .hb-hx { position: relative; height: 14px; font-size: 12px; color: var(--label2); }
 .hb-hx span { position: absolute; top: 0; }
+
+/* Desktop frame (owner 2026-11-20, "smoothen it out according to the corner"): the app clips itself to the screen's
+   own radius, so a sheet's dimmed backdrop and anything fixed follow the bezel instead of the iframe box */
+html.inframe body { clip-path: inset(0 round 44px); }
+
+/* Search results fade and blur under the field, as the page does under the top bar */
+.search-layer::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: calc(var(--bar-bottom) + 22px); z-index: 1; pointer-events: none;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); background: linear-gradient(color-mix(in srgb, var(--bg) 82%, transparent) 55%, transparent);
+  -webkit-mask: linear-gradient(#000 60%, transparent); mask: linear-gradient(#000 60%, transparent); opacity: 0; transition: opacity .2s; }
+.search-on::before { opacity: 1; }
+.search-head { position: relative; z-index: 2; }
+
+/* A chip row that scrolls sideways never scrolls up and down: the chips' larger tap areas stay inside its padding
+   (owner 2026-11-20, a Book View row cut in half on the iPhone) */
+main.screen > .tchips { overflow-y: hidden; padding-top: 8px; padding-bottom: 8px; margin-top: 0; margin-bottom: -4px; }
+main.screen > .tchips > .tchip::after { top: -7px; bottom: -7px; }
+
+/* No text selection or callout anywhere (owner 2026-11-20): copying goes through the Copy actions only */
+html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+
+/* Page changes slide the screen, never scroll it (owner 2026-11-20, "it scrolls from down to up"): the page box does
+   not animate from the old scroll position, and the old snapshot keeps the place it was read at */
+::view-transition-group(.vt-push), ::view-transition-group(.vt-pop), ::view-transition-group(.vt-tab) { animation: none; }
+::view-transition-old(.vt-push), ::view-transition-old(.vt-pop), ::view-transition-old(.vt-tab) { translate: 0 calc(-1 * var(--vt-y, 0px)); }
+
+/* Monthly history */
+.mix { display: flex; gap: 1.5px; height: 6px; border-radius: 3px; overflow: hidden; width: 100%; }
+.mix i { min-width: 2px; }
+.mix-wrap { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; }
+.mix-wrap .mix { height: 10px; border-radius: 5px; }
+.mix-keys { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--label2); font-variant-numeric: tabular-nums; }
+.mix-keys span { display: inline-flex; align-items: center; gap: 6px; }
+.mix-keys i, .mix-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.mrow-sub { display: flex; flex-direction: column; gap: 6px; }
+.mrow-sub .mix { max-width: 180px; }

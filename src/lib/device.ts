@@ -42,7 +42,7 @@ st.setProperty('--bar-top',bar+'px');st.setProperty('--screen-r',(window.self!==
 d.setAttribute('data-device',m?(m[0]+'x'+m[1]):'other');d.setAttribute('data-cutout',cut);
 }
 if(document.body)fit();else document.addEventListener('DOMContentLoaded',fit);
-addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,250);});
+document.addEventListener('click',function(){document.documentElement.style.setProperty('--vt-y',scrollY+'px');},true);addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,250);});
 var no=function(e){e.preventDefault();};
 document.addEventListener('gesturestart',no,{passive:false});document.addEventListener('gesturechange',no,{passive:false});
 document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});
