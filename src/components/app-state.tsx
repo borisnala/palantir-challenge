@@ -19,6 +19,8 @@ export const ROLE_CAN: Record<Role, string[]> = {
   editor: ["Decide withdrawals", "Set status, notes and the watchlist", "Move client groups", "Change liquidity controls and models"],
   admin: ["Approve devices", "Manage users and roles", "Edit build paths"],
 };
+/** A device asking for access on the Access screen, queued for Account, Device access. */
+export type DeviceRequest = { id: number; label: string; purpose: string; first_ip: string; user_agent: string; created_at: string };
 export const USERS = us.users.map((u) => ({ name: u.username, role: u.role as Role, since: u.created_at }));
 
 /** Settings that belong to this viewer and survive a reload (kept in the browser only). */

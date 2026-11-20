@@ -1133,3 +1133,83 @@ button.drawer-item { width: 100%; text-align: left; }
 .popmenu.pulldown.pd-up { animation: menu-in-up .34s cubic-bezier(.2,1.1,.3,1) both !important; transform-origin: calc(100% - 20px) 100%; }
 @keyframes menu-in-up { from { transform: translateY(-100%) scale(.32); opacity: 0; filter: blur(4px); } 45% { opacity: 1; filter: blur(0); } to { transform: translateY(-100%); } }
 @media (prefers-reduced-motion: reduce) { .popmenu, .popmenu.pulldown.pd-up { animation-duration: .01s !important; } }
+
+/* Sign in and Access (owner 2026-11-20, the portal's login.html and access.html): outside the app, so no menu and no
+   bars. The mark, a large title, one inset group of fields, the main action as a full-width capsule. */
+html.gate .cmdbar, html.gate .scroll-edge-bottom, html.gate .drawer, html.gate .stage-scrim, html.gate .ptr { display: none !important; }
+.gatepage { min-height: 100dvh; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 0;
+  padding: calc(var(--sat) + 24px) 0 calc(var(--sab) + 24px); max-width: 430px; margin: 0 auto; }
+.gate-mark { align-self: center; width: 88px; height: 88px; border-radius: 22px; background: var(--cell); display: grid; place-items: center; color: var(--label);
+  box-shadow: 0 1px 0 var(--sep), 0 10px 30px rgba(0,0,0,.06); margin-bottom: 22px; }
+.gate-title { text-align: center; font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: .37px; }
+.gate-sub { text-align: center; font-size: 17px; color: var(--label2); margin: 4px 0 28px; }
+.gate-form { display: flex; flex-direction: column; gap: 18px; }
+.gate-form .grp { margin: 0; }
+.field { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; }
+.grp-body > .field + .field { box-shadow: inset 0 .5px 0 var(--sep); margin-left: 16px; padding-left: 0; }
+.field span { flex: none; width: 92px; font-size: 17px; }
+.field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: 17px; color: var(--label); height: 48px; }
+.field input::placeholder { color: var(--label3); }
+.gate-link { align-self: center; margin-top: 14px; min-height: 44px; padding: 0 12px; font-size: 17px; font-weight: 500; color: var(--blue); }
+.gate-foot { text-align: center; font-size: 15px; color: var(--label2); margin-top: 18px; }
+.gate-foot a { color: var(--blue); }
+.gate-fine { text-align: center; font-size: 13px; color: var(--label3); margin-top: 24px; }
+.gate-btn { display: grid; place-items: center; }
+.gate-status { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 24px 16px; text-align: center; }
+.gate-status b { font-size: 20px; font-weight: 600; }
+.gate-status span { font-size: 15px; color: var(--label2); }
+.gate-ic.warn { color: var(--orange); } .gate-ic.pos { color: var(--green); } .gate-ic.neg { color: var(--red); }
+html.gate main.screen { padding-top: 0 !important; padding-bottom: 0 !important; }
+.gatepage { width: 100%; min-width: 0; box-sizing: border-box; } .gate-fine { overflow-wrap: anywhere; }
+
+/* Symbol toxicity board (Book View): share of activity against share of book losses or wins, one bar pair a symbol */
+.tox { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; }
+.grp-body > .tox + .tox { box-shadow: inset 0 .5px 0 var(--sep); }
+.tox-top { display: flex; align-items: center; gap: 8px; font-size: 17px; }
+.tox-top b { font-weight: 600; flex: 1; }
+.tox-bars { position: relative; display: flex; flex-direction: column; gap: 3px; }
+.tox-bars i { display: block; height: 6px; border-radius: 3px; min-width: 2px; transform-origin: left; animation: grow .7s var(--spring-soft) both; }
+.tox-act { background: var(--fill2); }
+.tox-loss { background: var(--red); } .tox-win { background: var(--green); }
+.tox-sub { font-size: 13px; color: var(--label2); }
+
+/* Scatter chart (src/components/scatter.tsx) */
+.scatter { margin: 0; padding: 12px 8px 10px 16px; }
+.scatter svg { width: 100%; height: auto; display: block; overflow: visible; }
+.sc-grid { stroke: var(--sep); stroke-width: var(--hair, .5px); }
+.sc-div { stroke: var(--label3); stroke-width: 1; stroke-dasharray: 3 3; }
+.sc-tick { font-size: 11px; fill: var(--label2); font-variant-numeric: tabular-nums; }
+.sc-dot { stroke: var(--cell); stroke-width: 1.5; animation: scpop .5s var(--spring) both; transform-box: fill-box; transform-origin: center; cursor: pointer; }
+.sc-muted { fill: var(--label3); } .sc-pos { fill: var(--green); } .sc-neg { fill: var(--red); } .sc-warn { fill: var(--orange); }
+.sc-on { stroke: var(--label); stroke-width: 2; }
+@keyframes scpop { from { transform: scale(0); opacity: 0; } }
+.scatter figcaption { display: flex; justify-content: space-between; font-size: 12px; color: var(--label2); padding: 4px 36px 0 0; }
+/* The portal's quadrant maps as a 2 x 2 grid of tiles, placed as on the chart */
+.quad { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--sep); }
+.quad button { background: var(--cell); padding: 12px 14px; text-align: left; display: flex; flex-direction: column; gap: 2px; min-height: 84px; }
+.quad button[aria-pressed="true"] { background: var(--fill2); }
+.quad b { font-size: 15px; font-weight: 600; } .quad span { font-size: 13px; color: var(--label2); }
+.quad strong { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ml-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .9s cubic-bezier(.3,.7,.2,1) forwards; }
+.ml-legend { flex-wrap: wrap; gap: 4px 12px; justify-content: flex-start !important; }
+.ml-legend span { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.ml-legend i { width: 10px; height: 3px; border-radius: 2px; }
+.ml-legend span:last-child { margin-left: auto; }
+/* Before, during and after a move: three bars a row, one scale per metric */
+.bda { display: grid; grid-template-columns: 52px 1fr 1fr 1fr; gap: 6px 10px; align-items: end; padding: 12px 16px; font-size: 13px; }
+.bda > b { font-size: 12px; font-weight: 500; color: var(--label2); text-align: center; }
+.bda > span { font-weight: 600; font-size: 15px; align-self: center; }
+.bda .bcell { display: flex; flex-direction: column; align-items: stretch; gap: 3px; text-align: center; font-variant-numeric: tabular-nums; }
+.bda .bcell i { display: block; height: 28px; border-radius: 6px; transform-origin: bottom; animation: growy .6s var(--spring-soft) both; }
+@keyframes growy { from { transform: scaleY(0); } }
+.seg-row { padding: 8px 8px; } .seg-row .segmented { margin: 0; }
+.gate-foot a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; }
+
+/* Filter chips scroll sideways in one line, as iOS Mail categories and Photos filters do (owner 2026-11-20, "scream
+   iOS 27"), running to the screen edges and fading out at them. Chips inside a card or a sheet still wrap. */
+main.screen > .tchips { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  margin-left: calc(-1 * max(var(--page-x, 16px), var(--sal, 0px))); margin-right: calc(-1 * max(var(--page-x, 16px), var(--sar, 0px)));
+  padding: 2px max(var(--page-x, 16px), var(--sar, 0px)) 2px max(var(--page-x, 16px), var(--sal, 0px));
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 20px), transparent); mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 20px), transparent); }
+main.screen > .tchips::-webkit-scrollbar { display: none; }
+main.screen > .tchips > .tchip { flex: none; }

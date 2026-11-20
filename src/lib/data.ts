@@ -14,7 +14,7 @@ export interface Client {
 }
 
 export const CLIENTS = clientsJson as Client[];
-export const WATCHLIST = watchJson as { login: number; name: string; group: string; pg: string; watched_at: string; watched_by: string; balance: number; equity: number; fpl: number; t30: number; t_all: number }[];
+export const WATCHLIST = watchJson as { login: number; name: string; group: string; pg: string; watched_at: string; watched_by: string; balance: number; equity: number; fpl: number; t30: number; t_all: number; closed_since: number; float_delta: number; since_total: number }[];
 
 const NAMES = new Map<number, string>([...WATCHLIST.map((w) => [w.login, w.name] as [number, string]), ...CLIENTS.map((c) => [c.login, c.name] as [number, string])]);
 export const findClient = (login: number) => CLIENTS.find((c) => c.login === login);

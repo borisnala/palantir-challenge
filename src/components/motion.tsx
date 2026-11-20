@@ -47,6 +47,8 @@ export function Transitions() {
   const path = usePathname();
   const prev = useRef(path);
   useEffect(() => listenForChoices(), []);
+  // Sign in and Access stand outside the app: no menu, no bars (globals.css html.gate)
+  useEffect(() => { document.documentElement.classList.toggle("gate", /^\/(login|access)\b/.test(path)); }, [path]);
   useEffect(() => {
     const from = prev.current;
     prev.current = path;
@@ -83,7 +85,7 @@ export function PullToRefresh() {
     };
     const start = (e: TouchEvent) => {
       const s = st.current;
-      if (s.busy || window.scrollY > 0 || e.touches.length > 1 || document.body.style.overflow === "hidden" || document.documentElement.classList.contains("menu-open") || e.touches[0].clientX < 24) return;
+      if (s.busy || window.scrollY > 0 || e.touches.length > 1 || document.body.style.overflow === "hidden" || document.documentElement.classList.contains("menu-open") || document.documentElement.classList.contains("gate") || e.touches[0].clientX < 24) return;
       s.y0 = e.touches[0].clientY; s.d = 0; main.classList.remove("pull-settle");
     };
     const move = (e: TouchEvent) => {

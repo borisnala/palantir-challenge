@@ -112,8 +112,8 @@ function Pages() {
         <Row onClick={() => setOut(true)} icon={<LogOut size={20} strokeWidth={1.8} />} tint="var(--red)" title={<span className="neg">Sign out</span>} chevron={false} />
       </Group>
       <Confirm need="viewer" open={out} title="Sign out" action="Sign out" destructive onCancel={() => setOut(false)}
-        lines={["Clears the decisions, notes, statuses and moves made this session", "Signs back in as demo.admin"]}
-        onConfirm={() => { setOut(false); app.signOut(); app.set("ui.settings", false); router.push("/"); }} />
+        lines={["Clears the decisions, notes, statuses and moves made this session", "Returns to the sign in screen"]}
+        onConfirm={() => { setOut(false); app.signOut(); app.set("ui.settings", false); router.push("/login/", { transitionTypes: ["tab"] }); }} />
     </>
   );
 }

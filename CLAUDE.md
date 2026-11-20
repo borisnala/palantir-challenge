@@ -45,6 +45,24 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 - Morning Digest (owner 2026-11-19, "columns won't scale to hundreds"): the profit change, one stacked bar of movement
   counts, the kinds as filter chips with counts, and a dense table of the largest moves (8 here, the rest in a sheet
   with a search field). Never columns of cards.
+- Portal page map (owner 2026-11-20, "make sure literally all pages exist"; the zip Portal_frontend_dummy, 28 pages).
+  login to /login, access to /access (both outside the app chrome, html.gate), morning_digest to /, notifications to
+  /alerts, client360 to /search and /clients/[login], watchlist, open_lots, growth, top10, catches, news, risk_analysis,
+  algo_activity, cra_model, cra_analysis, promotion_analysis, housecleaning under /risk, candletl_showcase (cltl),
+  pg_markups, manual_level, group_spread, hsb_pov (book) under /liquidity, wd_approvals, wd_check under /withdrawals
+  (plus its gate health), users (users and devices) and build_paths under /account. index (Algo Config) stays out.
+  Panels follow the portal: Top 10 all eight boards and Client or Broker P&L; Watchlist Up, Down, Flat since watch;
+  Book View symbol toxicity and cost per USD 1m notional, Flagged or whole B-book; Open Lots closed history with the
+  edge and behaviour quadrant maps and lots against equity (src/components/scatter.tsx); Risk Analysis algo
+  behaviour before, during, after and cumulative; CRA Model mode, sign-off (maker can not sign), restore, Try a
+  customer; Growth Client or Broker, minimum days, price group chips, momentum; Catches period and source chips;
+  News currency chips, exposure going in, event types; Users New user and Reset password; Build paths edit.
+  Picking what a panel becomes: a ranked list stays an inset list with a bar or value, a two-dimensional table
+  becomes a scatter or quadrant grid, a weekday by hour grid a heatmap, a time series a line, a before and after a
+  bar triplet, a filter with more than four values horizontal chips, a choice among two to four a segmented control,
+  a detail a sheet, a change a Confirm sheet.
+- Filter chip rows directly in the page scroll sideways in one line to the screen edges (iOS Mail, Photos). Chips in
+  a card or sheet wrap. Tags (Chip) always read in sentence case.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 

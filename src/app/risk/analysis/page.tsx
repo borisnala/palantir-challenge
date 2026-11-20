@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Group, Metrics, NavBar, Row, Segmented } from "@/components/ios";
 import { ClientRow } from "@/components/rows";
+import { MultiLine } from "@/components/scatter";
 import { Bars, Pnl, Share } from "@/components/ui";
 import ra from "@/data/riskanalysis.json";
 import { compact, group, money, num, pct, when } from "@/lib/data";
 
 type A = "machinegun" | "scalperam" | "fbuv2";
+const ALGO_NAME: Record<string, string> = { machinegun: "MachineGun", mg: "MachineGun", scalperam: "ScalperAM", fbuv2: "FBUv2", fbu: "FBUv2" };
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const AN = ra.analysis as any;
 const PROT = ra.protection as any;
@@ -60,6 +62,48 @@ function Fbu() {
   );
 }
 
+type Beh = { label: string; tiers_order: string[]; tiers: Tier[]; all: Tier;
+  simulation: { hours: number[]; expiry_hours: number; tiers: Record<string, Sim>; all: Sim } };
+type Tier = { tier: string; accounts: number; avg: { lots: number[]; pl: number[] }; protection_usd: number };
+type Sim = { lots: number[]; deals: number[]; pl: number[]; prot: number[]; catches: number };
+const BEH = (ra as unknown as { behaviour: { algos: Record<string, Beh> } }).behaviour.algos;
+const TIER_COLOR = ["var(--orange)", "var(--red)", "var(--purple)", "var(--blue)"];
+
+/** The portal's Algo Behaviour panel: what flagged clients did before, during and after a move, per tier, and the
+ *  cumulative effect over the hours after the move. */
+function Behaviour() {
+  const [algo, setAlgo] = useState<"machinegun" | "fbuv2">("machinegun");
+  const [m, setM] = useState<"prot" | "pl" | "lots" | "deals">("prot");
+  const b = BEH[algo];
+  if (!b) return null;
+  const rows = [...b.tiers, b.all];
+  const lotsMax = Math.max(...rows.flatMap((r) => r.avg.lots)), plMax = Math.max(...rows.flatMap((r) => r.avg.pl.map(Math.abs)));
+  const sim = b.simulation;
+  return (
+    <>
+      <h2 className="sub-head">Algo behaviour</h2>
+      <Segmented label="Algorithm" value={algo} onChange={setAlgo} options={[{ v: "machinegun", label: "MachineGun" }, { v: "fbuv2", label: "FBU" }]} />
+      <Group header="Average lots, before, during and after the move">
+        <div className="bda"><span /><b>Before</b><b>During</b><b>After</b>
+          {rows.map((r) => (<Fragment key={r.tier}><span>{r.tier === "ALL" ? "All" : r.tier}</span>
+            {r.avg.lots.map((v, i) => <span key={i} className="bcell"><i style={{ background: "var(--blue)", opacity: 0.35 + 0.65 * (v / lotsMax), transform: `scaleY(${Math.max(0.06, v / lotsMax)})` }} />{num(v, 1)}</span>)}</Fragment>))}
+        </div>
+      </Group>
+      <Group header="Average client P&L, before, during and after" footer="A drop during the move is the protection working. Client P&L, positive when the client profits.">
+        <div className="bda"><span /><b>Before</b><b>During</b><b>After</b>
+          {rows.map((r) => (<Fragment key={r.tier}><span>{r.tier === "ALL" ? "All" : r.tier}</span>
+            {r.avg.pl.map((v, i) => <span key={i} className="bcell"><i style={{ background: v >= 0 ? "var(--red)" : "var(--green)", transform: `scaleY(${Math.max(0.06, Math.abs(v) / plMax)})` }} />{compact(v, true)}</span>)}</Fragment>))}
+        </div>
+      </Group>
+      <Segmented label="Cumulative" value={m} onChange={setM} options={[{ v: "prot", label: "Protection" }, { v: "pl", label: "Client P&L" }, { v: "lots", label: "Lots" }, { v: "deals", label: "Deals" }]} />
+      <Group header="Cumulative after the move" footer={`Hours after each move, all catches stacked from the move. The dashed line is the ${sim.expiry_hours} h expiry.`}>
+        <MultiLine x={sim.hours} xLabel="Hours after the move" unit={m === "prot" || m === "pl" ? "" : ""} mark={sim.expiry_hours}
+          series={[...b.tiers_order.map((t, i) => ({ name: t, values: sim.tiers[t]?.[m] ?? [], color: TIER_COLOR[i % 4] })).filter((s) => s.values.length), { name: "All", values: sim.all[m], color: "var(--label)" }]} />
+      </Group>
+    </>
+  );
+}
+
 export default function RiskAnalysis() {
   const [a, setA] = useState<A>("machinegun");
   const [scope, setScope] = useState<"default" | "all">("default");
@@ -77,8 +121,9 @@ export default function RiskAnalysis() {
         {p.by_algo.map((x: any) => <Row key={x.algo} title={x.label} subtitle={`${x.moves} moves · ${x.accounts} accounts`} detail={money(x.protection_usd)} chevron={false} />)}
       </Group>
       <Group header="Latest moves">
-        {p.rows.slice(0, 15).map((x: any, i: number) => <ClientRow key={i} login={x.login} sub={`${x.algo} · ${x.symbol} · ${when(x.moved_at, false)}`} detail={money(x.protection_usd)} />)}
+        {p.rows.slice(0, 15).map((x: any, i: number) => <ClientRow key={i} login={x.login} sub={`${ALGO_NAME[x.algo] ?? x.algo} · ${x.symbol} · ${when(x.moved_at, false)}`} detail={money(x.protection_usd)} />)}
       </Group>
+      <Behaviour />
     </>
   );
 }

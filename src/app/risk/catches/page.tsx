@@ -6,6 +6,7 @@ import { Chip, Group, Metrics, NavBar, Row, Segmented, Sheet } from "@/component
 import { ClientRow } from "@/components/rows";
 import ca from "@/data/catches.json";
 import { ago, group, nameOf, sentence } from "@/lib/data";
+import { buzz } from "@/lib/haptics";
 
 type A = "all" | "mg" | "scalper" | "fbu" | "etl" | "journal";
 const LABEL: Record<string, string> = { mg: "MachineGun", scalper: "ScalperAM", fbu: "FBUv2", etl: "Equity traffic light", journal: "MT5 journal" };
@@ -14,21 +15,26 @@ const TINT: Record<string, string> = { mg: "var(--red)", scalper: "var(--orange)
 const login = (acc: number) => 99000000 + acc;
 type K = (typeof ca)[number];
 
-const KINDS: Record<string, string> = { mg: "MachineGun", etl: "ETL", scalper: "ScalperAM", auto_direct: "Auto direct", promote: "Promote", manual: "Manual", intraday: "Intraday", other: "Other" };
+const KINDS: Record<string, string> = { fbu: "FBUv2", journal: "Journal", mg: "MachineGun", etl: "ETL", scalper: "ScalperAM", auto_direct: "Auto direct", promote: "Promote", manual: "Manual", intraday: "Intraday", other: "Other" };
 const kindLabel = (k: string) => KINDS[k] ?? sentence(k);
 
 export default function Catches() {
   const [a, setA] = useState<A>("all");
+  const [p, setP] = useState<"1" | "7" | "30" | "all">("1");
+  const inP = ca.filter((x) => p === "all" || x.day < Number(p));
   const [sel, setSel] = useState<K | null>(null);
   const [open, setOpen] = useState(false);
-  const list = ca.filter((x) => a === "all" || x.algo === a).sort((x, y) => (x.seen_ago_min ?? 0) - (y.seen_ago_min ?? 0));
-  const count = (k: string) => ca.filter((x) => x.algo === k).length;
+  const list = inP.filter((x) => a === "all" || x.algo === a).sort((x, y) => x.day - y.day || (x.seen_ago_min ?? 0) - (y.seen_ago_min ?? 0));
+  const count = (k: string) => inP.filter((x) => k === "all" || x.algo === k).length;
 
   return (
     <>
-      <NavBar title="Catches" eyebrow="Today, most recent first" back={{ href: "/risk/", label: "Risk Management" }} />
+      <NavBar title="Catches" eyebrow={`${p === "1" ? "Today" : p === "all" ? "All time" : `Last ${p} days`}, most recent first`} back={{ href: "/risk/", label: "Risk Management" }} />
       <Metrics label="By algorithm" items={[{ k: "MG", v: count("mg") }, { k: "Scalper", v: count("scalper") }, { k: "FBU", v: count("fbu") }, { k: "ETL", v: count("etl") }]} />
-      <Segmented label="Algorithm" value={a} onChange={setA} options={[{ v: "all", label: "All" }, { v: "mg", label: "MG" }, { v: "scalper", label: "SC" }, { v: "fbu", label: "FBU" }, { v: "etl", label: "ETL" }, { v: "journal", label: "Log" }]} />
+      <Segmented label="Period" value={p} onChange={setP} options={[{ v: "1", label: "Day" }, { v: "7", label: "7 days" }, { v: "30", label: "30 days" }, { v: "all", label: "All" }]} />
+      <div className="tchips" role="radiogroup" aria-label="Source">
+        {(["all", "etl", "mg", "fbu", "scalper", "journal"] as A[]).map((k) => <button key={k} role="radio" aria-checked={a === k} className={`tchip ${a === k ? "on" : ""}`} onClick={() => { buzz(); setA(k); }}>{k === "all" ? "All" : k === "mg" ? "MG" : k === "fbu" ? "FBU" : k === "etl" ? "ETL" : k === "scalper" ? "Scalper" : "Journal"} {count(k)}</button>)}
+      </div>
       <Group>
         {list.map((x, i) => {
           const I = ICON[x.algo as keyof typeof ICON] ?? Crosshair;

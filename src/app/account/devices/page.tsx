@@ -1,7 +1,7 @@
 "use client";
 
 import { MonitorSmartphone } from "lucide-react";
-import { useApp } from "@/components/app-state";
+import { useApp, type DeviceRequest } from "@/components/app-state";
 import { Chip, Group, NavBar, Row } from "@/components/ios";
 import us from "@/data/users.json";
 import { when } from "@/lib/data";
@@ -12,8 +12,10 @@ export default function Devices() {
   const { get, set, say, guard } = useApp();
   const decided = get<Record<number, string>>("dev.decided", {});
   const decide = (d: D, s: "approved" | "denied") => { if (!guard("admin")) return; set("dev.decided", { ...decided, [d.id]: s }); say(`${d.label} ${s}`); };
-  const waiting = us.pending.filter((d) => !decided[d.id]);
-  const done = [...us.pending.filter((d) => decided[d.id]).map((d) => ({ ...d, status: decided[d.id], decided_by: "demo.admin", decided_at: new Date().toISOString() })), ...us.decided];
+  // Requests made on the Access screen this session join the portal's own queue
+  const pending = [...get<DeviceRequest[]>("dev.requests", []).map((r) => ({ ...r, status: "pending", decided_by: null, decided_at: null, last_seen_at: null, last_ip: null })), ...us.pending] as D[];
+  const waiting = pending.filter((d) => !decided[d.id]);
+  const done = [...pending.filter((d) => decided[d.id]).map((d) => ({ ...d, status: decided[d.id], decided_by: "demo.admin", decided_at: new Date().toISOString() })), ...us.decided];
 
   return (
     <>

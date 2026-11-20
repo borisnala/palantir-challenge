@@ -26,8 +26,12 @@ export const FEATURES: Feature[] = [
   S("MachineGun", "Risk Analysis", "/risk/analysis/", "mg burst high lot orders trigger margin tiers"),
   S("ScalperAM", "Risk Analysis", "/risk/analysis/", "scalper fast trades holding time"),
   S("Force Build-Up", "Risk Analysis", "/risk/analysis/", "fbu fbuv2 build up exposure deposit"),
+  S("Algo behaviour", "Risk Analysis", "/risk/analysis/", "before during after cumulative protection tiers"),
+  S("Algo protection", "Risk Analysis", "/risk/analysis/", "protection spread markup house p&l"),
   S("Algo Activity", "Risk", "/risk/activity/", "algorithm moves risk score window"),
   S("CRA Model", "Risk", "/risk/cra-model/", "customer risk assessment thresholds weights region profile product channel tppu tppt"),
+  S("Try a customer", "CRA Model", "/risk/cra-model/", "score customer test rating trial"),
+  S("CRA sign-off", "CRA Model", "/risk/cra-model/", "sign off approve version maker checker shadow enforce mode restore"),
   S("CRA Analysis", "Risk", "/risk/cra-analysis/", "customer risk assessments audit chain edd high medium low"),
   S("Promotion Analysis", "Risk", "/risk/promotion/", "jamesbond promo promoted rolled back expiry"),
   S("HouseCleaning", "Risk", "/risk/housecleaning/", "groups cutlist reinstate archive delete empty"),
@@ -37,6 +41,9 @@ export const FEATURES: Feature[] = [
   S("CLTL · LPTL", "Liquidity", "/liquidity/cltl/", "candle liquidity traffic light spread level red orange yellow"),
   S("PG Markups", "Liquidity", "/liquidity/pg-markups/", "spread markup price group points ib rebate bands"),
   S("Manual Level", "Liquidity", "/liquidity/manual-level/", "spread limits traffic light level symbol price feed"),
+  S("Symbol toxicity", "Book View", "/liquidity/book/", "toxic symbols loss share activity lift b-book"),
+  S("Cost per $1m notional", "Book View", "/liquidity/book/", "pnl per million notional cost clients"),
+  S("Closed lots", "Open Lots", "/risk/open-lots/", "history edge map behaviour map quadrant scalper machinegun"),
   S("Group Spread", "Liquidity", "/liquidity/group-spread/", "spread tier mt5 group mispriced"),
   S("Book View", "Liquidity", "/liquidity/book/", "flagged book exposure loss price group symbols hours heatmap"),
 
@@ -51,6 +58,7 @@ export const FEATURES: Feature[] = [
   // Account
   S("Account", "Account", "/account/", "profile admin"),
   S("Users", "Account", "/account/users/", "users roles viewer editor admin permissions"),
+  S("New user", "Users", "/account/users/", "create user add reset password"),
   S("Device access", "Account", "/account/devices/", "devices approve deny tablet phone laptop"),
   S("Build paths", "Account", "/account/build-paths/", "configuration files algorithm settings env"),
 
@@ -66,6 +74,8 @@ export const FEATURES: Feature[] = [
   T("Haptic feedback", "Settings", "vibration haptics"),
   T("Appearance", "Settings", "theme dark light mode system"),
   T("Sign out", "Settings", "log out logout"),
+  S("Sign in", "Account", "/login/", "login log in password view only"),
+  S("Request access", "Account", "/access/", "device access approval new device"),
 ];
 
 /** Ranked matches: a title that starts with the query first, then a word in the title, then the keywords. */

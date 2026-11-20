@@ -6,6 +6,7 @@ import { Chip, Group, Metrics, NavBar, Row, Segmented, Sheet } from "@/component
 import { Bars } from "@/components/ui";
 import cl from "@/data/cltl.json";
 import { ago, num, pct } from "@/lib/data";
+import { sentence } from "@/lib/data";
 import { levelLabel, levelTone } from "@/lib/levels";
 
 type S = (typeof cl.symbols)[number];
@@ -36,6 +37,12 @@ export default function Cltl() {
           <Row key={i} title={e.symbol} subtitle={<span className="inline-flow"><Chip tone={levelTone(e.from)}>{levelLabel(e.from)}</Chip><ArrowRight size={14} /><Chip tone={levelTone(e.to)}>{levelLabel(e.to)}</Chip></span>}
             detail={ago(Math.round(e.ago / 60) || 1)} chevron={false} />
         ))}
+      </Group>
+
+      <Group header="Profile" footer="The portal's MAD parameter tool edits these thresholds on the desktop. Read only here.">
+        <Row title="Profile" detail={cl.profile.label} chevron={false} />
+        <Row title="Thresholds from" detail={sentence(cl.profile.threshold_source.replace(/-/g, " "))} chevron={false} />
+        {Object.entries(cl.profile.hold_ttl_minutes).map(([k, v]) => <Row key={k} title={`${k} hold`} detail={`${v} min`} chevron={false} />)}
       </Group>
 
       <Sheet open={open} onClose={() => setOpen(false)} title={sel?.symbol ?? "Symbol"}>

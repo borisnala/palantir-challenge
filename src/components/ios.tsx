@@ -417,7 +417,9 @@ export function Metrics({ items, label }: { items: { k: string; v: React.ReactNo
 
 /** A small status chip. */
 export function Chip({ tone = "gray", children }: { tone?: "gray" | "green" | "orange" | "red" | "blue" | "purple"; children: React.ReactNode }) {
-  return <span className={`chip chip-${tone}`}>{children}</span>;
+  // Tags read in sentence case whatever the portal sent (owner register): "admin" shows as "Admin", codes stay as sent
+  const text = typeof children === "string" && children ? children.charAt(0).toUpperCase() + children.slice(1) : children;
+  return <span className={`chip chip-${tone}`}>{text}</span>;
 }
 
 /** The confirmation toast at the bottom, above the tab bar. */

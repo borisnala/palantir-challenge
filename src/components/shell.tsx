@@ -82,6 +82,7 @@ export function Drawer() {
       const t = e.touches[0];
       const open = x.current.x > 0.5;
       const onPage = (e.target as Element)?.closest?.(".stage-scrim, .drawer");
+      if (document.documentElement.classList.contains("gate")) return;
       if ((!open && t.clientX < 32 && !document.querySelector(".sheet-wrap")) || (open && onPage))
         drag.current = { x0: t.clientX, y0: t.clientY, p0: x.current.x, last: t.clientX, t: e.timeStamp, v: 0, axis: null };
     };

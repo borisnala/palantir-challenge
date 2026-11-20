@@ -122,6 +122,10 @@ for key, b in t10["boards"].items():
         "losers": [pick(r, "login", "name", "group", "pl", "deals", "win_rate", "pf", "prev_rank") for r in bb.get("losers", [])],
         "volume": [pick(r, "login", "name", "group", "lots", "deals", "avg_lot") for r in bb.get("volume", [])],
         "groups": bb.get("groups", []),
+        "activity": [pick(r, "login", "name", "group", "pl", "deals", "active_days", "win_rate") for r in bb.get("activity", [])],
+        "movers": [pick(r, "login", "name", "group", "pl", "delta", "prev_pl", "is_new", "deals") for r in bb.get("movers", [])],
+        "consistency": [pick(r, "login", "name", "group", "pl", "active_days", "win_rate", "pf") for r in bb.get("consistency", [])],
+        "instruments": [pick(r, "symbol", "lots", "profit", "deals", "traders", "top_login", "top_share_pct") for r in bb.get("instruments", [])],
     }
 out["top10"] = boards
 
@@ -136,6 +140,8 @@ for win, w in gr["windows"].items():
                "rows": [{k: r2(r.get(k)) for k in ("login", "net_change", "slope_per_day", "r_squared", "win_day_ratio",
                                                    "active_days", "balance", "max_drawdown", "eligible", "name", "group",
                                                    "pg", "consistency", "label") if k in r} for r in w["rows"]]}
+gw["detail"] = {lg: {"momentum": d.get("momentum"), "moves": [pick(m, "time_wib", "from_tier", "to_tier", "source_detail") for m in d.get("pg_moves", [])],
+                     "etl": d.get("etl", [])} for lg, d in gr["detail"].items()}
 out["growth"] = gw
 
 # ---- Open Lots ----
@@ -143,6 +149,18 @@ o = ol["open"]
 out["openlots"] = {"as_of": o["as_of"], "totals": o["totals"], "mg1": o["mg1"],
                    "clients": [pick(c, "login", "group", "micro", "excluded", "balance", "equity", "fpl", "positions",
                                     "gross", "net", "top_symbols", "mg", "age") for c in o["clients"]]}
+# Closed lots history: per window, the family filter that covers the most clients (all families)
+hist = {}
+for k, v in ol["hist"].items():
+    w = "|".join(k.split("|")[:2])
+    if w not in hist or len(v.get("clients", [])) > len(hist[w]["clients"]):
+        hist[w] = {"from": v["from"], "to": v["to"], "totals": v["totals"],
+                   "quadrants": {m: {"title": q["title"], "x_label": q["x_label"], "y_label": q["y_label"], "x_div": q["x_div"], "y_div": q["y_div"],
+                                     "cells": {c: pick(z, "short", "pos", "clients", "lots", "pl") for c, z in q["quadrants"].items()}}
+                                 for m, q in v["quadrants"].items()},
+                   "clients": [pick(c, "login", "family", "excluded", "lots", "deals", "avg_lot", "active_days", "deals_per_day", "pl", "win_rate", "quadrant")
+                               for c in v["clients"]]}
+out["openlots"]["history"] = hist
 
 # ---- News ----
 nw = load("news")
@@ -174,7 +192,12 @@ out["book"] = {"accounts": tx["accounts"], "by_pg": tx["by_pg"], "totals": tx["t
                "symbols": tx["book"]["symbol_toxicity"], "exposure": tx["book"]["exposure"],
                "heatmap": tx["book"]["loss_heatmap"],
                "loss": {k: pick(v.get("meta", {}), "scope", "accounts_in_pool", "accounts_with_activity", "deals_counted")
-                        | {"summary": v.get("summary") or v.get("totals")} for k, v in hb["loss"].items()}}
+                        | {"summary": v.get("summary") or v.get("totals"),
+                           "board": [pick(c, "symbol", "net_broker", "deals", "lots", "activity_share_pct", "profit_share_pct", "profit_lift_pp",
+                                          "loss_share_pct", "loss_lift_pp", "side", "material") for c in v.get("concentration", [])]}
+                        for k, v in hb["loss"].items()},
+               "pnlmm": {scope: {"totals": v["totals"], "rows": [pick(r, "login", "hpov_usd", "notional_usd", "pnl_per_mm", "deals", "lots", "tier", "reliable")
+                                                                  for r in v["rows"]]} for scope, v in hb["pnlmm"].items()}}
 
 # ---- HouseCleaning ----
 hc = load("housecleaning")
