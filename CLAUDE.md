@@ -121,8 +121,6 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   would move the page box from the old scroll offset to the top), and the old snapshot is held at --vt-y, the scroll
   position device.ts records on every click.
 - No text selection or iOS callout anywhere except inputs (owner 2026-11-20). Copying goes through Copy actions only.
-- The app inside the desktop frame clips itself to the 44 px screen radius (html.inframe body clip-path), so sheet
-  backdrops follow the bezel.
 - Chip rows that scroll sideways set overflow-y hidden with 8 px padding, so the chips' tap areas never make the row
   scroll vertically (it once cut the Book View row in half on the iPhone).
 - Monthly history (owner 2026-11-20, the portal's MONTHLY HISTORY panel "as a pop up"): Client 360, Trading, a row
