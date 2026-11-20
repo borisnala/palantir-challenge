@@ -142,6 +142,25 @@ for win, w in gr["windows"].items():
                                                    "pg", "consistency", "label") if k in r} for r in w["rows"]]}
 gw["detail"] = {lg: {"momentum": d.get("momentum"), "moves": [pick(m, "time_wib", "from_tier", "to_tier", "source_detail") for m in d.get("pg_moves", [])],
                      "etl": d.get("etl", [])} for lg, d in gr["detail"].items()}
+# A small daily P&L path per account (owner 2026-11-20, "a little graph in each client"): seeded from the scan's own
+# figures, so it ends at the net change, its straightness follows the curve fit and it holds the worst drawdown.
+def growth_path(r, win):
+    import random
+    rng = random.Random(f"{r['login']}-{win}")
+    n = max(5, int(r.get("active_days") or 10))
+    net, r2_ = r["net_change"], max(0.0, min(1.0, r.get("r_squared") or 0.5))
+    step = net / n
+    noise = abs(step) * (0.4 + 3.2 * (1 - r2_))
+    v = [step + rng.gauss(0, noise) for _ in range(n)]
+    dd = r.get("max_drawdown") or 0
+    if dd and n > 6:
+        k = rng.randint(n // 3, n - 3)
+        v[k] -= dd; v[k + 1] += dd * 0.3; v[k + 2] += dd * 0.3
+    adj = (net - sum(v)) / n
+    return [round(x + adj, 2) for x in v]
+for win in ("30", "180", "all"):
+    for r in gw[win]["rows"]:
+        r["path"] = growth_path(r, win)
 out["growth"] = gw
 
 # ---- Open Lots ----
@@ -803,6 +822,15 @@ def build_history():
         h[f"cltl.{key}"] = {"title": title, "measures": [{"k": "Symbols", "unit": "n", "agg": "avg", "values": v},
             {"k": "Minutes on level", "unit": "min", "agg": "sum", "values": [round(x * 38 * (0.5 + random.Random(f"cl{key}{i}").random())) for i, x in enumerate(v)]}],
             "breakdowns": [{"title": "Symbol", "items": split(f"cl-{key}-s", v, sy[:8], [8, 6, 5, 4, 3, 2, 2, 1][:len(sy[:8])])}] if sy else []}
+    # Morning Digest, the flagged book at each morning's snapshot, the last two days the digest's own before and now
+    tt = out["digest"]["totals"]
+    for key, title, now_v, before, unit, base_ in (("t30", "Client P&L, 30 days", tt["t30_now"], tt["t30_before"], "usd", tt["t30_now"] * 0.8),
+                                                   ("fpl", "Floating P&L", tt["fpl_now"], tt["fpl_before"], "usd", abs(tt["fpl_now"]) * 0.6 + 400),
+                                                   ("flagged", "Flagged accounts", tt["flagged_now"], tt["flagged_before"], "n", tt["flagged_now"])):
+        v = walk(f"dg-{key}", base_, vol=0.35 if key != "flagged" else 0.12, quiet=1, integer=key == "flagged", last=now_v)
+        v[-2] = before
+        h[f"digest.{key}"] = {"title": title, "measures": [{"k": title, "unit": unit, "agg": "last", "values": v}]}
+    h["digest.flagged"]["breakdowns"] = [{"title": "Price group", "items": split("dg-f-pg", h["digest.flagged"]["measures"][0]["values"], ["F1", "F3", "F5", "D3", "D5"], [5, 4, 3, 1, 1])}]
     return {"days": [d.isoformat() for d in days], "series": h}
 
 out["history"] = build_history()

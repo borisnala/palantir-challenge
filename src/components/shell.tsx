@@ -6,7 +6,7 @@
 import Link from "@/components/nav-link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ArrowDownUp, Bell, Droplets, Eye, House, Search, Settings, ShieldAlert, SlidersHorizontal, UserRound, Users, X } from "lucide-react";
+import { ArrowDownUp, Bell, ChevronDown, Droplets, Eye, House, Search, Settings, ShieldAlert, SlidersHorizontal, UserRound, Users, X } from "lucide-react";
 import { CLIENTS, group, hasProfile, nameOf } from "@/lib/data";
 import { Monogram, Pnl } from "./ui";
 import { ROLE_LABEL, useApp } from "./app-state";
@@ -47,6 +47,8 @@ export function Drawer() {
   const x = useRef(new Spring(0, 320, 32)); // 0 closed, 1 open
   const drag = useRef<{ x0: number; y0: number; p0: number; last: number; t: number; v: number; axis: "x" | "y" | null } | null>(null);
   const width = () => panel.current?.offsetWidth || 320;
+  const held = useRef<{ y: number; path: string } | null>(null);
+  const [moreW, setMoreW] = useState(false);
 
   const paint = () => {
     const p = Math.max(0, Math.min(1.04, x.current.x));
@@ -54,7 +56,16 @@ export function Drawer() {
     const scrim = document.querySelector(".stage-scrim") as HTMLElement | null;
     if (stage) {
       stage.style.transform = p > 0.001 ? `translateX(${p * width()}px)` : "";
-      stage.classList.toggle("stage-open", p > 0.001);
+      // The open card is one screen tall, which would clamp the page's scroll to the top (owner 2026-11-20, "the
+      // page scrolled up again"). Hold the scroll as an offset on main while open and put it back on close.
+      const open = p > 0.001, was = stage.classList.contains("stage-open");
+      if (open && !was) { held.current = { y: window.scrollY, path: location.pathname }; stage.style.setProperty("--menu-y", `${-window.scrollY}px`); }
+      stage.classList.toggle("stage-open", open);
+      if (!open && was) {
+        stage.style.removeProperty("--menu-y");
+        if (held.current && held.current.path === location.pathname) window.scrollTo(0, held.current.y);
+        held.current = null;
+      }
     }
     if (scrim) { scrim.style.opacity = String(p * 0.5); scrim.style.pointerEvents = p > 0.02 ? "auto" : "none"; }
     if (panel.current) { panel.current.style.transform = `translateX(${(p - 1) * width() * 0.25}px)`; panel.current.style.visibility = p > 0.001 ? "visible" : "hidden"; }
@@ -75,7 +86,7 @@ export function Drawer() {
     if (panel.current) panel.current.inert = !drawer;
     kick();
   }, [drawer]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setDrawer(false); }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { document.querySelector<HTMLElement>(".stage")?.style.removeProperty("--menu-y"); setDrawer(false); }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Edge swipe to open, swipe on the pushed page or the menu to close
   useEffect(() => {
@@ -170,9 +181,10 @@ export function Drawer() {
       </div>
       {(() => {
         // Recents (clients and analysis screens opened lately) and the watchlist share the space down to the foot.
-        const list = recents.filter((r) => r.path !== path).slice(0, 5);
+        const list = recents.filter((r) => r.path !== path).slice(0, 3);
         const seen = new Set(list.map((r) => r.path));
-        const watch = [...watched].filter((l) => hasProfile(l) && !seen.has(`/clients/${l}/`)).slice(0, 12);
+        const allW = [...watched].filter((l) => hasProfile(l) && !seen.has(`/clients/${l}/`));
+        const watch = moreW ? allW : allW.slice(0, 5);
         return (
           <>
             {list.length > 0 && <p className="drawer-label">Recents</p>}
@@ -194,12 +206,19 @@ export function Drawer() {
                   <Link key={l} href={`/clients/${l}/`} transitionTypes={["menu"]} className="drawer-item drawer-two"><Eye size={20} strokeWidth={1.8} />
                     <span className="ellip"><b>{nameOf(l)}</b><small>#{l}</small></span></Link>
                 ))}
+                {allW.length > 5 && (
+                  <button className="drawer-item drawer-more" onClick={() => { buzz(); setMoreW(!moreW); }}>
+                    <ChevronDown size={20} strokeWidth={1.8} style={{ transform: moreW ? "rotate(180deg)" : undefined, transition: "transform .3s" }} />
+                    <span className="ellip"><b>{moreW ? "Show fewer" : `${allW.length - 5} more`}</b></span>
+                  </button>
+                )}
               </div>
             )}
           </>
         );
       })()}
       </>)}
+        <p className="drawer-credit">Risk Tool · Palantir design challenge, Lens B<br />Boris Nala · Demonstration data</p>
       </div>
       <div className="drawer-foot">
         <button className="glassbtn-link drawer-me" aria-label={`Settings, ${user.name}`} onClick={() => { buzz(); set("ui.settings", true); }}>

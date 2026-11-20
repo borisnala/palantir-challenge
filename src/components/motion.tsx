@@ -150,7 +150,7 @@ export function DeviceFrame() {
   if (!on || !src) return null;
   return createPortal(
     <div className="device-canvas">
-      <iframe className="device" src={src} title="Risk Tool" />
+      <div className="device"><div className="device-screen"><iframe src={src} title="Risk Tool" /></div></div>
       <aside className="device-credit" aria-label="About">
         <Wordmark />
         <p><b>Palantir design challenge</b>Lens B, make it click</p>

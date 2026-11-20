@@ -96,8 +96,8 @@ const RANGES: { k: string; d: number }[] = [{ k: "1M", d: 31 }, { k: "3M", d: 92
 
 /** The P&L chart with zoom (owner 2026-11-20, "zoom in, zoom out"): range buttons as in Stocks, a pinch on the chart,
  *  or the scroll wheel on a computer. The window is a slice of the series; scrub and tip keep the full series' index. */
-function ExposureChart({ days: allDays, values: allValues, net: allNet, scale, bands, overlays, onScrub, tip }: {
-  days: number[]; values: number[]; net: number[]; scale: Scale; bands: Band[]; overlays: string[];
+function ExposureChart({ days: allDays, values: allValues, net: allNet, scale, bands, overlays, tones = [], onScrub, tip }: {
+  days: number[]; values: number[]; net: number[]; scale: Scale; bands: Band[]; overlays: string[]; tones?: string[];
   onScrub: (i: number | null) => void; tip: (i: number) => React.ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
@@ -208,7 +208,7 @@ function ExposureChart({ days: allDays, values: allValues, net: allNet, scale, b
             <text x={cw + 8} y={y(v) + 4} className="lc-label">{compact(v)}</text>
           </g>
         ))}
-        {lines.map((ld, k) => <path key={overlays[k]} d={ld} className="lc-overlay" style={{ stroke: OVERLAY[k % OVERLAY.length] }} />)}
+        {lines.map((ld, k) => <path key={overlays[k]} d={ld} className="lc-overlay" style={{ stroke: tones[k] ?? OVERLAY[k % OVERLAY.length] }} />)}
         <path d={`${d}L${cw},${zero}L0,${zero}Z`} fill="url(#lfill)" className="lc-area" />
         <path d={d} className="lc-line" pathLength={1} />
         {/* net lots per day */}
@@ -530,13 +530,13 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 </span>
                 <button role="switch" aria-checked={groups} className={`tchip ${groups ? "on" : ""}`} onClick={() => { buzz(); setGroups(!groups); }}>Groups</button>
               </div>
-              <ExposureChart days={daily.map((dd) => dd[0])} values={plotted} net={netByDay} scale={scale} bands={groups ? bands : []} overlays={compare} onScrub={setScrub}
+              <ExposureChart days={daily.map((dd) => dd[0])} values={plotted} net={netByDay} scale={scale} bands={groups ? bands : []} overlays={compare} tones={compare.map((c) => OVERLAY[Math.max(0, p.symbols.findIndex((z) => z.symbol === c)) % OVERLAY.length])} onScrub={setScrub}
                 tip={(i) => (<><b>{day(daily[i][0])}</b><span>{series === "realized" ? "Cumulative" : "Balance"} {money(plotted[i])}</span><span>Change {money(daily[i][1], true)}</span>{bandAt(daily[i][0]) && <span>Group {bandAt(daily[i][0])}</span>}<span>Net lots {num(netByDay[i], 2)}</span></>)} />
               <div className="tchips" role="group" aria-label="Compare price">
                 <span className="tlabel">Compare price</span>
                 {p.symbols.slice(0, 4).map((sy, k) => {
                   const onC = compare.includes(sy.symbol);
-                  return <button key={sy.symbol} role="switch" aria-checked={onC} className={`tchip ${onC ? "on" : ""}`} style={{ ["--c" as string]: OVERLAY[compare.indexOf(sy.symbol) >= 0 ? compare.indexOf(sy.symbol) : k] }}
+                  return <button key={sy.symbol} role="switch" aria-checked={onC} className={`tchip ${onC ? "on" : ""}`} style={{ ["--c" as string]: OVERLAY[k % OVERLAY.length] }}
                     onClick={() => { buzz(); setCompare(onC ? compare.filter((z) => z !== sy.symbol) : [...compare, sy.symbol].slice(-2)); }}><i />{sy.symbol}</button>;
                 })}
               </div>
@@ -547,7 +547,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 <div><span>Win rate</span><b>{pct(p.behaviour.win_rate_pct, 0)}</b></div>
               </div>
             </section>
-            <p className="caption">Compare prices simulated.</p>
+            <p className="caption">Compare price is the daily price of the symbol over the same window, scaled to the chart height. Simulated.</p>
 
             <Group header="At a glance">
               <Row onClick={() => setTab("trading")} title="Trades" detail={num(p.behaviour.trade_count)} />

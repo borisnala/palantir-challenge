@@ -129,6 +129,21 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   opens src/components/monthly.tsx in a sheet. Lifetime figures, asset mix, one row a month with its mix bar, a month
   pushes its figures and symbols. distill.py monthly(): 99000001 from the portal's months, others from their own
   daily P&L and trades, balance run forward from deposits and never negative.
+- Menu and scroll (owner 2026-11-20, "the page scrolled up again"): the open menu card is one screen tall, so shell.tsx
+  holds the page's scroll as --menu-y on main while it is open and restores it on close (unless the path changed).
+- Frame and sheet corners: the iframe sits in .device (the bezel) > .device-screen (radius 44, clip with a mask). A
+  sheet clips to its own corners and its list fades out at the bottom as under the header.
+- Challenge credit (owner 2026-11-20, "appear but not annoying"): under the launch mark, at the foot of the side menu
+  and in the Morning Digest fine print. Never a banner or a blocking sheet.
+- Side menu lists 3 recents and 5 watchlist clients, then a row that shows the rest.
+- Growth Detection draws each account's P&L path (distill.py growth_path, from the scan's own net change, fit and
+  drawdown) beside the row and large in its sheet.
+- Morning Digest (owner 2026-11-20, "more interactive"): since Last snapshot, 7 days or 30 days (history.json
+  digest.*), Flagged, Client P&L and Floating figures open their history, every move opens its detail sheet with the
+  portal's fields and Open Client 360, today's algorithm catches.
+- Monthly history is interactive: measure chips (P&L, trades, win rate, lots, balance), a month chart a finger scrubs
+  whose reading opens the month, symbol chips that filter chart and rows, Newest, Best or Worst order, best and worst
+  month rows, and each month against the month before. Compare price on the P&L chart has one colour per symbol.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 

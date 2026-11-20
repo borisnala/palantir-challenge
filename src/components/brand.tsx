@@ -32,6 +32,7 @@ export function Launch() {
     <script dangerouslySetInnerHTML={{ __html: "try{var pf=JSON.parse(localStorage.getItem('risktool-prefs')||'{}');if(pf.theme==='light'||pf.theme==='dark')document.documentElement.setAttribute('data-theme',pf.theme)}catch(e){}try{history.pushState=function(s,t,u){return history.replaceState(s,t,u)}}catch(e){}try{var c=document.documentElement.classList;if(window.self!==window.top)c.add('inframe');else if(matchMedia('(min-width: 700px) and (min-height: 521px)').matches)c.add('framed','nolaunch');if(sessionStorage.getItem('launched'))c.add('nolaunch')}catch(e){}" }} />
     <div id="launch" aria-hidden>
       <svg className="launchplus" viewBox="0 0 100 100" fill="currentColor"><path d={PLUS_PATH} /></svg>
+      <p className="launch-credit">Palantir design challenge<br />Lens B · Boris Nala</p>
     </div>
     </>
   );

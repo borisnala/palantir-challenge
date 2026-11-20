@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Chip, Group, Metrics, NavBar, Row, Segmented, Sheet } from "@/components/ios";
 import { ClientRow } from "@/components/rows";
-import { Pnl } from "@/components/ui";
+import { Pnl, Sparkline } from "@/components/ui";
 import gr from "@/data/growth.json";
 import { compact, group, money, num, pct, sentence } from "@/lib/data";
 import { buzz } from "@/lib/haptics";
@@ -48,7 +48,9 @@ export default function Growth() {
         {rows.map((r) => (
           <Row key={r.login} onClick={() => { setSel(r); setOpen(true); }} title={r.name ?? `#${r.login}`}
             subtitle={`Fit ${num(r.r_squared, 2)} · ${num(r.active_days)} active days · ${compact(r.slope_per_day, true)} a day`}
-            detail={<span className="stack-r"><Pnl v={sg * r.net_change} short />{r.pg && <Chip>{r.pg}</Chip>}</span>} />
+            detail={<span className="stack-r"><Pnl v={sg * r.net_change} short />{r.pg && <Chip>{r.pg}</Chip>}</span>}>
+            <span className="row-spark"><Sparkline values={(r as G & { path: number[] }).path.map((v) => sg * v)} height={30} id={`g${r.login}`} /></span>
+          </Row>
         ))}
       </Group>
 
@@ -56,6 +58,9 @@ export default function Growth() {
         {sel && (
           <>
             <Group><ClientRow login={sel.login} name={sel.name ?? undefined} sub={`#${sel.login} · ${group(sel.group)}`} /></Group>
+            <Group header={`${sg > 0 ? "Client" : "Broker"} P&L path, ${num(sel.active_days)} active days`} footer="Cumulative P&L per active day. Seeded from the scan figures.">
+              <div className="growth-spark"><Sparkline values={(sel as G & { path: number[] }).path.map((v) => sg * v)} height={120} fill id="gsel" /></div>
+            </Group>
             <Group header={`Window ${w === "all" ? "all time" : `${w} days`}`}>
               <Row title="Client profit" detail={<Pnl v={sel.net_change} />} />
               <Row title="Profit a day" detail={money(sel.slope_per_day)} />
