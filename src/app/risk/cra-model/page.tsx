@@ -58,10 +58,10 @@ export default function CraModel() {
         <div className="seg-row"><Segmented label="Mode" value={effective} onChange={(m) => { if (m !== effective) setMode(m); }} options={[{ v: "shadow", label: "Shadow" }, { v: "enforce", label: "Enforce" }]} /></div>
       </Group>
 
-      <Group header="Sign-off" footer="A second person signs off each version. The maker can not sign off their own version.">
-        <Row icon={<ShieldCheck size={17} strokeWidth={2.4} />} tint={signedBy ? "var(--green)" : "var(--orange)"} title={cr.model.version} subtitle={`${cr.model.note} · by ${maker}`}
+      <Group header="Sign-off" footer="A second person signs off each version. The maker can not sign off the same version.">
+        <Row icon={<ShieldCheck size={17} strokeWidth={2.4} />} tint={signedBy ? "var(--green)" : "var(--orange)"} title={cr.model.version} subtitle={`${cr.model.note.replace(/^\w/, (c) => c.toUpperCase())} · by ${maker}`}
           detail={<Chip tone={signedBy ? "green" : "orange"}>{signedBy ? `Signed by ${signedBy}` : "Pending sign-off"}</Chip>} chevron={false} />
-        {!signedBy && <Row onClick={() => setSigning(true)} title={user.name === maker ? "You made this version" : `Sign off ${cr.model.version}`} subtitle={user.name === maker ? "Sign in as another user to sign off" : undefined} />}
+        {!signedBy && <Row onClick={() => setSigning(true)} title={user.name === maker ? "Maker of this version" : `Sign off ${cr.model.version}`} subtitle={user.name === maker ? "Sign off requires a second user" : undefined} />}
       </Group>
 
       <Group>

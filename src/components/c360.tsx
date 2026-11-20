@@ -313,7 +313,7 @@ function FloatChart({ values }: { values: number[] }) {
         {t.map((v) => (
           <g key={v}>
             <line x1="0" x2={cw} y1={y(v)} y2={y(v)} className={v === 0 ? "lc-zero" : "lc-grid"} />
-            <text x={cw + 8} y={y(v) + 4} className="lc-label">{compact(v)}</text>
+            {Math.abs(y(v) - y(last)) > 16 && <text x={cw + 8} y={y(v) + 4} className="lc-label">{compact(v)}</text>}
           </g>
         ))}
         {[[0, "2 min"], [WINDOW / 2, "1 min"], [WINDOW - 1, "Now"]].map(([i, l]) => (
@@ -732,7 +732,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               detail={moveTo === t2 ? <Check size={20} strokeWidth={2.6} color="var(--blue)" /> : undefined} />
           ))}
         </Group>
-        <Group header="Reason" footer="Required. Recorded in the group history under your name.">
+        <Group header="Reason" footer="Required. Recorded in the group history with the user name.">
           <div className="tchips why-chips" role="radiogroup" aria-label="Reason">
             {REASONS.map((r) => <button key={r} role="radio" aria-checked={why === r} className={`tchip ${why === r ? "on" : ""}`} onClick={() => { buzz(); setWhy(r); }}>{r}</button>)}
           </div>

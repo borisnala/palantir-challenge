@@ -53,8 +53,8 @@ function movesOf(): Move[] {
     ...S.new_flagged.map((r) => ({ kind: "new" as Kind, login: r.login, name: r.name, what: `Tier ${r.pg} ${r.tier}`, size: Math.abs(n(r.t30)), fig: <ChangePill v={n(r.t30)} />, r })),
     ...tm.filter((r) => r.direction === "worse").map((r) => ({ kind: "worse" as Kind, login: r.login, name: r.name, what: `${r.pg_before} to ${r.pg_now}`, size: Math.abs(n(r.t30)), fig: <ChangePill v={n(r.t30)} />, r })),
     ...tm.filter((r) => r.direction !== "worse").map((r) => ({ kind: "better" as Kind, login: r.login, name: r.name, what: `${r.pg_before} to ${r.pg_now}`, size: Math.abs(n(r.t30)), fig: <ChangePill v={n(r.t30)} />, r })),
-    ...S.exposure_up.map((r) => ({ kind: "up" as Kind, login: r.login, name: r.name, what: "Client profit up", size: Math.abs(n(r.t30_delta)), fig: <ChangePill v={n(r.t30_delta)} />, r })),
-    ...S.floating_swing.map((r) => ({ kind: "swing" as Kind, login: r.login, name: r.name, what: "Floating swing", size: Math.abs(n(r.fpl_delta)), fig: <ChangePill v={n(r.fpl_delta)} />, r })),
+    ...S.exposure_up.map((r) => ({ kind: "up" as Kind, login: r.login, name: r.name, what: `30 day P&L ${compact(n(r.t30_before))} to ${compact(n(r.t30_now))}`, size: Math.abs(n(r.t30_delta)), fig: <ChangePill v={n(r.t30_delta)} />, r })),
+    ...S.floating_swing.map((r) => ({ kind: "swing" as Kind, login: r.login, name: r.name, what: `Floating ${compact(n(r.fpl_before))} to ${compact(n(r.fpl_now))}`, size: Math.abs(n(r.fpl_delta)), fig: <ChangePill v={n(r.fpl_delta)} />, r })),
     ...S.left_book.map((r) => ({ kind: "left" as Kind, login: r.login, name: r.name, what: `Was ${r.pg}`, size: Math.abs(n(r.t30)), fig: <ChangePill v={n(r.t30)} />, r })),
   ].sort((x, y) => y.size - x.size);
 }
@@ -165,7 +165,7 @@ export default function Today() {
 
       <Board />
 
-      <Metrics label="Flagged book, tap for history" items={[
+      <Metrics label="Flagged book" items={[
         { k: "Flagged", v: t.flagged_now, history: "digest.flagged" },
         { k: "Client P&L", v: compact(t.t30_now), tone: "neg", history: "digest.t30" },
         { k: "Floating", v: compact(t.fpl_now), tone: t.fpl_now >= 0 ? "neg" : "pos", history: "digest.fpl" },
@@ -192,7 +192,7 @@ export default function Today() {
 
       <Group header={`Watchlist hits · ${S.watchlist_hits.length}`}>
         {S.watchlist_hits.map((r) => (
-          <ClientRow key={r.login} login={r.login} name={r.name} sub={String(r.watchlist_note ?? "").replace(/^DUMMY note: /, "")}
+          <ClientRow key={r.login} login={r.login} name={r.name} sub={String(r.watchlist_note ?? "").replace(/^DUMMY note[:,] /, "").replace(/^\w/, (c) => c.toUpperCase())}
             detail={<span className="stack-r"><ChangePill v={n(r.t30_delta)} /><span className="small">T30 change</span></span>} />
         ))}
       </Group>

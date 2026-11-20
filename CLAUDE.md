@@ -65,9 +65,12 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   beneath (ios.tsx sheetStack) and shows a back chevron instead of the X; closing it brings the one beneath back. Every
   sheet has the grabber bar on top to pull it down. Sheets float 8 px from the bottom and sides with corners the
   screen's radius less 8 (--screen-r per iPhone in src/lib/device.ts, 44 inside the desktop frame).
-- Notifications (owner 2026-11-20, "enrich"): distill.py builds src/data/alerts.json from the portal's 16 news profit
-  notifications (kit mock SPECS), the Morning Digest changes, today's algorithm moves and pending withdrawals. Six kinds
-  (news, algo, tier, swing, book, wd), each switchable in Settings, grouped by day as iOS Mail, kind chips on top.
+- Notifications (owner 2026-11-20, "enrich", then "loads of features, group them"): distill.py builds
+  src/data/alerts.json, 80 alerts in ten kinds (lib/data.ts ALERT_KINDS): news, algo, wd (pending and decided), tier,
+  swing, book, exposure (MachineGun on open lots), level (CLTL changes), growth (30 day scan), system (screener
+  checks, device requests, housecleaning). An alert without a client profile carries `href` (a screen, or
+  settings:devices) and `source` (shown as sender). The screen arranges By kind, stacks of three with "N more", newest
+  stack first, or By time as iOS Mail. Kind chips, a Severity pull-down, disabled kinds hidden from list and bell.
 - Client 360 point of view: Client P&L or Broker P&L flips every P&L figure (chart, calendar, sessions, symbols,
   holding time, trading pattern). Sessions, symbols and holding time draw diverging bars on one shared scale (ui.tsx
   DivBar). Balance and equity are account facts and never flip. The P&L chart zooms: 1M 3M 6M 1Y All, pinch on a phone,
@@ -142,6 +145,9 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 - Monthly history is interactive: measure chips (P&L, trades, win rate, lots, balance), a month chart a finger scrubs
   whose reading opens the month, symbol chips that filter chart and rows, Newest, Best or Worst order, best and worst
   month rows, and each month against the month before. Compare price on the P&L chart has one colour per symbol.
+- Language and overlap audit (2026-11-20): every on-screen string formal desk English, no "you", no usage
+  instructions outside the Add to Home Screen steps, portal codes through sentence(), compact() never shows -$0. An
+  axis label under a chart's value tag is hidden, as in Stocks. Long notification titles ellipsize in their own span.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 

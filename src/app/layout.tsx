@@ -30,7 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className="launching">
       <body>
         <script dangerouslySetInnerHTML={{ __html: DEVICE_SCRIPT }} />
-        <div className="rotate" role="alert" aria-live="polite"><RotateCcw size={34} strokeWidth={1.6} aria-hidden /><b>Turn your phone upright</b><span>Risk Tool is built for portrait.</span></div>
+        <div className="rotate" role="alert" aria-live="polite"><RotateCcw size={34} strokeWidth={1.6} aria-hidden /><b>Rotate to portrait</b><span>Risk Tool is built for portrait.</span></div>
         <Launch />
         <LightSource />
         <AppState>

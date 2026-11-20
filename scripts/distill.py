@@ -717,6 +717,34 @@ for x in out["catches"]:
               x["reason"] or f"{frm} to {to}", "algo")
 for i, r in enumerate([r for r in out["withdrawals"]["rows"] if r["status"] == "pending"]):
     alert(12 + i * 47, "warn", r["ta_id"], "Withdrawal pending", f"${r['amount']:,.2f} · {r['request_id']} · {(r.get('reason_code') or 'manual review').replace('_', ' ').lower()}", "wd")
+for i, r in enumerate([r for r in out["withdrawals"]["rows"] if r["status"] in ("auto", "approved", "rejected")]):
+    st = {"auto": "Withdrawal auto approved", "approved": "Withdrawal approved", "rejected": "Withdrawal rejected"}[r["status"]]
+    who = f" · {r['decided_by']}" if r.get("decided_by") else ""
+    alert(20 + i * 53, "critical" if r["status"] == "rejected" else "info", r["ta_id"], st,
+          f"${r['amount']:,.2f} · {r['request_id']} · {(r.get('reason_code') or 'clean').replace('_', ' ').lower()}{who}", "wd", extra={"href": "/withdrawals/"})
+
+# More of the desk's day (owner 2026-11-20, "add more notifications for loads of features, group them"). Each alert
+# without a client profile carries the screen it opens.
+LV = lambda c: c.replace("_", " ").title().replace(" ", " ")
+for x in out["cltl"].get("events", []):
+    worse = ["BASIC", "YELLOW", "ORANGE", "RED"].index(x["to"].split("_")[0]) > ["BASIC", "YELLOW", "ORANGE", "RED"].index(x["from"].split("_")[0]) if x["to"].split("_")[0] != x["from"].split("_")[0] else x["to"] > x["from"]
+    alert(x["ago"], "critical" if x["to"].startswith("RED") else "warn" if worse else "info", None, f"{x['symbol']} {'up' if worse else 'down'} to {LV(x['to'])}",
+          f"From {LV(x['from'])} · {', '.join(x.get('sources') or [])} range", "level", extra={"href": "/liquidity/cltl/", "source": "CLTL"})
+for i, c in enumerate([c for c in out["openlots"]["clients"] if (c.get("mg") or {}).get("tier")]):
+    m = c["mg"]
+    alert(7 + i * 19, "critical" if m["tier"] >= 3 else "warn", c["login"], f"MachineGun tier {m['tier']} on open lots",
+          f"{m['lots']} lots inside {m['window']} s · equity ${c['equity']:,.0f}", "exposure", extra={"href": "/risk/open-lots/"})
+for i, r in enumerate(sorted([r for r in out["growth"]["30"]["rows"] if (r.get("r_squared") or 0) >= 0.9 and r["net_change"] > 0], key=lambda r: -r["net_change"])[:5]):
+    alert(180 + i * 41, "warn", r["login"], "Consistent growth found",
+          f"Fit {r['r_squared']:.2f} · +${r['net_change']:,.0f} over {r['active_days']} active days · ${r['slope_per_day']:,.0f} a day", "growth", extra={"href": "/risk/growth/"})
+CHECK_NOTE = {"Algo history (CSV files)": "Information feeds unreadable. HN and gate files readable."}
+for i, c in enumerate([c for c in out["withdrawals"]["health"]["checks"] if c["status"] != "ok"]):
+    alert(5 + i * 61, "critical" if c["status"] == "bad" else "warn", None, f"Screener check, {c['name']}", CHECK_NOTE.get(c["name"], tidy(c["detail"])[:1].upper() + tidy(c["detail"])[1:]), "system", extra={"href": "/withdrawals/health/", "source": "WD screener"})
+for i, d in enumerate(out["users"].get("pending", [])):
+    alert(240 + i * 90, "warn", None, f"Device access request, {d['label']}", f"{d['purpose']} · first seen from {d['first_ip']}", "system", extra={"href": "settings:devices", "source": "Device access"})
+hs = out["housecleaning"]["summary"]
+alert(300, "warn", None, f"{hs['reinstate']} groups to reinstate", f"Housecleaning snapshot · {hs['cutlisted']} cutlisted of {hs['total_groups']} groups", "system", extra={"href": "/risk/housecleaning/", "source": "HouseCleaning"})
+
 alerts.sort(key=lambda a: a["minutesAgo"])
 for i, a in enumerate(alerts):
     a["id"] = i + 1

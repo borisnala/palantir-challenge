@@ -23,8 +23,8 @@ export const nameOf = (login: number) => NAMES.get(login) ?? `Account ${login}`;
 export const hasProfile = (login: number) => CLIENTS.some((c) => c.login === login);
 
 export type Severity = "critical" | "warn" | "info";
-export type AlertKind = "news" | "tier" | "swing" | "book" | "algo" | "wd";
-export interface Alert { id: number; minutesAgo: number; severity: Severity; login: number | null; title: string; detail: string; unread: boolean; kind: AlertKind; wa: string }
+export type AlertKind = "news" | "tier" | "swing" | "book" | "algo" | "wd" | "level" | "exposure" | "growth" | "system";
+export interface Alert { id: number; minutesAgo: number; severity: Severity; login: number | null; title: string; detail: string; unread: boolean; kind: AlertKind; wa: string; href?: string; source?: string }
 
 // What the desk is told during a day (distill.py, alerts): the portal's own news profit notifications, the Morning
 // Digest changes, today's algorithm moves and the withdrawals waiting for Risk.
@@ -38,6 +38,10 @@ export const ALERT_KINDS: { k: AlertKind; label: string; sub: string }[] = [
   { k: "tier", label: "Tier moves", sub: "A client moves to a worse or better tier" },
   { k: "swing", label: "Floating swings", sub: "A large change in floating P&L" },
   { k: "book", label: "Flagged book", sub: "A client enters or leaves the flagged book" },
+  { k: "exposure", label: "Open exposure", sub: "MachineGun tier tripped on open lots" },
+  { k: "level", label: "Spread levels", sub: "A symbol changes CLTL level" },
+  { k: "growth", label: "Growth detection", sub: "A consistent profit curve in the 30 day scan" },
+  { k: "system", label: "System and access", sub: "Screener checks, device requests, housecleaning" },
 ];
 export const alertKind = (a: Alert): AlertKind => a.kind;
 
@@ -52,6 +56,7 @@ export const money = (v: number | null | undefined, sign = false) => {
 export const compact = (v: number | null | undefined, sign = false) => {
   if (v === null || v === undefined || Number.isNaN(v)) return "No data";
   const a = Math.abs(v);
+  if (a < 0.5) return "$0";
   const pre = v < 0 ? "-$" : sign ? "+$" : "$";
   if (a >= 1e6) return pre + (a / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
   if (a >= 1000) return pre + (a / 1000).toFixed(a >= 100000 ? 0 : 1).replace(/\.0$/, "") + "k";

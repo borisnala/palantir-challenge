@@ -36,7 +36,7 @@ export default function CraAnalysis() {
       <Group header={`Recent · ${list.length}`}>
         {list.map((a) => (
           <Row key={a.request_id} onClick={() => { setSel(a); setOpen(true); }} icon={<FileCheck2 size={17} strokeWidth={2.4} />} tint={`var(--${tone(a.overall)})`}
-            title={a.customer_id} subtitle={`${a.trigger.replace(/_/g, " ")} · ${when(a.assessed_at)}`}
+            title={a.customer_id} subtitle={`${sentence(a.trigger)} · ${when(a.assessed_at)}`}
             detail={<span className="stack-r"><Chip tone={tone(a.overall)}>{a.overall}</Chip>{a.edd_required && <span className="small">EDD</span>}</span>} />
         ))}
       </Group>
@@ -46,8 +46,8 @@ export default function CraAnalysis() {
           <>
             <div className="sheet-hero"><span className="eyebrow">{sel.customer_id} · {when(sel.assessed_at)}</span><b className="contact-name">{sel.overall} risk</b>{sel.provisional && <Chip tone="orange">Provisional</Chip>}</div>
             <Group header="Scores">
-              <Row title="TPPU, money laundering" subtitle={`from ${sel.tppu.basis.replace(/_/g, " ")}${sel.tppu.overridden ? ", overridden" : ""}`} detail={<span className="stack-r"><Chip tone={tone(sel.tppu.rating)}>{sel.tppu.rating}</Chip><span className="small">{sel.tppu.score}</span></span>} chevron={false} />
-              <Row title="TPPT, terror funding" subtitle={`from ${sel.tppt.basis.replace(/_/g, " ")}${sel.tppt.overridden ? ", overridden" : ""}`} detail={<span className="stack-r"><Chip tone={tone(sel.tppt.rating)}>{sel.tppt.rating}</Chip><span className="small">{sel.tppt.score}</span></span>} chevron={false} />
+              <Row title="TPPU, money laundering" subtitle={`From ${sel.tppu.basis.replace(/_/g, " ")}${sel.tppu.overridden ? ", overridden" : ""}`} detail={<span className="stack-r"><Chip tone={tone(sel.tppu.rating)}>{sel.tppu.rating}</Chip><span className="small">{sel.tppu.score}</span></span>} chevron={false} />
+              <Row title="TPPT, terror funding" subtitle={`From ${sel.tppt.basis.replace(/_/g, " ")}${sel.tppt.overridden ? ", overridden" : ""}`} detail={<span className="stack-r"><Chip tone={tone(sel.tppt.rating)}>{sel.tppt.rating}</Chip><span className="small">{sel.tppt.score}</span></span>} chevron={false} />
             </Group>
             <Group header="Assessment">
               <Row title="Trigger" detail={sentence(sel.trigger)} chevron={false} />

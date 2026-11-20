@@ -1507,3 +1507,4 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
    corners (owner 2026-11-20). A sheet whose last element is its action keeps a solid bottom. */
 .sheet-body { -webkit-mask-image: linear-gradient(transparent, #000 18px, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(transparent, #000 18px, #000 calc(100% - 26px), transparent); }
 .sheet-body:has(> .btn.wide:last-child), .sheet-body:has(> .sheet-actions:last-child) { -webkit-mask-image: linear-gradient(transparent, #000 18px); mask-image: linear-gradient(transparent, #000 18px); }
+.mailrow-tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

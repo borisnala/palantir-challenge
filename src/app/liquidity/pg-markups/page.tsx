@@ -7,7 +7,7 @@ import pg from "@/data/pgmarkups.json";
 
 type Mk = Record<string, Record<string, number>>;
 type Field = { key: string; value: string; kind: string };
-const nice = (k: string) => k.toLowerCase().replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+const nice = (k: string) => k.toLowerCase().replace(/_sec$/, ", seconds").replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
 export default function PgMarkups() {
   const { get, set, say } = useApp();

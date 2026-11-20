@@ -32,7 +32,7 @@ export interface Prefs {
   live: boolean;
   notify: Record<AlertKind, boolean>;
 }
-export const DEFAULT_PREFS: Prefs = { theme: "system", haptics: true, start: "/", pov: "client", live: true, notify: { news: true, tier: true, swing: true, book: true, algo: true, wd: true } };
+export const DEFAULT_PREFS: Prefs = { theme: "system", haptics: true, start: "/", pov: "client", live: true, notify: { news: true, tier: true, swing: true, book: true, algo: true, wd: true, level: true, exposure: true, growth: true, system: true } };
 const PREFS_KEY = "risktool-prefs";
 export function readPrefs(): Prefs {
   try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); return { ...DEFAULT_PREFS, ...p, notify: { ...DEFAULT_PREFS.notify, ...(p.notify ?? {}) } }; } catch { return DEFAULT_PREFS; }
