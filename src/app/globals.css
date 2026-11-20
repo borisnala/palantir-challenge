@@ -1361,3 +1361,69 @@ button.cmd-link { padding: 0; text-align: left; }
 .hub-split i { border-radius: 4px; animation: grow .7s var(--spring-soft) both; transform-origin: left; }
 .hub-note { font-size: 13px; color: var(--label2); padding: 0 4px; }
 .hub-val { white-space: nowrap; font-size: 26px; } .hub-top b { white-space: normal; line-height: 18px; }
+
+/* Taps (owner 2026-11-20, "buttons weren't very responsive"): double-tap zoom is off through touch-action, which never
+   delays or cancels a tap, and every control's hit area reaches 44 px however small it is drawn. The extra area is an
+   invisible layer around the control, so nothing moves on screen. Each control answers on touch down. */
+html { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button, a, [role=button], [role=radio], [role=switch], label { touch-action: manipulation; }
+.tchip, .segmented button, .tseg button, .lc-range button, .switch, .pick, .gate-link, .drawer-cancel, .search-cancel, .search-clear { position: relative; }
+.tchip::after { content: ""; position: absolute; left: -3px; right: -3px; top: -7px; bottom: -7px; }
+.segmented button::after, .tseg button::after, .lc-range button::after { content: ""; position: absolute; left: 0; right: 0; top: -4px; bottom: -4px; }
+.tseg button::after { top: -9px; bottom: -9px; }
+.switch::after { content: ""; position: absolute; inset: -8px -6px; }
+.search-clear::after { content: ""; position: absolute; inset: -12px; }
+.tchip:active, .tseg button:active, .lc-range button:active { opacity: .55; transition: opacity 0s; }
+.tchip, .tseg button, .lc-range button { transition: opacity .25s, background-color .25s; }
+/* segment style buttons centre their label in the pill (a global button rule aligns text to the start) */
+.lc-range button, .tseg button, .segmented button, .tchip, .cmd-key, .btn { display: inline-grid; place-items: center; text-align: center; }
+.tchip { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+
+/* Search field as glass that grew out of the capsule: same glass, same radius, FLIP from the capsule's box */
+.search-field { transform-origin: 0 0; will-change: transform; background: var(--glass, rgba(255,255,255,.7)); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: var(--glass-shadow, 0 6px 20px rgba(0,0,0,.08)), inset 0 0 0 .5px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.7); }
+.search-field::before { display: none; }
+.search-cancel { opacity: 0; transition: opacity .2s; }
+.search-on .search-cancel { opacity: 1; transition: opacity .25s .15s; }
+.search-head { transform: none !important; }
+html.searching .cmd-link { opacity: 0; }
+/* Client previews */
+.cpv-sec { display: flex; flex-direction: column; gap: 10px; }
+.cpv-sec .grp-head { margin: 0; }
+.cpv { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border-radius: 22px; background: var(--cell); transition: transform .25s var(--spring); animation: fadein .25s ease-out both; }
+.cpv:active { transform: scale(.98); }
+.cpv-top { display: flex; align-items: center; gap: 12px; }
+.cpv-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cpv-id b { font-size: 17px; font-weight: 600; }
+.cpv-id small { font-size: 13px; color: var(--label2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cpv-tags { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.cpv-tags i { font-style: normal; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 7px; background: var(--fill); color: var(--label2); }
+.cpv-tags .cpv-live { background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--pos); }
+.cpv-figs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding-top: 10px; box-shadow: inset 0 .5px 0 var(--sep); }
+.cpv-figs span { display: flex; flex-direction: column; gap: 1px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.cpv-figs small { font-size: 11px; color: var(--label2); }
+.cpv-figs b { font-weight: 600; }
+
+/* Summary figures that open their history */
+.metric-btn { display: flex !important; flex-direction: column; align-items: center; gap: 2px; padding: 0; border: 0; background: none; color: inherit; font: inherit; position: relative; transition: opacity .2s; }
+.metric-btn::after { content: ""; position: absolute; inset: -12px 0; }
+.metric-btn:active { opacity: .5; transition: opacity 0s; }
+.metric-btn span { display: inline-flex; align-items: center; gap: 1px; }
+.metric-btn span svg { opacity: .55; }
+.metrics > * + * { box-shadow: inset .5px 0 0 var(--sep); }
+/* History sheet bars */
+.hb { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px 12px; }
+.hb-read { display: flex; align-items: baseline; gap: 8px; min-height: 30px; }
+.hb-read b { font-family: var(--rounded); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hb-read span { font-size: 13px; color: var(--label2); }
+.hb-plot { position: relative; height: 140px; display: flex; align-items: flex-end; gap: 1.5px; touch-action: none; cursor: crosshair; box-shadow: inset 0 -.5px 0 var(--sep), inset 0 .5px 0 var(--sep); }
+.hb-plot i { flex: 1; min-width: 0; border-radius: 2px 2px 0 0; opacity: .45; transition: opacity .15s; }
+.hb-plot i.on { opacity: 1; }
+.hb-max { position: absolute; top: 2px; left: 0; font-size: 11px; color: var(--label2); font-variant-numeric: tabular-nums; pointer-events: none; }
+.hb-hours .hb-plot { height: 80px; cursor: default; }
+.hb-hours .hb-plot i { opacity: .7; }
+.hb-max { left: auto; right: 0; top: -16px; }
+.hb-plot { margin-top: 4px; }
+.hb-plot i { opacity: .55; }
+.hb-hx { position: relative; height: 14px; font-size: 12px; color: var(--label2); }
+.hb-hx span { position: absolute; top: 0; }

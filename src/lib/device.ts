@@ -7,7 +7,9 @@
 //   --dpr --hair              device pixel ratio and one device pixel, for hairlines
 //   --screen-r                the display's corner radius, so floating sheets sit concentric to it
 //   data-device, data-cutout  the iPhone size class and island, notch or none
-// It also stops pinch and double-tap zoom: the layout is drawn at 1 CSS px per point for each phone and must stay so.
+// It also stops pinch zoom here, and double-tap zoom through touch-action manipulation in globals.css. A touchend
+// blocker once did the double-tap part and swallowed every second tap within 300 ms (owner 2026-11-20, "buttons
+// weren't very responsive"), so taps are never cancelled here.
 
 /** iPhones by viewport in points, portrait: [width, height, top inset, bottom inset, cutout, name, screen corner radius]. */
 export const IPHONES: [number, number, number, number, "island" | "notch" | "none", string, number][] = [
@@ -44,5 +46,5 @@ addEventListener('resize',fit);addEventListener('orientationchange',function(){s
 var no=function(e){e.preventDefault();};
 document.addEventListener('gesturestart',no,{passive:false});document.addEventListener('gesturechange',no,{passive:false});
 document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});
-var last=0;document.addEventListener('touchend',function(e){var n=Date.now();if(n-last<300&&!(e.target.closest&&e.target.closest('input,textarea,select')))e.preventDefault();last=n;},{passive:false});
+
 }catch(e){}})();`;

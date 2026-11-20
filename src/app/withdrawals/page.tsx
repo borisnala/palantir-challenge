@@ -32,10 +32,10 @@ export default function Withdrawals() {
       <NavBar title="WD Approvals" eyebrow="Withdrawal screening" root />
 
       <Metrics label="Today" items={[
-        { k: "Pending", v: pending.length, tone: pending.length ? "warn" : undefined },
-        { k: "Auto", v: wdRows.filter((x) => x.status === "auto").length },
-        { k: "Approved", v: wdRows.filter((x) => x.status === "approved").length, tone: "pos" },
-        { k: "Rejected", v: wdRows.filter((x) => x.status === "rejected").length, tone: "neg" },
+        { k: "Pending", v: pending.length, tone: pending.length ? "warn" : undefined, history: "wd.pending" },
+        { k: "Auto", v: wdRows.filter((x) => x.status === "auto").length, history: "wd.auto" },
+        { k: "Approved", v: wdRows.filter((x) => x.status === "approved").length, tone: "pos", history: "wd.approved" },
+        { k: "Rejected", v: wdRows.filter((x) => x.status === "rejected").length, tone: "neg", history: "wd.rejected" },
       ]} />
 
       <Group footer={wd.mode === "shadow" ? "Shadow mode. The screener recommends, Risk decides. No payouts execute from this app." : undefined}>

@@ -14,6 +14,7 @@ import { ROLE_LABEL, useApp, type Role } from "./app-state";
 import { Glass, Spring, stretch, useSpringLoop } from "./liquid";
 import { buzz } from "@/lib/haptics";
 import { ghost } from "./motion";
+import { HistorySheet, hasHistory } from "./history";
 
 /** What the ⋯ button offers on this screen (owner 2026-11-19, "make it tailored, what the user needs most"). A screen
  *  registers its own items with usePageMenu; Refresh data and Settings always close the list. */
@@ -430,11 +431,20 @@ export function Stepper({ value: raw, onChange, step = 1, min = -Infinity, max =
 }
 
 /** A strip of headline numbers, as on the Approvals screen. */
-export function Metrics({ items, label }: { items: { k: string; v: React.ReactNode; tone?: "pos" | "neg" | "warn" }[]; label: string }) {
+/** A row of summary figures. A figure with `history` opens its history sheet (src/components/history.tsx). */
+export function Metrics({ items, label }: { items: { k: string; v: React.ReactNode; tone?: "pos" | "neg" | "warn"; history?: string }[]; label: string }) {
+  const [h, setH] = useState<string | null>(null);
+  const tint = (t?: string) => (t === "pos" ? "var(--green)" : t === "neg" ? "var(--red)" : t === "warn" ? "var(--orange)" : "var(--blue)");
+  const sel = items.find((m) => m.history === h);
   return (
-    <div className="metrics" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }} aria-label={label}>
-      {items.map((m) => <div key={m.k}><span>{m.k}</span><b className={m.tone ?? ""}>{m.v}</b></div>)}
-    </div>
+    <>
+      <div className="metrics" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }} aria-label={label}>
+        {items.map((m) => m.history && hasHistory(m.history)
+          ? <button key={m.k} className="metric-btn" onClick={() => { buzz(); setH(m.history!); }} aria-label={`${m.k} history`}><span>{m.k}<ChevronRight size={11} strokeWidth={3} aria-hidden /></span><b className={m.tone ?? ""}>{m.v}</b></button>
+          : <div key={m.k}><span>{m.k}</span><b className={m.tone ?? ""}>{m.v}</b></div>)}
+      </div>
+      <HistorySheet k={h} onClose={() => setH(null)} tone={tint(sel?.tone)} />
+    </>
   );
 }
 

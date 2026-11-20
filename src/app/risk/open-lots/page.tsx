@@ -45,8 +45,8 @@ export default function OpenLots() {
 
       {mode === "open" && (<>
       <Metrics label="Open now" items={[
-        { k: "Clients", v: t.clients }, { k: "Positions", v: t.positions },
-        { k: "Gross lots", v: num(t.gross_lots, 1) }, { k: "MG hits", v: t.mg_triggered, tone: t.mg_triggered ? "warn" : undefined },
+        { k: "Clients", v: t.clients, history: "openlots.clients" }, { k: "Positions", v: t.positions, history: "openlots.positions" },
+        { k: "Gross lots", v: num(t.gross_lots, 1), history: "openlots.gross" }, { k: "MG hits", v: t.mg_triggered, tone: t.mg_triggered ? "warn" : undefined, history: "openlots.mg" },
       ]} />
 
       <Group header="Open lots against equity" footer="Equity on a log scale, floating P&L included. Red dots tripped MachineGun.">

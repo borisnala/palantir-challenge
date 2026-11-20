@@ -639,6 +639,109 @@ for i, a in enumerate(alerts):
     a["unread"] = i < 9
 out["alerts"] = alerts
 
+# ---- History behind the summary figures (owner 2026-11-20, "give dummy of historical at any given moment") ----
+# 90 seeded days per figure, the last day equal to today's figure on screen, weekends quieter. Each entry holds one or
+# more measures (count, amount, time), breakdowns that add up to the count, and the day's hours in WIB.
+def build_history():
+    import datetime, random
+    end = datetime.datetime.fromtimestamp(AS_OF, datetime.timezone(datetime.timedelta(hours=7))).date()
+    days = [end - datetime.timedelta(days=89 - i) for i in range(90)]
+    wkend = [d.weekday() >= 5 for d in days]
+
+    def walk(seed, base, vol=0.3, quiet=0.3, last=None, integer=True, floor=0):
+        rng = random.Random(seed)
+        lv, out_ = base, []
+        for i in range(90):
+            lv += (base - lv) * 0.18 + rng.gauss(0, base * vol * 0.25)
+            v = max(floor, lv * (quiet if wkend[i] else 1) * (1 + rng.gauss(0, vol * 0.45)))
+            out_.append(round(v) if integer else round(v, 1))
+        if last is not None:
+            out_[-1] = last
+        return out_
+
+    def split(seed, totals, labels, weights):
+        rng = random.Random(seed)
+        items = [[0] * 90 for _ in labels]
+        for i, t in enumerate(totals):
+            w = [x * (0.6 + rng.random() * 0.8) for x in weights]
+            for _ in range(int(t)):
+                items[rng.choices(range(len(labels)), w)[0]][i] += 1
+        return [{"label": l, "values": v} for l, v in zip(labels, items)]
+
+    def amounts(seed, counts, mean):
+        rng = random.Random(seed)
+        return [round(sum(rng.lognormvariate(0, 0.9) * mean * 0.67 for _ in range(int(c)))) for c in counts]
+
+    def hours(seed, total, shape):
+        rng = random.Random(seed)
+        h = [0] * 24
+        for _ in range(total):
+            h[rng.choices(range(24), shape)[0]] += 1
+        return h
+
+    desk = [0.3, 0.2, 0.2, 0.2, 0.3, 0.6, 1.2, 2.2, 3.4, 4.0, 3.6, 3.0, 2.4, 2.8, 3.4, 3.6, 3.2, 2.6, 2.4, 2.8, 3.0, 2.6, 1.6, 0.8]
+    market = [1.2, 1.0, 0.8, 0.7, 0.8, 1.0, 1.4, 1.8, 2.2, 2.4, 2.2, 2.0, 1.8, 2.0, 2.6, 3.2, 3.6, 3.4, 3.0, 3.6, 4.0, 3.4, 2.4, 1.6]
+    rows = wd["rows"]
+    now = {s: [r for r in rows if r.get("status") == s] for s in ("pending", "auto", "approved", "rejected")}
+    reasons = ["History flag", "Live flag", "Shared IP peer", "Family index stale", "Failsafe timeout", "History unavailable"]
+    rw = [5, 3, 1.4, 1, 0.8, 0.6]
+    bands = ["Under $500", "$500 to $2k", "$2k to $10k", "Over $10k"]
+    by = ["demo.editor", "demo.admin", "demo.risk2"]
+    h = {}
+
+    def wd_entry(key, title, n_now, base, mean, with_time, br):
+        c = walk(f"wd-{key}", base, last=n_now)
+        e = {"title": title, "measures": [{"k": "Requests", "unit": "n", "agg": "sum", "values": c},
+                                          {"k": "Amount", "unit": "usd", "agg": "sum", "values": amounts(f"wd-{key}-a", c, mean)}]}
+        if with_time:
+            e["measures"].append({"k": "Time to decision", "unit": "min", "agg": "avg", "values": walk(f"wd-{key}-t", with_time, vol=0.35, quiet=1, integer=False, floor=1)})
+        e["breakdowns"] = br(c)
+        e["hours"] = hours(f"wd-{key}-h", int(sum(c[-30:])), desk)
+        return e
+
+    h["wd.pending"] = wd_entry("pending", "Pending", len(now["pending"]), 4, 820, 0, lambda c: [{"title": "Reason", "items": split("wd-p-r", c, reasons, rw)}])
+    h["wd.pending"]["measures"][0]["agg"] = "last"
+    h["wd.pending"]["measures"].append({"k": "Oldest wait", "unit": "min", "agg": "avg", "values": walk("wd-p-w", 22, vol=0.5, quiet=1.4, integer=True, floor=2, last=max(round(r.get("elapsed_ms", 0) / 60000) for r in now["pending"]) or 9)})
+    h["wd.auto"] = wd_entry("auto", "Auto", len(now["auto"]), 9, 640, 0, lambda c: [{"title": "Amount band", "items": split("wd-a-b", c, bands, [5, 3.5, 1.2, 0.2])}])
+    h["wd.auto"]["measures"].append({"k": "Screen time", "unit": "s", "agg": "avg", "values": walk("wd-a-s", 1.4, vol=0.3, quiet=1, integer=False, floor=0.4)})
+    for key, title, base, mean, t in (("approved", "Approved", 4, 1100, 16), ("rejected", "Rejected", 1.6, 2300, 24)):
+        h[f"wd.{key}"] = wd_entry(key, title, len(now[key]), base, mean, t, lambda c, key=key: [
+            {"title": "Reason", "items": split(f"wd-{key}-r", c, reasons, rw if key == "approved" else [4, 4, 2.4, 0.6, 0.3, 1.4])},
+            {"title": "Decided by", "items": split(f"wd-{key}-u", c, by, [5, 3, 2])}])
+
+    # Catches by algorithm, today's count from the catch log
+    groups = ["To Std", "To VIP1", "To MVIP", "To watch group"]
+    for algo, title, base in (("mg", "MachineGun", 3), ("scalper", "ScalperAM", 2), ("fbu", "Force Build-Up", 1.4), ("etl", "ETL", 2.4)):
+        n = sum(1 for x in out["catches"] if x["algo"] == algo and x["day"] == 0)
+        c = walk(f"ca-{algo}", base, vol=0.45, quiet=0.15, last=n)
+        h[f"catch.{algo}"] = {"title": title, "measures": [{"k": "Catches", "unit": "n", "agg": "sum", "values": c},
+            {"k": "Client profit stopped", "unit": "usd", "agg": "sum", "values": amounts(f"ca-{algo}-p", c, 1900)}],
+            "breakdowns": [{"title": "Moved", "items": split(f"ca-{algo}-g", c, groups, [4, 2, 1, 1.5])}],
+            "hours": hours(f"ca-{algo}-h", int(sum(c[-30:])), market)}
+
+    # Open Lots, end of day books
+    t = out["openlots"]["totals"]
+    syms = ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY", "TECH100", "Other"]
+    for key, title, now_v, integer, unit in (("clients", "Clients", t["clients"], True, "n"), ("positions", "Positions", t["positions"], True, "n"),
+                                             ("gross", "Gross lots", round(t["gross_lots"], 1), False, "lots"), ("mg", "MG hits", t["mg_triggered"], True, "n")):
+        v = walk(f"ol-{key}", now_v * 0.9 + 1, vol=0.25, quiet=0.2 if key == "mg" else 0.55, last=now_v, integer=integer)
+        e = {"title": title, "measures": [{"k": title, "unit": unit, "agg": "sum" if key == "mg" else "avg", "values": v}]}
+        if key in ("positions", "mg"):
+            e["breakdowns"] = [{"title": "Symbol", "items": split(f"ol-{key}-s", [round(x) for x in v], syms, [5, 3, 2, 2, 1.2, 1.5])}]
+        h[f"openlots.{key}"] = e
+
+    # CLTL, symbols on each level at the close
+    sy = [s["symbol"] for s in out["cltl"]["symbols"]] if "symbols" in out["cltl"] else []
+    for key, title, rx in (("red", "Red", "RED"), ("orange", "Orange", "ORANGE")):
+        n = sum(1 for s in out["cltl"].get("symbols", []) if rx in (s.get("effective_level") or ""))
+        v = walk(f"cl-{key}", max(n, 1.5), vol=0.5, quiet=0.4, last=n)
+        h[f"cltl.{key}"] = {"title": title, "measures": [{"k": "Symbols", "unit": "n", "agg": "avg", "values": v},
+            {"k": "Minutes on level", "unit": "min", "agg": "sum", "values": [round(x * 38 * (0.5 + random.Random(f"cl{key}{i}").random())) for i, x in enumerate(v)]}],
+            "breakdowns": [{"title": "Symbol", "items": split(f"cl-{key}-s", v, sy[:8], [8, 6, 5, 4, 3, 2, 2, 1][:len(sy[:8])])}] if sy else []}
+    return {"days": [d.isoformat() for d in days], "series": h}
+
+out["history"] = build_history()
+
 total = 0
 for name, data in out.items():
     size = save(name, data)

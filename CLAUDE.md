@@ -104,6 +104,19 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   with "Built for mobile" on the right.
 - Filter chip rows directly in the page scroll sideways in one line to the screen edges (iOS Mail, Photos). Chips in
   a card or sheet wrap. Tags (Chip) always read in sentence case.
+- Taps (owner 2026-11-20, "buttons werent very responsive"): no script may preventDefault a touchend (device.ts once
+  swallowed every second tap within 300 ms). Zoom stays blocked through touch-action manipulation. Small controls reach
+  44 pt through an invisible ::after (globals.css, chips, segments, range, switch, clear), and labels centre with
+  inline-grid place-items center, never text-align start.
+- Client search (owner 2026-11-20, "preview of each client", "expansion of the search bar, liquid glass"): the bottom
+  capsule grows into the top field (a FLIP in shell.tsx CommandBar), results are client preview cards (cpv: name,
+  login, group, Live and momentum tags, T30, floating, win rate, lots), empty query shows recently viewed and the
+  largest 30 day moves. A tap on anything outside the field and the cards closes it. /search has no bottom fade.
+- History behind figures (owner 2026-11-20, "dummy of historical at any given moment, via selectables"): a Metrics item
+  with `history: "<key>"` opens src/components/history.tsx, 7, 30 or 90 days, the measure chips (count, amount,
+  time), daily bars a finger scrubs, the summary against the previous period, breakdowns that filter the bars, and
+  the hours in WIB. distill.py build_history() writes src/data/history.json, the last day equal to today's figure.
+  Wired on WD Approvals, Catches, Open Lots and CLTL. Add a key there before adding a figure.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 

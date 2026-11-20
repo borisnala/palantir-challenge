@@ -229,26 +229,64 @@ export const commandSlot = {
   subscribe: (f: () => void) => { slotSubs.add(f); return () => { slotSubs.delete(f); }; },
   get: () => slotEl,
 };
+/** A client as a search result (owner 2026-11-20, "a preview of each client, not a crop of Client 360"): who it is,
+ *  three figures a dealer checks first, and what is happening on the account now. */
+function ClientPreview({ c, onPick }: { c: (typeof CLIENTS)[number]; onPick: () => void }) {
+  const live = ((c.open as { positions?: number } | null)?.positions ?? 0) > 0;
+  return (
+    <Link href={`/clients/${c.login}/`} transitionTypes={["tab"]} className="cpv" onClick={onPick}>
+      <span className="cpv-top">
+        <Monogram name={c.name} size={40} />
+        <span className="cpv-id"><b>{c.name}</b><small>#{c.login} · {group(c.group_now)}</small></span>
+        <span className="cpv-tags">{live && <i className="cpv-live">Live</i>}{c.momentum && <i>{c.momentum.charAt(0).toUpperCase() + c.momentum.slice(1)}</i>}</span>
+      </span>
+      <span className="cpv-figs">
+        <span><small>T30</small><Pnl v={c.t30 ?? 0} short /></span>
+        <span><small>Floating</small><Pnl v={c.fpl} short /></span>
+        <span><small>Win rate</small><b>{Math.round(c.win_rate ?? 0)}%</b></span>
+        <span><small>Lots 30 d</small><b>{Math.round(c.lots_30d ?? 0)}</b></span>
+      </span>
+    </Link>
+  );
+}
+
 export function CommandBar() {
   const path = usePathname();
-  const { watched } = useApp();
+  const { recents } = useApp();
   const onSearch = path.startsWith("/search");
-  // Search (owner 2026-11-20, "act correctly at top bar level"): the bottom capsule opens a search screen. Its field
-  // takes the top bar's place with Cancel beside it, the results fill the screen down to the keyboard, the page under
-  // it is untouched. The field is focused inside the tap itself, so iOS raises the keyboard at once.
+  // Search (owner 2026-11-20, "expansion of the search bar with liquid glass"): the bottom capsule grows into the search
+  // field at the top bar on a spring, the glass stretching on the way, Cancel fades in beside it and the keyboard
+  // rises in the same tap. Results are client previews. A tap anywhere outside the field and results, or Cancel,
+  // shrinks the field back into the capsule.
   const [q, setQ] = useState<string | null>(null);
   const layer = useRef<HTMLDivElement>(null);
+  const field = useRef<HTMLLabelElement>(null);
+  const capsule = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const open = q !== null;
+  // FLIP: the field starts where the capsule is and springs to its own place
+  const travel = (fromCapsule: boolean) => {
+    const f = field.current, c = capsule.current; if (!f || !c) return;
+    const a = c.getBoundingClientRect(), z = f.getBoundingClientRect();
+    const dx = a.left - z.left, dy = a.top - z.top, sx = a.width / z.width, sy = a.height / z.height;
+    const from = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+    f.style.transition = "none";
+    f.style.transform = fromCapsule ? from : "none";
+    void f.offsetWidth;
+    f.style.transition = "transform .5s cubic-bezier(.2,1.12,.3,1), border-radius .5s";
+    f.style.transform = fromCapsule ? "none" : from;
+  };
   const start = () => {
     buzz();
     layer.current?.classList.add("search-on");
     document.documentElement.classList.add("searching");
     input.current?.focus({ preventScroll: true });
+    travel(true);
     setQ("");
   };
   const close = () => {
     input.current?.blur();
+    travel(false);
     layer.current?.classList.remove("search-on");
     document.documentElement.classList.remove("searching");
     setQ(null);
@@ -261,21 +299,17 @@ export function CommandBar() {
     return () => { vv?.removeEventListener("resize", fit); vv?.removeEventListener("scroll", fit); document.documentElement.style.setProperty("--kb", "0px"); };
   }, [open]);
   const query = (q ?? "").trim().toLowerCase();
-  const match = CLIENTS.filter((c) => !query || `${c.login} ${c.name} ${c.group_now}`.toLowerCase().includes(query));
-  const first = match.filter((c) => watched.has(c.login)), rest = match.filter((c) => !watched.has(c.login));
-  const row = (c: (typeof CLIENTS)[number]) => (
-    <Link key={c.login} href={`/clients/${c.login}/`} transitionTypes={["tab"]} className="row" onClick={() => { buzz(); close(); }}>
-      <span className="tile-icon" style={{ color: "transparent" }}><Monogram name={c.name} size={36} /></span>
-      <span className="row-main"><span className="row-text"><span className="row-title">{c.name}</span><span className="row-sub">#{c.login} · {group(c.group_now)}</span></span>
-        <span className="row-detail"><Pnl v={c.t30} short /></span></span>
-    </Link>
-  );
+  const match = query ? CLIENTS.filter((c) => `${c.login} ${c.name} ${c.group_now}`.toLowerCase().includes(query)) : [];
+  const recent = recents.map((r) => r.path.match(/\/clients\/(\d+)/)?.[1]).filter(Boolean).map((l) => CLIENTS.find((c) => String(c.login) === l)).filter((c): c is (typeof CLIENTS)[number] => !!c).slice(0, 3);
+  const movers = [...CLIENTS].sort((x, y) => Math.abs(y.t30) - Math.abs(x.t30)).filter((c) => !recent.includes(c)).slice(0, 4);
+  const pick = () => { buzz(); close(); };
   return (
     <>
-      <div className="scroll-edge-bottom" aria-hidden />
-      <div ref={layer} className="search-layer" role={open ? "dialog" : undefined} aria-modal={open || undefined} aria-label="Search clients" aria-hidden={!open}>
+      {!onSearch && <div className="scroll-edge-bottom" aria-hidden />}
+      <div ref={layer} className="search-layer" role={open ? "dialog" : undefined} aria-modal={open || undefined} aria-label="Search clients" aria-hidden={!open}
+        onPointerDown={(e) => { if (e.target === e.currentTarget || (e.target as Element).classList?.contains("search-results")) close(); }}>
         <div className="search-head">
-          <label className="search-field"><Search size={18} strokeWidth={2.2} aria-hidden />
+          <label ref={field} className="search-field lg"><Search size={18} strokeWidth={2.2} aria-hidden />
             <input ref={input} value={q ?? ""} onChange={(e) => setQ(e.target.value)} placeholder="Clients, logins, groups" aria-label="Search clients, logins, groups"
               enterKeyHint="search" inputMode="search" autoCapitalize="none" autoComplete="off" spellCheck={false} tabIndex={open ? 0 : -1}
               onKeyDown={(e) => { if (e.key === "Escape") close(); if (e.key === "Enter") input.current?.blur(); }} />
@@ -285,15 +319,16 @@ export function CommandBar() {
         </div>
         {open && (
           <div className="search-results">
-            {first.length > 0 && <section className="grp"><h2 className="grp-head">{query ? "On the watchlist" : "Watchlist"} · {first.length}</h2><div className="grp-body">{first.map(row)}</div></section>}
-            {rest.length > 0 && <section className="grp"><h2 className="grp-head">{query ? "Other clients" : "All clients"} · {rest.length}</h2><div className="grp-body">{rest.map(row)}</div><p className="grp-foot">Amounts are T30, client profit over 30 days.</p></section>}
-            {match.length === 0 && <p className="drawer-empty">No client matches {"\u201c"}{q}{"\u201d"}. Enter a login, for example 99000003.</p>}
+            {query === "" && recent.length > 0 && <section className="cpv-sec"><h2 className="grp-head">Recently viewed</h2>{recent.map((c) => <ClientPreview key={c.login} c={c} onPick={pick} />)}</section>}
+            {query === "" && <section className="cpv-sec"><h2 className="grp-head">Largest 30 day moves</h2>{movers.map((c) => <ClientPreview key={c.login} c={c} onPick={pick} />)}</section>}
+            {query !== "" && match.length > 0 && <section className="cpv-sec"><h2 className="grp-head">{match.length} {match.length === 1 ? "client" : "clients"}</h2>{match.map((c) => <ClientPreview key={c.login} c={c} onPick={pick} />)}</section>}
+            {query !== "" && match.length === 0 && <p className="drawer-empty">No client matches {"\u201c"}{q}{"\u201d"}. Enter a login, for example 99000003.</p>}
           </div>
         )}
       </div>
       <div className={`cmdbar ${onSearch ? "cmd-nofield" : ""}`} role="toolbar" aria-label="Search and actions">
         {!onSearch && (
-          <button className="glassbtn-link cmd-link" aria-label="Search clients" onClick={start}>
+          <button ref={capsule} className="glassbtn-link cmd-link" aria-label="Search clients" onClick={start}>
             <Glass className="cmd-field"><Search size={18} strokeWidth={2.2} aria-hidden /><span>Search clients, logins, groups</span></Glass>
           </button>
         )}

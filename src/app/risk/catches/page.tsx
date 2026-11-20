@@ -30,7 +30,7 @@ export default function Catches() {
   return (
     <>
       <NavBar title="Catches" eyebrow={`${p === "1" ? "Today" : p === "all" ? "All time" : `Last ${p} days`}, most recent first`} back={{ href: "/risk/", label: "Risk Management" }} />
-      <Metrics label="By algorithm" items={[{ k: "MG", v: count("mg") }, { k: "Scalper", v: count("scalper") }, { k: "FBU", v: count("fbu") }, { k: "ETL", v: count("etl") }]} />
+      <Metrics label="By algorithm" items={[{ k: "MG", v: count("mg"), history: "catch.mg" }, { k: "Scalper", v: count("scalper"), history: "catch.scalper" }, { k: "FBU", v: count("fbu"), history: "catch.fbu" }, { k: "ETL", v: count("etl"), history: "catch.etl" }]} />
       <Segmented label="Period" value={p} onChange={setP} options={[{ v: "1", label: "Day" }, { v: "7", label: "7 days" }, { v: "30", label: "30 days" }, { v: "all", label: "All" }]} />
       <div className="tchips" role="radiogroup" aria-label="Source">
         {(["all", "etl", "mg", "fbu", "scalper", "journal"] as A[]).map((k) => <button key={k} role="radio" aria-checked={a === k} className={`tchip ${a === k ? "on" : ""}`} onClick={() => { buzz(); setA(k); }}>{k === "all" ? "All" : k === "mg" ? "MG" : k === "fbu" ? "FBU" : k === "etl" ? "ETL" : k === "scalper" ? "Scalper" : "Journal"} {count(k)}</button>)}
