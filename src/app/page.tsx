@@ -48,12 +48,12 @@ type Move = { kind: Kind; login: number; name: string; what: string; size: numbe
 function movesOf(): Move[] {
   const tm = S.tier_moves;
   return [
-    ...S.new_flagged.map((r) => ({ kind: "new" as Kind, login: r.login, name: r.name, what: `Tier ${r.pg} ${r.tier}`, size: Math.abs(n(r.t30)), fig: compact(n(r.t30)) })),
-    ...tm.filter((r) => r.direction === "worse").map((r) => ({ kind: "worse" as Kind, login: r.login, name: r.name, what: `${r.pg_before} to ${r.pg_now}`, size: Math.abs(n(r.t30)), fig: compact(n(r.t30)) })),
-    ...tm.filter((r) => r.direction !== "worse").map((r) => ({ kind: "better" as Kind, login: r.login, name: r.name, what: `${r.pg_before} to ${r.pg_now}`, size: Math.abs(n(r.t30)), fig: compact(n(r.t30)) })),
+    ...S.new_flagged.map((r) => ({ kind: "new" as Kind, login: r.login, name: r.name, what: `Tier ${r.pg} ${r.tier}`, size: Math.abs(n(r.t30)), fig: <ChangePill v={n(r.t30)} /> })),
+    ...tm.filter((r) => r.direction === "worse").map((r) => ({ kind: "worse" as Kind, login: r.login, name: r.name, what: `${r.pg_before} to ${r.pg_now}`, size: Math.abs(n(r.t30)), fig: <ChangePill v={n(r.t30)} /> })),
+    ...tm.filter((r) => r.direction !== "worse").map((r) => ({ kind: "better" as Kind, login: r.login, name: r.name, what: `${r.pg_before} to ${r.pg_now}`, size: Math.abs(n(r.t30)), fig: <ChangePill v={n(r.t30)} /> })),
     ...S.exposure_up.map((r) => ({ kind: "up" as Kind, login: r.login, name: r.name, what: "Client profit up", size: Math.abs(n(r.t30_delta)), fig: <ChangePill v={n(r.t30_delta)} /> })),
     ...S.floating_swing.map((r) => ({ kind: "swing" as Kind, login: r.login, name: r.name, what: "Floating swing", size: Math.abs(n(r.fpl_delta)), fig: <ChangePill v={n(r.fpl_delta)} /> })),
-    ...S.left_book.map((r) => ({ kind: "left" as Kind, login: r.login, name: r.name, what: `Was ${r.pg}`, size: Math.abs(n(r.t30)), fig: compact(n(r.t30)) })),
+    ...S.left_book.map((r) => ({ kind: "left" as Kind, login: r.login, name: r.name, what: `Was ${r.pg}`, size: Math.abs(n(r.t30)), fig: <ChangePill v={n(r.t30)} /> })),
   ].sort((x, y) => y.size - x.size);
 }
 const MOVES = movesOf();

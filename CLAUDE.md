@@ -19,7 +19,7 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   strips colons, semicolons, em dashes and ASCII arrows from portal text. Portal codes go through sentence() on screen.
 - `src/lib/data.ts`: clients, alerts and the formatters. `src/lib/levels.ts`: traffic light labels.
 - Navigation (owner 2026-11-18): the side menu (src/components/shell.tsx) holds Today, Risk, Liquidity, Withdrawals,
-  Clients and Recents (client profiles and analysis screens only, with a second line; the watchlist stands in while it is empty); the account (Users, Device access, Build paths) sits at its bottom. The bell is top right. Every portal page has a
+  Clients, Recents and the watchlist; the signed-in user sits at its bottom and opens Settings. The bell is top right. Every portal page has a
   screen: Risk holds the risk pages, CRA and Promotion; Liquidity holds CLTL, PG Markups, Manual Level, Group Spread,
   Book View. CandleTL Control and Algo Config are confidential and stay out.
 - Rule (owner 2026-11-18, "never hyperlink some feature or display anything from some buttons"): every button does its
@@ -50,7 +50,7 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   /alerts, client360 to /search and /clients/[login], watchlist, open_lots, growth, top10, catches, news, risk_analysis,
   algo_activity, cra_model, cra_analysis, promotion_analysis, housecleaning under /risk, candletl_showcase (cltl),
   pg_markups, manual_level, group_spread, hsb_pov (book) under /liquidity, wd_approvals, wd_check under /withdrawals
-  (plus its gate health), users (users and devices) and build_paths under /account. index (Algo Config) stays out.
+  (plus its gate health), users (users and devices) and build_paths inside Settings. index (Algo Config) stays out.
   Panels follow the portal: Top 10 all eight boards and Client or Broker P&L; Watchlist Up, Down, Flat since watch;
   Book View symbol toxicity and cost per USD 1m notional, Flagged or whole B-book; Open Lots closed history with the
   edge and behaviour quadrant maps and lots against equity (src/components/scatter.tsx); Risk Analysis algo
@@ -80,9 +80,22 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   Lens B, Boris Nala) and what the data is, then Add to Home Screen, iPhone or Android, four drawn steps. Once per
   browser (localStorage risktool-welcome), skipped in the Home Screen app, again from Settings, i, About this demo or
   Add to Home Screen. Test scripts set risktool-welcome so the sheet does not cover the page.
-- Bottom search (owner 2026-11-20, "search through there directly"): the capsule is a real field. Typing shows client
-  results over the page between the bars, a round X closes, only a chosen client navigates. The bar rides on the
-  keyboard (--kb from visualViewport). The menu search field and Cancel are 52 px, the round buttons' height.
+- Bottom search (owner 2026-11-20, "act correctly at top bar level"): tapping the capsule opens the search screen
+  (shell.tsx search-layer): the field and Cancel take the top bar's place, focused inside the tap so the keyboard
+  rises at once, client results fill the screen down to the keyboard (--kb), the page beneath is untouched, only a
+  chosen client navigates. The menu search field and Cancel are 52 px, the round buttons' height.
+- Settings holds every setting (owner 2026-11-20): Users and roles, Device access and Build paths are panels pushed
+  inside the Settings sheet (src/components/admin/*), with no routes of their own; /account/* redirect to / in
+  router/worker.js. ui.settings may name a panel ("users", "devices", "paths") to open Settings on it. Every Sheet
+  renders through a portal at the page root, so a sheet opened from inside another sits on the screen.
+- Sheet bottoms: the list scrolls to the sheet's real bottom edge; a sheet's main action (a .btn.wide or .sheet-actions
+  as its last element) rests at the sheet bottom, sticky, the list fading behind it.
+- Add to Home Screen explains why first, then iPhone or Android and the browser (Safari or Chrome, Chrome or Samsung
+  Internet), preselected from the user agent, each with its own steps and drawings where that browser puts its buttons.
+- Landing pages (Liquidity and Risk Management) are tile boards (rows.tsx HubTile): two a row, a wide lead tile, the
+  key figure large and a small picture of the data (levels, bars or a split). No chevrons on tiles.
+- Value pills (ChangePill) hug their figure, tinted green or red with the figure in the same hue, one style for every
+  figure in a list.
 - Confirmation code (owner 2026-11-20, "more security layer"): Confirm's `code` prop asks for six characters from a
   SHA-256 of the change and the moment the sheet opened (no 0, O, 1, I), new each time. Used for Move group, Remove
   user, Group Spread, Manual Level, PG Markups and the CRA mode.

@@ -123,7 +123,7 @@ export function Drawer() {
   const [typed, setQ] = useState<string | null>(null);
   const q = drawer ? typed : null; // closing the menu ends the search
   const found = q ? findFeatures(q) : [];
-  const openFeature = (f: Feature) => { buzz(); setQ(null); setDrawer(false); if (f.title === "About this demo") set("ui.welcome", "about"); else if (f.title === "Add to Home Screen") set("ui.welcome", "install"); else if (f.settings) set("ui.settings", true); };
+  const openFeature = (f: Feature) => { buzz(); setQ(null); setDrawer(false); if (f.title === "About this demo") set("ui.welcome", "about"); else if (f.title === "Add to Home Screen") set("ui.welcome", "install"); else if (f.settings) set("ui.settings", f.settings); };
 
   const badge = (href: string) => (href === "/withdrawals/" ? pending.length : href === "/alerts/" ? unread.size : 0);
 
@@ -233,26 +233,38 @@ export function CommandBar() {
   const path = usePathname();
   const { watched } = useApp();
   const onSearch = path.startsWith("/search");
-  // Search in place (owner 2026-11-20, "search through there directly"): the capsule is the field. Typing opens the
-  // results above it, over the page, and only a chosen client changes the screen.
+  // Search (owner 2026-11-20, "act correctly at top bar level"): the bottom capsule opens a search screen. Its field
+  // takes the top bar's place with Cancel beside it, the results fill the screen down to the keyboard, the page under
+  // it is untouched. The field is focused inside the tap itself, so iOS raises the keyboard at once.
   const [q, setQ] = useState<string | null>(null);
+  const layer = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const open = q !== null;
+  const start = () => {
+    buzz();
+    layer.current?.classList.add("search-on");
+    document.documentElement.classList.add("searching");
+    input.current?.focus({ preventScroll: true });
+    setQ("");
+  };
+  const close = () => {
+    input.current?.blur();
+    layer.current?.classList.remove("search-on");
+    document.documentElement.classList.remove("searching");
+    setQ(null);
+  };
   useEffect(() => {
-    document.documentElement.classList.toggle("searching", open);
     if (!open) return;
-    // keep the bar on top of the keyboard: iOS leaves fixed elements under it
     const vv = window.visualViewport;
     const fit = () => document.documentElement.style.setProperty("--kb", `${vv ? Math.max(0, innerHeight - vv.height - vv.offsetTop) : 0}px`);
     fit(); vv?.addEventListener("resize", fit); vv?.addEventListener("scroll", fit);
     return () => { vv?.removeEventListener("resize", fit); vv?.removeEventListener("scroll", fit); document.documentElement.style.setProperty("--kb", "0px"); };
   }, [open]);
-  const close = () => { setQ(null); input.current?.blur(); };
   const query = (q ?? "").trim().toLowerCase();
   const match = CLIENTS.filter((c) => !query || `${c.login} ${c.name} ${c.group_now}`.toLowerCase().includes(query));
   const first = match.filter((c) => watched.has(c.login)), rest = match.filter((c) => !watched.has(c.login));
   const row = (c: (typeof CLIENTS)[number]) => (
-    <Link key={c.login} href={`/clients/${c.login}/`} transitionTypes={["push"]} className="row" onClick={() => { buzz(); close(); }}>
+    <Link key={c.login} href={`/clients/${c.login}/`} transitionTypes={["tab"]} className="row" onClick={() => { buzz(); close(); }}>
       <span className="tile-icon" style={{ color: "transparent" }}><Monogram name={c.name} size={36} /></span>
       <span className="row-main"><span className="row-text"><span className="row-title">{c.name}</span><span className="row-sub">#{c.login} · {group(c.group_now)}</span></span>
         <span className="row-detail"><Pnl v={c.t30} short /></span></span>
@@ -261,27 +273,31 @@ export function CommandBar() {
   return (
     <>
       <div className="scroll-edge-bottom" aria-hidden />
-      {open && (
-        <div className="cmd-results" role="listbox" aria-label="Clients">
-          {first.length > 0 && <section className="grp"><h2 className="grp-head">{query ? "On the watchlist" : "Watchlist"} · {first.length}</h2><div className="grp-body">{first.map(row)}</div></section>}
-          {rest.length > 0 && <section className="grp"><h2 className="grp-head">{query ? "Other clients" : "All clients"} · {rest.length}</h2><div className="grp-body">{rest.map(row)}</div><p className="grp-foot">Amounts are T30, client profit over 30 days.</p></section>}
-          {match.length === 0 && <p className="drawer-empty">No client matches {"\u201c"}{q}{"\u201d"}. Enter a login, for example 99000003.</p>}
+      <div ref={layer} className="search-layer" role={open ? "dialog" : undefined} aria-modal={open || undefined} aria-label="Search clients" aria-hidden={!open}>
+        <div className="search-head">
+          <label className="search-field"><Search size={18} strokeWidth={2.2} aria-hidden />
+            <input ref={input} value={q ?? ""} onChange={(e) => setQ(e.target.value)} placeholder="Clients, logins, groups" aria-label="Search clients, logins, groups"
+              enterKeyHint="search" inputMode="search" autoCapitalize="none" autoComplete="off" spellCheck={false} tabIndex={open ? 0 : -1}
+              onKeyDown={(e) => { if (e.key === "Escape") close(); if (e.key === "Enter") input.current?.blur(); }} />
+            {q ? <button className="search-clear" onClick={() => { setQ(""); input.current?.focus(); }} aria-label="Clear"><X size={13} strokeWidth={3} /></button> : null}
+          </label>
+          <button className="search-cancel" onClick={() => { buzz(); close(); }} tabIndex={open ? 0 : -1}>Cancel</button>
         </div>
-      )}
-      <div className={`cmdbar ${onSearch ? "cmd-nofield" : ""} ${open ? "cmd-open" : ""}`} role="toolbar" aria-label="Search and actions">
+        {open && (
+          <div className="search-results">
+            {first.length > 0 && <section className="grp"><h2 className="grp-head">{query ? "On the watchlist" : "Watchlist"} · {first.length}</h2><div className="grp-body">{first.map(row)}</div></section>}
+            {rest.length > 0 && <section className="grp"><h2 className="grp-head">{query ? "Other clients" : "All clients"} · {rest.length}</h2><div className="grp-body">{rest.map(row)}</div><p className="grp-foot">Amounts are T30, client profit over 30 days.</p></section>}
+            {match.length === 0 && <p className="drawer-empty">No client matches {"\u201c"}{q}{"\u201d"}. Enter a login, for example 99000003.</p>}
+          </div>
+        )}
+      </div>
+      <div className={`cmdbar ${onSearch ? "cmd-nofield" : ""}`} role="toolbar" aria-label="Search and actions">
         {!onSearch && (
-          <Glass className="cmd-field">
-            <Search size={18} strokeWidth={2.2} aria-hidden />
-            <input ref={input} value={q ?? ""} placeholder="Search clients, logins, groups" aria-label="Search clients, logins, groups" enterKeyHint="search" inputMode="search"
-              onFocus={() => { if (q === null) { buzz(); setQ(""); } }} onChange={(e) => setQ(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Escape") close(); if (e.key === "Enter" && match.length === 1) { input.current?.blur(); (document.querySelector(".cmd-results a.row") as HTMLElement | null)?.click(); } }} />
-          </Glass>
+          <button className="glassbtn-link cmd-link" aria-label="Search clients" onClick={start}>
+            <Glass className="cmd-field"><Search size={18} strokeWidth={2.2} aria-hidden /><span>Search clients, logins, groups</span></Glass>
+          </button>
         )}
-        {open ? (
-          <button className="glassbtn-link" aria-label="Close search" onClick={() => { buzz(); close(); }}><Glass className="glassbtn round cmd-close"><X size={20} strokeWidth={2.2} /></Glass></button>
-        ) : (
-          <span className="cmd-slot" ref={(el) => { if (slotEl !== el) { slotEl = el; slotSubs.forEach((f) => f()); } }} />
-        )}
+        <span className="cmd-slot" ref={(el) => { if (slotEl !== el) { slotEl = el; slotSubs.forEach((f) => f()); } }} />
       </div>
     </>
   );

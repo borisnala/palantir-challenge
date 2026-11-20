@@ -6,12 +6,12 @@
 import { useState } from "react";
 import { CircleCheck, CircleX } from "lucide-react";
 import { useApp } from "@/components/app-state";
-import { Confirm, Group, NavBar, Row, Sheet } from "@/components/ios";
+import { Confirm, Group, Row, Sheet } from "@/components/ios";
 import bp from "@/data/buildpaths.json";
 
 type Item = { slug: string; label: string; path: string; exists: boolean; env?: string };
 
-export default function BuildPaths() {
+export function BuildPathsPanel() {
   const { get, set, say, guard } = useApp();
   const paths = get<Record<string, string>>("bp.paths", {});
   const [sel, setSel] = useState<Item | null>(null);
@@ -29,8 +29,7 @@ export default function BuildPaths() {
   };
   return (
     <>
-      <NavBar title="Build paths" eyebrow={missing ? `${missing} missing` : "All found"} back={{ href: "/account/", label: "Account" }} />
-      <Group footer="Settings file per algorithm. A missing file runs on defaults.">{items.filter((a) => a.slug !== "candletl_home").map(row)}</Group>
+      <Group header={missing ? `${missing} missing` : "All found"} footer="Settings file per algorithm. A missing file runs on defaults.">{items.filter((a) => a.slug !== "candletl_home").map(row)}</Group>
       <Group header="CandleTL home">{row(items[items.length - 1])}</Group>
 
       <Sheet open={sel !== null && !review} onClose={() => setSel(null)} title={sel?.label ?? "Path"}>

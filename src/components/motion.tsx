@@ -14,7 +14,7 @@ import { readPrefs, useApp } from "./app-state";
 import { buzz, listenForChoices } from "@/lib/haptics";
 import { Wordmark } from "./brand";
 
-const SECTIONS = ["/risk", "/liquidity", "/withdrawals", "/search", "/clients", "/alerts", "/account"];
+const SECTIONS = ["/risk", "/liquidity", "/withdrawals", "/search", "/clients", "/alerts"];
 const depth = (p: string) => p.split("/").filter(Boolean).length;
 const section = (p: string) => SECTIONS.find((s) => p.startsWith(s)) ?? "/";
 

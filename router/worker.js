@@ -4,7 +4,7 @@ import SITE from "./site.js";
 
 const PREFIX = "/risktool-prototype";
 // Screens that moved in later builds. Bookmarks, Home Screen icons and old history entries still point at them.
-const MOVED = { "/approvals/": "/withdrawals/", "/clients/": "/search/", "/today/": "/" };
+const MOVED = { "/approvals/": "/withdrawals/", "/clients/": "/search/", "/today/": "/", "/account/": "/", "/account/users/": "/", "/account/devices/": "/", "/account/build-paths/": "/" };
 const bytes = new Map();
 const body = (f) => {
   if (!f[1]) return f[2];

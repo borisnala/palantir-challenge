@@ -2,10 +2,10 @@
 // every screen, every tab or view inside a screen, and every setting, with the words a desk user would type for it.
 // A result opens the screen, or Settings for a setting. Client lookups stay in Client 360.
 
-export type Feature = { title: string; where: string; href?: string; settings?: true; words: string };
+export type Feature = { title: string; where: string; href?: string; settings?: true | string; words: string };
 
 const S = (title: string, where: string, href: string, words = ""): Feature => ({ title, where, href, words });
-const T = (title: string, where: string, words = ""): Feature => ({ title, where, settings: true, words });
+const T = (title: string, where: string, words = "", page?: string): Feature => ({ title, where, settings: page ?? true, words });
 
 export const FEATURES: Feature[] = [
   // Today
@@ -56,11 +56,9 @@ export const FEATURES: Feature[] = [
   S("Client 360", "Clients", "/search/", "client search login name group profile"),
 
   // Account
-  S("Account", "Account", "/account/", "profile admin"),
-  S("Users", "Account", "/account/users/", "users roles viewer editor admin permissions"),
-  S("New user", "Users", "/account/users/", "create user add reset password"),
-  S("Device access", "Account", "/account/devices/", "devices approve deny tablet phone laptop"),
-  S("Build paths", "Account", "/account/build-paths/", "configuration files algorithm settings env"),
+  T("Users and roles", "Settings", "users roles viewer editor admin permissions new user create reset password", "users"),
+  T("Device access", "Settings", "devices approve deny tablet phone laptop", "devices"),
+  T("Build paths", "Settings", "configuration files algorithm settings env", "paths"),
 
   // Settings
   T("Settings", "Settings", "preferences options"),

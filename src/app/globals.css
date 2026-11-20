@@ -1261,17 +1261,25 @@ main.screen > .tchips > .tchip { flex: none; }
 .lc-range { color: var(--label); }
 .lc-range button { height: 32px; padding: 0 14px; border-radius: 16px; }
 
-/* Search in place from the bottom capsule (owner 2026-11-20): the capsule is a real field, the results fill the screen
-   between the top bar and the bar, the round X closes, the bar rides on top of the keyboard (--kb). */
-.cmd-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: 17px; color: var(--label); height: 100%; }
-.cmd-field input::placeholder { color: var(--label2); }
-.cmdbar { transform: translateY(calc(-1 * var(--kb, 0px))); transition: transform .25s cubic-bezier(.32,.72,0,1); }
-.cmd-close { width: 52px; height: 52px; }
-.cmd-results { position: fixed; left: 0; right: 0; top: var(--bar-bottom, 110px); bottom: calc(var(--kb, 0px) + var(--dock-gap) + var(--sab) + var(--dock-h) + 8px); z-index: 19;
-  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; background: var(--bg); padding: 4px max(16px, var(--sal)) 24px max(16px, var(--sar));
-  display: flex; flex-direction: column; gap: 22px; animation: fadein .2s ease-out both; }
+/* Search screen (owner 2026-11-20, "act correctly at top bar level"): over everything but sheets, the field and Cancel
+   where the top bar sits, the results down to the keyboard (--kb). Hidden, it costs nothing and keeps the field ready
+   to focus inside the tap. */
+.search-layer { position: fixed; inset: 0; z-index: 36; background: var(--bg); display: flex; flex-direction: column; visibility: hidden; opacity: 0;
+  pointer-events: none; transition: opacity .18s ease-out, visibility 0s .18s; }
+.search-layer.search-on { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity .2s ease-out; }
+.search-head { flex: none; display: flex; align-items: center; gap: 12px; height: var(--bar-h); margin-top: var(--bar-top); padding: 0 max(16px, var(--sar)) 0 max(16px, var(--sal));
+  transform: translateY(18px); transition: transform .38s cubic-bezier(.32,.72,0,1); }
+.search-on .search-head { transform: none; }
+.search-field { flex: 1; min-width: 0; height: var(--bar-h); display: flex; align-items: center; gap: 10px; padding: 0 14px 0 18px; border-radius: calc(var(--bar-h) / 2);
+  background: var(--fill2); color: var(--label2); }
+.search-field input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; font: inherit; font-size: 17px; color: var(--label); }
+.search-field input::placeholder { color: var(--label2); }
+.search-clear { flex: none; width: 20px; height: 20px; border-radius: 10px; display: grid; place-items: center; background: var(--label3); color: var(--bg); }
+.search-cancel { flex: none; height: var(--bar-h); font-size: 17px; font-weight: 500; color: var(--blue); padding: 0 2px; }
+.search-results { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 14px max(16px, var(--sar)) calc(var(--kb, 0px) + var(--sab) + 24px) max(16px, var(--sal));
+  display: flex; flex-direction: column; gap: 22px; animation: fadein .22s .05s ease-out both; }
 html.searching body { overflow: hidden; }
-html.searching .scroll-edge-bottom { opacity: 1; }
+button.cmd-link { padding: 0; text-align: left; }
 /* Menu search: the field is a 52 px glass-height capsule like the round buttons beside it, Cancel centred on it */
 .drawer-search { height: var(--bar-h, 52px); }
 .drawer-field { height: var(--bar-h, 52px); border-radius: calc(var(--bar-h, 52px) / 2); padding: 0 16px; gap: 10px; }
@@ -1310,3 +1318,46 @@ html.searching .scroll-edge-bottom { opacity: 1; }
 .step-text b { font-size: 17px; font-weight: 600; }
 .step-text small { grid-column: 2; font-size: 14px; color: var(--label2); line-height: 18px; }
 .drawer-search { min-width: 0; } .drawer-field { min-width: 0; } .drawer-field input { width: 100%; } .drawer-cancel { flex: none; }
+
+/* Sheet bottoms (owner 2026-11-20, "that doesn't represent the true bottom", "find the correct bottom for every
+   button"): the list scrolls to the sheet's real bottom edge, the home indicator's room taken inside the scroll, and
+   a sheet's main action (a full-width button or the Cancel and confirm pair as its last element) rests at the bottom
+   of the sheet, above the home indicator, with the list fading out behind it. */
+.sheet { padding-bottom: 0; }
+.sheet-body { padding-bottom: calc(20px + max(0px, var(--sab) - 8px)); }
+.sheet-body > .btn.wide:last-child, .sheet-body > .sheet-actions:last-child {
+  position: sticky; bottom: 0; margin-top: auto; z-index: 2;
+  box-shadow: 0 -18px 18px -2px var(--sheet-bg, var(--bg)); }
+.sheet-body > .sheet-actions:last-child { background: var(--sheet-bg, var(--bg)); padding-top: 4px; margin-bottom: -4px; }
+.sheet-body:has(> .btn.wide:last-child), .sheet-body:has(> .sheet-actions:last-child) { padding-bottom: calc(14px + max(0px, var(--sab) - 8px)); }
+.install-why { font-size: 15px; line-height: 20px; color: var(--label2); padding: 0 4px; } .install-why b { color: var(--label); font-weight: 600; }
+
+/* Value pills (owner 2026-11-20, "fitted for every number"): the pill hugs its figure with even padding, tinted green
+   or red with the figure in the same hue, the same pill for every figure in a list, tabular digits so they align. */
+.pill-chg { min-width: 0; display: inline-block; text-align: center; padding: 3px 8px; border-radius: 8px; font-size: 15px; line-height: 19px; font-weight: 600; white-space: nowrap; }
+.pill-up { background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--pos); }
+.pill-down { background: color-mix(in srgb, var(--red) 14%, transparent); color: var(--neg); }
+.stack-r .pill-chg { align-self: flex-end; }
+
+/* Landing page tiles (Liquidity and Risk Management): two a row, a wide one for the lead screen */
+.hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hub-tile { display: flex; flex-direction: column; gap: 4px; min-height: 132px; padding: 14px 14px 12px; border-radius: 22px; background: var(--cell);
+  transition: transform .25s var(--spring); position: relative; overflow: hidden; }
+.hub-tile:active { transform: scale(.97); }
+.hub-wide { grid-column: span 2; min-height: 120px; }
+.hub-top { display: flex; align-items: center; gap: 8px; }
+.hub-top b { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hub-ic { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: var(--tint); background: color-mix(in srgb, var(--tint) 14%, transparent); flex: none; }
+.hub-chev { color: var(--label3); flex: none; }
+.hub-val { font-size: 28px; line-height: 32px; font-weight: 700; letter-spacing: -.4px; font-variant-numeric: tabular-nums; margin-top: 6px; }
+.hub-val small { font-size: 15px; font-weight: 500; color: var(--label2); letter-spacing: 0; }
+.hub-sub { font-size: 13px; line-height: 17px; color: var(--label2); }
+.hub-levels { display: flex; gap: 3px; margin-top: auto; padding-top: 8px; }
+.hub-levels i { flex: 1; height: 10px; border-radius: 3px; animation: pop .45s var(--spring) both; }
+.lv-red { background: var(--red); } .lv-orange { background: var(--orange); } .lv-yellow { background: #ffcc00; } .lv-basic { background: var(--fill2); }
+.hub-bars { display: flex; align-items: flex-end; gap: 3px; height: 28px; margin-top: auto; padding-top: 6px; }
+.hub-bars i { flex: 1; border-radius: 3px 3px 1px 1px; transform-origin: bottom; animation: growy .6s var(--spring-soft) both; opacity: .85; }
+.hub-split { display: flex; gap: 3px; height: 8px; margin-top: auto; padding-top: 8px; box-sizing: content-box; }
+.hub-split i { border-radius: 4px; animation: grow .7s var(--spring-soft) both; transform-origin: left; }
+.hub-note { font-size: 13px; color: var(--label2); padding: 0 4px; }
+.hub-val { white-space: nowrap; font-size: 26px; } .hub-top b { white-space: normal; line-height: 18px; }

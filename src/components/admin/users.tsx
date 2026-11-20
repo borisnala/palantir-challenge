@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { UserPlus } from "lucide-react";
 import { useApp } from "@/components/app-state";
-import { BarButton, Chip, Confirm, Group, NavBar, Row, Segmented, Sheet } from "@/components/ios";
+import { Chip, Confirm, Group, Row, Segmented, Sheet } from "@/components/ios";
 import { Monogram } from "@/components/ui";
 import us from "@/data/users.json";
 import { sentence, when } from "@/lib/data";
@@ -10,7 +11,7 @@ import { sentence, when } from "@/lib/data";
 type U = (typeof us.users)[number];
 type Role = "admin" | "editor" | "viewer";
 
-export default function UsersPage() {
+export function UsersPanel() {
   const { get, set, say, guard } = useApp();
   const roles = get<Record<number, Role>>("users.roles", {});
   const removed = get<number[]>("users.removed", []);
@@ -30,9 +31,10 @@ export default function UsersPage() {
 
   return (
     <>
-      <NavBar title="Users" eyebrow={`${list.length} people`} back={{ href: "/account/", label: "Account" }}
-        trailing={<BarButton onClick={() => { if (!guard("admin")) return; setNewName(""); setNewRole("viewer"); setCreating(true); }}>New user</BarButton>} />
-      <Group footer="Admins change settings and users. Editors change settings. Viewers only read.">
+      <Group>
+        <Row onClick={() => { if (!guard("admin")) return; setNewName(""); setNewRole("viewer"); setCreating(true); }} icon={<UserPlus size={20} strokeWidth={1.8} />} tint="var(--blue)" title="New user" subtitle="Issue a sign in with a temporary password" />
+      </Group>
+      <Group header={`${list.length} people`} footer="Admins change settings and users. Editors change settings. Viewers only read.">
         {list.map((u) => (
           <Row key={u.id} onClick={() => { setSel(u); setRole(roleOf(u)); setOpen(true); }} icon={<Monogram name={u.username.replace("demo.", "").slice(0, 2)} size={36} />} tint="transparent"
             title={u.username} subtitle={`Since ${when(u.created_at, false)}`} detail={<Chip tone={roleOf(u) === "admin" ? "purple" : roleOf(u) === "editor" ? "blue" : "gray"}>{sentence(roleOf(u))}</Chip>} />

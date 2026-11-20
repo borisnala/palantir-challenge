@@ -263,7 +263,9 @@ export function Sheet({ open, onClose, title, children, trailing, tall }: { open
   };
 
   if (!mounted) return null;
-  return (
+  // every sheet renders at the page root, so a sheet opened from inside another is placed on the screen, not inside
+  // the first sheet's moving panel
+  return createPortal(
     <div className={`sheet-wrap ${under ? "sheet-under" : ""}`} aria-hidden={under || undefined}>
       <button ref={scrim} className="sheet-scrim" aria-label="Close" onClick={onClose} />
       <SheetNav.Provider value={(t, node) => { buzz(); setStack((x) => [...x, { title: t, node }]); }}>
@@ -287,7 +289,8 @@ export function Sheet({ open, onClose, title, children, trailing, tall }: { open
         <div key={stack.length} className={`sheet-body ${stack.length ? "sheet-pushed" : ""}`}>{stack.length ? stack[stack.length - 1].node : children}</div>
       </div>
       </SheetNav.Provider>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

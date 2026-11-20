@@ -2,13 +2,13 @@
 
 import { MonitorSmartphone } from "lucide-react";
 import { useApp, type DeviceRequest } from "@/components/app-state";
-import { Chip, Group, NavBar, Row } from "@/components/ios";
+import { Chip, Group, Row } from "@/components/ios";
 import us from "@/data/users.json";
 import { when } from "@/lib/data";
 
 type D = (typeof us.pending)[number];
 
-export default function Devices() {
+export function DevicesPanel() {
   const { get, set, say, guard } = useApp();
   const decided = get<Record<number, string>>("dev.decided", {});
   const decide = (d: D, s: "approved" | "denied") => { if (!guard("admin")) return; set("dev.decided", { ...decided, [d.id]: s }); say(`${d.label} ${s}`); };
@@ -19,7 +19,6 @@ export default function Devices() {
 
   return (
     <>
-      <NavBar title="Device access" eyebrow={`${waiting.length} waiting`} back={{ href: "/account/", label: "Account" }} />
       {waiting.length === 0 && <Group><Row title="No pending device requests" chevron={false} /></Group>}
       {waiting.map((d) => (
         <Group key={d.id} header={d.label} footer={`First seen from ${d.first_ip} on ${when(d.created_at)}.`}>

@@ -6,7 +6,7 @@
 // gates each change in the app, the switches and pickers change the app at once and are kept on this phone.
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Activity, Bell, FolderCog, Info, LogOut, MonitorSmartphone, Plus, ShieldCheck, UserRound, Users, Vibrate, ChartCandlestick, Compass, Eye } from "lucide-react";
 import { ROLE_CAN, ROLE_LABEL, ROLE_RANK, USERS, useApp, type Prefs, type Role } from "./app-state";
 import { Confirm, Group, PullDown, Row, Sheet, Switch, useSheetPush } from "./ios";
@@ -14,6 +14,10 @@ import { Monogram } from "./ui";
 import { Glass } from "./liquid";
 import { ALERT_KINDS, when } from "@/lib/data";
 import us from "@/data/users.json";
+import bp from "@/data/buildpaths.json";
+import { UsersPanel } from "./admin/users";
+import { DevicesPanel } from "./admin/devices";
+import { BuildPathsPanel } from "./admin/build-paths";
 
 const START: { v: Prefs["start"]; label: string }[] = [
   { v: "/", label: "Morning Digest" }, { v: "/withdrawals/", label: "WD Approvals" }, { v: "/search/", label: "Client 360" }, { v: "/risk/", label: "Risk Management" },
@@ -33,7 +37,14 @@ function Pages() {
   const app = useApp();
   const push = useSheetPush();
   const router = useRouter();
-  const go = (href: string, need: Role) => { if (!app.guard(need)) return; app.set("ui.settings", false); router.push(href); };
+  // Users and roles, Device access and Build paths open inside Settings (owner 2026-11-20, "every setting shall live in
+  // the Settings window"), as pages pushed into the sheet, never as screens of their own
+  const PANEL = { users: ["Users and roles", "admin", <UsersPanel key="u" />], devices: ["Device access", "viewer", <DevicesPanel key="d" />], paths: ["Build paths", "viewer", <BuildPathsPanel key="b" />] } as const;
+  const open = (k: keyof typeof PANEL) => { const [t, need, node] = PANEL[k]; if (!app.guard(need as Role)) return; push?.(t, node); };
+  const waiting = us.pending.filter((d) => !app.get<Record<number, string>>("dev.decided", {})[d.id]).length + app.get<unknown[]>("dev.requests", []).length;
+  const missing = bp.algorithms.filter((a) => !a.exists).length;
+  const asked = app.get<boolean | string>("ui.settings", false);
+  useEffect(() => { if (typeof asked === "string" && asked in PANEL) { open(asked as keyof typeof PANEL); app.set("ui.settings", true); } }, [asked]); // eslint-disable-line react-hooks/exhaustive-deps
   const on = Object.values(app.prefs.notify).filter(Boolean).length;
   const devices = us.decided.filter((d) => d.status === "approved").length;
   const [out, setOut] = useState(false);
@@ -85,9 +96,9 @@ function Pages() {
         <Row onClick={clearance} icon={<ShieldCheck size={20} strokeWidth={1.8} />} title="Clearance level" detail={ROLE_LABEL[app.user.role]} />
         <Row onClick={activity} icon={<Activity size={20} strokeWidth={1.8} />} title="Activity" detail={app.activity.length ? String(app.activity.length) : undefined} />
         <Row onClick={notifications} icon={<Bell size={20} strokeWidth={1.8} />} title="Notifications" detail={`${on} of ${ALERT_KINDS.length} on`} />
-        <Row onClick={() => go("/account/users/", "admin")} icon={<Users size={20} strokeWidth={1.8} />} title="Users and roles" detail={app.can("admin") ? undefined : "Administrator"} />
-        <Row onClick={() => go("/account/devices/", "viewer")} icon={<MonitorSmartphone size={20} strokeWidth={1.8} />} title="Device access" />
-        <Row onClick={() => go("/account/build-paths/", "viewer")} icon={<FolderCog size={20} strokeWidth={1.8} />} title="Build paths" />
+        <Row onClick={() => open("users")} icon={<Users size={20} strokeWidth={1.8} />} title="Users and roles" detail={app.can("admin") ? `${us.users.length}` : "Administrator"} />
+        <Row onClick={() => open("devices")} icon={<MonitorSmartphone size={20} strokeWidth={1.8} />} title="Device access" detail={waiting ? `${waiting} waiting` : undefined} />
+        <Row onClick={() => open("paths")} icon={<FolderCog size={20} strokeWidth={1.8} />} title="Build paths" detail={missing ? `${missing} missing` : undefined} />
       </Group>
 
       <Group header="App">
@@ -170,7 +181,7 @@ function InfoMenu() {
 
 export function SettingsSheet() {
   const app = useApp();
-  const open = app.get<boolean>("ui.settings", false);
+  const open = !!app.get<boolean | string>("ui.settings", false);
   return (
     <Sheet open={open} onClose={() => app.set("ui.settings", false)} title="Settings" trailing={<InfoMenu />} tall>
       <Pages />
