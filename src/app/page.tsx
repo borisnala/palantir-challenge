@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "@/components/nav-link";
-import { ArrowDownUp, Bell, ChartCandlestick, ChevronRight, Newspaper, Search, TrendingUp } from "lucide-react";
+import { ArrowDownUp, Bell, ChevronRight, Newspaper, Search } from "lucide-react";
 import { useState } from "react";
 import { buzz } from "@/lib/haptics";
 import { useApp } from "@/components/app-state";
@@ -142,7 +142,7 @@ function Board() {
           ))}
         </div>
       </div>
-      <Group header={kind === "all" ? "Largest moves" : KIND[kind].label} footer="Sorted by size. Profit and swing rows show the change, other rows 30 day client P&L.">
+      <Group header={kind === "all" ? "Largest moves" : KIND[kind].label} footer="Profit and swing rows show the change, others 30 day client P&L.">
         {list.slice(0, 8).map((m, i) => <MoveRow key={`${m.kind}-${m.login}-${i}`} m={m} onOpen={setSel} />)}
         {list.length > 8 && <Row onClick={() => setAll(true)} title={<span className="link-blue">Show all {list.length}</span>} chevron={false} />}
       </Group>
@@ -178,17 +178,6 @@ export default function Today() {
         <SummaryCard href="/alerts/" Icon={Bell} color="var(--red)" label="Notifications" value={String(unread.size)} unit="unread" />
       </section>
 
-      <section className="hcards" aria-label="Flagged book">
-        <h2 className="sub-head">Flagged book</h2>
-        <div className="hgrid">
-          <SummaryCard href="/liquidity/book/" Icon={TrendingUp} color="var(--green)" label="Client P&L" value={compact(t.t30_now)} unit="30 days"
-            note={`${compact(t.t30_delta, true)} since ${day(Date.parse(digest.previous_taken_at) / 1000)}`} />
-          <SummaryCard href="/risk/open-lots/" Icon={ChartCandlestick} color="var(--blue)" label="Floating" value={compact(t.fpl_now)}
-            note={`${compact(t.fpl_delta, true)} since ${day(Date.parse(digest.previous_taken_at) / 1000)}`} />
-        </div>
-        <SummaryCard href="/risk/watchlist/" Icon={TrendingUp} color="var(--purple)" label="Flagged accounts" value={String(t.flagged_now)}
-          note={`${t.flagged_now - t.flagged_before >= 0 ? "+" : ""}${t.flagged_now - t.flagged_before} since prior`} />
-      </section>
 
       <Group header={`Watchlist hits · ${S.watchlist_hits.length}`}>
         {S.watchlist_hits.map((r) => (
@@ -197,7 +186,7 @@ export default function Today() {
         ))}
       </Group>
 
-      <Group header={`Algorithm catches today · ${overnight.length}`} footer="Accounts the algorithms moved or flagged since the session opened.">
+      <Group header={`Algorithm catches today · ${overnight.length}`}>
         {overnight.slice(0, 5).map((c, i) => (
           <Row key={i} href={hasProfile(c.acc + 99000000) ? `/clients/${c.acc + 99000000}/` : undefined} icon={<i className="mv-dot" style={{ background: ALGO_TONE[c.algo] ?? "var(--gray)" }} />} tint="transparent"
             title={nameOf(c.acc + 99000000)} subtitle={`${ALGO_NAME[c.algo] ?? c.algo} · ${c.from_group ? `${group(c.from_group)} to ${group(c.to_group ?? "")}` : sentence(c.kind)}`}

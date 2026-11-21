@@ -1547,9 +1547,5 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .topbar { padding-bottom: 0; min-height: var(--bar-bottom); margin-bottom: -12px; grid-template-columns: var(--bar-h) 1fr auto; }
 .c360-head { margin-top: 0 !important; }
 
-/* The bell is a bare glyph (owner 2026-11-21, "just make it full, icon only"), filled, with the count on its top
-   right corner. Same 46 pt touch target as the round buttons beside it. */
-.bellbtn { position: relative; width: var(--bar-h); height: var(--bar-h); display: inline-grid; place-items: center; color: var(--label); transition: transform .3s var(--spring-soft); }
-.bellbtn:active { transform: scale(.9); }
-.bellbtn svg { width: 23px; height: 23px; }
-.bellbtn .navbadge { top: 7px; right: 7px; min-width: 17px; height: 17px; padding: 0 4px; box-shadow: 0 0 0 2px var(--bg); }
+/* The bell glyph a size up inside its glass circle (owner 2026-11-21, "enlarge the icon a bit") */
+.topbar .glassbtn.round svg.lucide-bell { width: 24px; height: 24px; }

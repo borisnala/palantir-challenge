@@ -751,6 +751,8 @@ for i, a in enumerate(alerts):
     a["unread"] = i < 9
 out["alerts"] = alerts
 
+out["cltl"]["profile"]["label"] = out["cltl"]["profile"]["label"].replace(" (dummy thresholds)", "")
+
 # ---- History behind the summary figures (owner 2026-11-20, "give dummy of historical at any given moment") ----
 # 90 seeded days per figure, the last day equal to today's figure on screen, weekends quieter. Each entry holds one or
 # more measures (count, amount, time), breakdowns that add up to the count, and the day's hours in WIB.

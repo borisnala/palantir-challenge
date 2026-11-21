@@ -547,7 +547,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 <div><span>Win rate</span><b>{pct(p.behaviour.win_rate_pct, 0)}</b></div>
               </div>
             </section>
-            <p className="caption">Compare price, daily symbol price over the same window, scaled to chart height. Simulated.</p>
+            <p className="caption">Symbol price over the same window, scaled to the chart. Simulated.</p>
 
             <Group header="At a glance">
               <Row onClick={() => setTab("trading")} title="Trades" detail={num(p.behaviour.trade_count)} />
@@ -582,7 +582,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 subtitle={`${(p.monthly as Monthly).months.length} months, lots, trades, win rate, balance, asset mix`} />
             </Group>
 
-            <Group header="Profit by session" footer={`UTC, all time. ${pov === "client" ? "Client" : "Broker"} P&L. Sessions, symbols and holding time share one scale.`}>
+            <Group header="Profit by session" footer="UTC, all time. One scale across sessions, symbols and holding time.">
               {p.sessions.map((s) => (
                 <div key={s.session} className="barrow">
                   <span className="barrow-top"><b>{s.session}</b><Pnl v={sg * s.net_pl} /></span>
@@ -732,7 +732,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               detail={moveTo === t2 ? <Check size={20} strokeWidth={2.6} color="var(--blue)" /> : undefined} />
           ))}
         </Group>
-        <Group header="Reason" footer="Required. Recorded in the group history with the user name.">
+        <Group header="Reason" footer="Recorded in the group history.">
           <div className="tchips why-chips" role="radiogroup" aria-label="Reason">
             {REASONS.map((r) => <button key={r} role="radio" aria-checked={why === r} className={`tchip ${why === r ? "on" : ""}`} onClick={() => { buzz(); setWhy(r); }}>{r}</button>)}
           </div>

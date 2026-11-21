@@ -134,8 +134,8 @@ export function Welcome() {
           <span>Lens B, make it click. By Boris Nala.</span>
         </div>
         <Group>
-          <Row icon={<Smartphone size={20} strokeWidth={1.8} />} title="The Global Risk Portal, for a phone" subtitle="The desk's portal for B-book risk, liquidity and withdrawals, rebuilt as a native style iPhone app." chevron={false} />
-          <Row icon={<Database size={20} strokeWidth={1.8} />} title="Demonstration data" subtitle="Every figure comes from the portal's own demo set, snapshot 13 Nov 2026. Logins 99000001 onward, names Demo Client N. No real client, group or value." chevron={false} />
+          <Row icon={<Smartphone size={20} strokeWidth={1.8} />} title="The Global Risk Portal, for a phone" subtitle="B-book risk, liquidity and withdrawals, rebuilt for iPhone." chevron={false} />
+          <Row icon={<Database size={20} strokeWidth={1.8} />} title="Demonstration data" subtitle="The portal's demo set, snapshot 13 Nov 2026. No real client, group or value." chevron={false} />
           <Row icon={<ArrowDownUp size={20} strokeWidth={1.8} />} title="What it shows" subtitle="Who moved overnight, which clients cost the book, the withdrawals waiting for Risk, and each client's full profile in Client 360." chevron={false} />
           <Row icon={<ShieldCheck size={20} strokeWidth={1.8} />} title="Changes need confirmation" subtitle="Group moves, spreads and users pass a confirmation, some with a typed code. Nothing leaves the device." chevron={false} />
           <Row icon={<Hand size={20} strokeWidth={1.8} />} title="Getting around" subtitle="Swipe from the left edge for the menu, search clients from the bottom bar, the bell for alerts." chevron={false} />

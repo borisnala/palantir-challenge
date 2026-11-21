@@ -39,7 +39,7 @@ export default function Withdrawals() {
       ]} />
 
       <Group footer={wd.mode === "shadow" ? "Shadow mode. The screener recommends, Risk decides. No payouts execute from this app." : undefined}>
-        <PageRow href="/withdrawals/check/" Icon={ScanSearch} tint="var(--blue)" title="WD Check" sub="Pre-screen an account before a withdrawal" />
+        <PageRow href="/withdrawals/check/" Icon={ScanSearch} tint="var(--blue)" title="WD Check" sub="Pre-screen an account" />
         <PageRow href="/withdrawals/health/" Icon={Activity} tint={warn ? "var(--orange)" : "var(--green)"} title="System health"
           sub={`${wd.health.checks.length} checks, ${warn} flagged`} />
       </Group>
