@@ -169,14 +169,18 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   deliberate edge swipe (owner 2026-11-21, "it stops at 80 percent"): the touch starts within 20 px of the edge,
   moves 10 px and 1.5 times more sideways than down, and a touchcancel (iOS Safari's own back swipe) never opens it.
   The segmented pill moves in three stages of equal length that never overlap (owner 2026-11-21, "zooming out, moving,
-  zooming in, same load, do not rush"): the lens rises out of the track, travels to the new segment, sinks back, 0.25 s
-  each (owner 2026-11-21, "too slow, faster a bit") on an ease in and out (ios.tsx Segmented timeline, STAGE). A drag rises, follows the finger, then travels to the
+  zooming in, same load, do not rush"): the lens rises out of the track, travels to the new segment, sinks back, the
+  rise 0.12 s, the travel and the sink 0.25 s each (owner 2026-11-21, "faster zoom out, keep the move and zoom in"), on an ease in and out (ios.tsx Segmented timeline, STAGE). A drag rises, follows the finger, then travels to the
   nearest segment and sinks. The track's ResizeObserver snaps the thumb only on a real width change.
   Frame loops (liquid.tsx useSpringLoop) keep one kick for the component's life and restart when a requested frame
   never arrives (iOS drops frames during its own gestures), and the menu watchdog puts the menu at rest when two checks
   0.5 s apart find it off its resting point and not moving. Unit springs settle at eps 0.002 to 0.003.
   Page transitions never freeze a half-open menu: device.ts wraps document.startViewTransition, skipping the animation
   while the menu is open or moving and ending any transition still on screen after 1.2 s.
+  After the keyboard closes, iPhone Safari can leave the page offset, which drops the fixed bars mid-screen: device.ts
+  scrolls the page back into place on every focusout once no field has focus. The score ring starts at 12 o'clock
+  through CSS (rotate on .ring-fill), never the SVG transform attribute, which Safari dropped during its animation. The
+  Client 360 verdict card shows the score drivers (toxicity factors), not the verdict again.
 - Top spacing and bell (owner 2026-11-21): the sticky top bar keeps no padding under itself and gives back the page
   gap, so the first card sits 14 px under --bar-bottom. The bell keeps its glass circle and its glyph fills it,
   29 px in the 46 px circle (owner 2026-11-21, "full to the circle", then 15 percent smaller), with a small red dot, no count, on the

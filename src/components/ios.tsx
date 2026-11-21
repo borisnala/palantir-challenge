@@ -313,7 +313,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   // Three stages of equal length, never overlapping (owner 2026-11-21, "zooming out, moving, zooming in, same load, do
   // not rush"): the lens rises out of the track, then travels to the new segment, then sinks back, STAGE seconds each
   // on an ease in and out. A drag rises the same way, follows the finger, then travels to the nearest segment and sinks.
-  const STAGE = 0.25;
+  const STAGE = 0.25, RISE = 0.12; // the rise is quick, the travel and the sink take their time (owner 2026-11-21)
   const iRef = useRef(i);
   useEffect(() => { iRef.current = i; });
   const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
@@ -328,7 +328,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     // Lift: rising, held up, or sinking
     let L = s.L;
     if (s.s0 >= 0 && t >= s.s0) L = s.sFrom * (1 - ease((t - s.s0) / STAGE));
-    else if (s.r0 >= 0) L = s.rFrom + (1 - s.rFrom) * ease((t - s.r0) / STAGE);
+    else if (s.r0 >= 0) L = s.rFrom + (1 - s.rFrom) * ease((t - s.r0) / RISE);
     // Position: the finger while dragging, else the travel stage
     const before = s.x;
     if (!d && s.m0 >= 0) s.x = t < s.m0 ? s.mFrom : s.mFrom + (s.mTo - s.mFrom) * ease((t - s.m0) / STAGE);
@@ -341,7 +341,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
       thumb.current.style.zIndex = L > 0.02 ? "2" : "0"; // the fill sits under the labels, the lifted lens over them
     }
     if (copy.current) copy.current.style.setProperty("--cx", `${-s.x}px`);
-    const moving = !!d || (s.r0 >= 0 && t < s.r0 + STAGE) || (s.m0 >= 0 && t < s.m0 + STAGE) || (s.s0 >= 0 && t < s.s0 + STAGE) || s.waitTap;
+    const moving = !!d || (s.r0 >= 0 && t < s.r0 + RISE) || (s.m0 >= 0 && t < s.m0 + STAGE) || (s.s0 >= 0 && t < s.s0 + STAGE) || s.waitTap;
     if (!moving && s.s0 >= 0 && t >= s.s0 + STAGE) { s.L = 0; s.r0 = -1; s.s0 = -1; s.m0 = -1; }
     return moving;
   });
@@ -349,7 +349,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   /** Plan the travel to x and the sink after it, each starting once the stage before it has ended. */
   const travel = (to: number) => {
     const s = tl.current, t = now();
-    const start = Math.max(t, s.r0 >= 0 ? s.r0 + STAGE : t);
+    const start = Math.max(t, s.r0 >= 0 ? s.r0 + RISE : t);
     s.mFrom = s.x; s.mTo = to; s.m0 = Math.abs(to - s.x) > 0.5 ? start : -1;
     s.s0 = (s.m0 >= 0 ? s.m0 + STAGE : start); s.sFrom = 1; s.waitTap = false;
     kick();

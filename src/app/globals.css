@@ -1606,3 +1606,8 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 :root { --dock-h: var(--bar-h); }
 .drawer-head .glassbtn.round { width: var(--bar-h); height: var(--bar-h); }
 .drawer-head .glassbtn.round svg { width: 20px; height: 20px; }
+
+/* The score ring starts at 12 o'clock through CSS (owner 2026-11-21): iPhone Safari dropped the SVG transform
+   attribute while the fill animation ran, so the arc began near 1 o'clock */
+.score-ring .ring-fill { transform: rotate(-90deg); transform-origin: 42px 42px; transform-box: view-box; }
+.verdict-text b { overflow-wrap: anywhere; }

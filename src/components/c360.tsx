@@ -45,7 +45,7 @@ function Ring({ score, color, size = 84 }: { score: number; color: string; size?
   return (
     <svg className="score-ring" viewBox="0 0 84 84" width={size} height={size} role="img" aria-label={`Toxicity score ${score} of 100`}>
       <circle cx="42" cy="42" r={r} className="ring-track" />
-      <circle cx="42" cy="42" r={r} stroke={color} className="ring-fill" strokeDasharray={`${(score / 100) * c} ${c}`} style={{ ["--len" as string]: `${c}` }} transform="rotate(-90 42 42)" />
+      <circle cx="42" cy="42" r={r} stroke={color} className="ring-fill" strokeDasharray={`${(score / 100) * c} ${c}`} style={{ ["--len" as string]: `${c}` }} />
       <text x="42" y="47" textAnchor="middle" className="ring-num">{score}</text>
     </svg>
   );
@@ -512,8 +512,9 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 <Ring score={p.toxicity.score} color={b.color} />
                 <span className="verdict-text">
                   <span className="verdict-tags"><Chip tone={b.tone}>{b.label}</Chip><Chip tone="blue">{VERDICT[p.decision.verdict] ?? p.decision.verdict}</Chip></span>
-                  <b>{p.decision.headline.split(". ")[0]}.</b>
-                  <span className="row-sub">{p.toxicity.factors[0]?.label}</span>
+                  {/* The tag already names the verdict, so the lines say what drives the score */}
+                  <b>{p.toxicity.factors[0]?.label ?? p.decision.headline.split(". ")[0]}</b>
+                  {p.toxicity.factors[1] && <span className="row-sub">{p.toxicity.factors[1].label}</span>}
                 </span>
               </button>
             </Group>
