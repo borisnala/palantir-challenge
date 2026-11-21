@@ -311,7 +311,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   const thumb = useRef<HTMLSpanElement>(null);
   const copy = useRef<HTMLSpanElement>(null);
   const sx = useRef(new Spring(-1, 300, 24));
-  const lift = useRef(new Spring(0, 160, 20)); // a slow, gentle lift and sink (owner 2026-11-21, "slow down the zoom, correct amount")
+  const lift = useRef(new Spring(0, 70, 14)); // a slow, gentle lift and sink (owner 2026-11-21, "slow down the zoom, correct amount")
   const drag = useRef<{ off: number; x0: number; last: number; t: number; moved: boolean } | null>(null);
   const skipClick = useRef(false);
   const unit = () => { const el = track.current; return el ? (el.clientWidth - 4) / options.length : 0; };

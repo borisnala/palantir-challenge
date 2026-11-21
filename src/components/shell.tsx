@@ -132,7 +132,19 @@ export function Drawer() {
     addEventListener("touchcancel", end); // the system took the touch: settle open or closed, never stay half way
     const close = () => { drag.current = null; x.current.target = 0; kick(); };
     addEventListener("menu-close", close);
-    return () => { removeEventListener("menu-close", close); removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); removeEventListener("touchcancel", end); };
+    // Watchdog (owner 2026-11-21, "sometimes it is still stuck"): a drag with no touch event for 0.8 s lost its
+    // touchend, so it is dropped. Whenever no finger drags, the menu rests exactly open or closed, never in between.
+    let lastTouch = 0;
+    const seen = () => { lastTouch = performance.now(); };
+    addEventListener("touchstart", seen, { passive: true });
+    addEventListener("touchmove", seen, { passive: true });
+    const dog = setInterval(() => {
+      if (drag.current && performance.now() - lastTouch > 800) drag.current = null;
+      if (drag.current) return;
+      const want = drawer ? 1 : 0;
+      if (x.current.target !== want || Math.abs(x.current.x - want) > 0.001) { x.current.target = want; kick(); }
+    }, 250);
+    return () => { clearInterval(dog); removeEventListener("touchstart", seen); removeEventListener("touchmove", seen); removeEventListener("menu-close", close); removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); removeEventListener("touchcancel", end); };
   }, [drawer, setDrawer, kick]);
 
   // The menu's search finds features (lib/features.ts), never clients: Client 360 has its own search.

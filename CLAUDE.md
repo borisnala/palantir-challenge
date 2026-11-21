@@ -35,7 +35,8 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   "make the equity move"): src/components/c360.tsx, four tabs. Overview (live equity that ticks each second for a client
   with open positions, the verdict, the P&L chart with a y axis and a finger scrub), Trading (month grid of trading
   days, sessions, symbols, holding time), Risk (score ring, reasons, detections, evidence, findings, group history),
-  Account (money, profit windows, open positions, reconciliation, withdrawals, note, alerts). Header actions are Status,
+  Account (money, profit windows, open positions, reconciliation, withdrawals, note, alerts). Header tags carry no Live chip (the equity
+  line shows it). Header actions are Status,
   Note and Move group (a Confirm sheet, recorded in the group history), never Watch, Alerts or Copy login. Data:
   distill.py builds client360.json, 99000001 from the portal's own payload, every other client a seeded variant
   shaped to that client's own figures (P&L windows, win rate, lots, open book, group moves, ETL). Odd logins trade live,
@@ -156,8 +157,10 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   controls follow the Claude app, --bar-h 46 (round buttons and title capsule, title 15.5 semibold over 12.5),
   --dock-h 48 (bottom capsule and action, 16 px), segmented 34 with 13.5 px labels. Page push and pop 0.3 s, menus
   0.28 s, the side menu spring 480/42, sheets 460/40. Glass presses swell to 1.06. The segmented lens lifts on a slow
-  spring (160/20) by 6 percent wide and 18 percent tall and always settles exactly. Any touch or tap settles a menu a
-  lost touchend left half way, and the page tap dispatches menu-close so it closes even when the state already reads closed.
+  spring (70/14) by 6 percent wide and 18 percent tall and always settles exactly. Glass presses swell in 0.3 s and
+  release over 1.1 s (owner 2026-11-21, "zoom out not slow enough"): the resting state's transition is the release.
+  The side menu never rests half way: any touch or tap settles it, the page tap dispatches menu-close, and a
+  watchdog drops a drag with no touch event for 0.8 s and springs the menu to open or closed.
 - Top spacing and bell (owner 2026-11-21): the sticky top bar keeps no padding under itself and gives back the page
   gap, so the first card sits 14 px under --bar-bottom. The bell keeps its glass circle and its glyph fills it,
   29 px in the 46 px circle (owner 2026-11-21, "full to the circle", then 15 percent smaller), with a small red dot, no count, on the

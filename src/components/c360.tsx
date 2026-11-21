@@ -472,7 +472,6 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
         <span className="tags">
           <Chip tone={b.tone}>{b.label}</Chip><Chip>{p.classification}</Chip>
           {status !== "none" && <Chip tone={status === "escalated" ? "red" : status === "cleared" ? "green" : "purple"}>{STATUS[status]}</Chip>}
-          {isLive && <Chip tone="green"><i className="live-dot" />Live</Chip>}
         </span>
         <div className="actions">
           <button className={`action ${status !== "none" ? "action-on" : ""}`} onClick={() => { if (!app.guard("editor")) return; setDraftStatus(status); setDraftPin(pinned); setSheet("status"); }}><Flag size={20} strokeWidth={2.2} /><span>{status === "none" ? "Set status" : STATUS[status]}</span></button>
