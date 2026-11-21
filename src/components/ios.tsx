@@ -313,7 +313,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   // Three stages of equal length, never overlapping (owner 2026-11-21, "zooming out, moving, zooming in, same load, do
   // not rush"): the lens rises out of the track, then travels to the new segment, then sinks back, STAGE seconds each
   // on an ease in and out. A drag rises the same way, follows the finger, then travels to the nearest segment and sinks.
-  const STAGE = 0.4;
+  const STAGE = 0.25;
   const iRef = useRef(i);
   useEffect(() => { iRef.current = i; });
   const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
