@@ -58,7 +58,6 @@ export const FEATURES: Feature[] = [
   // Account
   T("Users and roles", "Settings", "users roles viewer editor admin permissions new user create reset password", "users"),
   T("Device access", "Settings", "devices approve deny tablet phone laptop", "devices"),
-  T("Build paths", "Settings", "configuration files algorithm settings env", "paths"),
 
   // Settings
   T("Settings", "Settings", "preferences options"),

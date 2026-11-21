@@ -671,7 +671,6 @@ for login, prof in profiles.items():
 
 # ---- Admin: users, devices, build paths ----
 out["users"] = load("users")
-out["buildpaths"] = load("build_paths")
 
 # ---- Notifications (owner 2026-11-20, "enrich the notification lists") ----
 # The bell gathers what the desk is told during a day: the portal's own news profit notifications (the 16 rows its

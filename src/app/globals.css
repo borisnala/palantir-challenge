@@ -1550,6 +1550,36 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 /* The bell glyph a size up inside its glass circle (owner 2026-11-21, "enlarge the icon a bit") */
 /* The bell fills its glass circle (owner 2026-11-21, "full to the circle encasing it") and carries a small red dot,
    not a count, on its top right corner. The count stays in the button's label and on the Notifications screen. */
-.bellcap .bell-glyph { position: relative; display: grid; place-items: center; width: 34px; height: 34px; }
-.topbar .glassbtn.round.bellcap svg { width: 34px; height: 34px; }
-.bell-dot { position: absolute; top: 3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 2px var(--glass-solid, var(--bg)); }
+.bellcap .bell-glyph { position: relative; display: grid; place-items: center; width: 29px; height: 29px; }
+.topbar .glassbtn.round.bellcap svg { width: 29px; height: 29px; }
+.bell-dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 2px var(--glass-solid, var(--bg)); }
+
+/* Side menu sections 15 percent smaller (owner 2026-11-21): 15.5 px labels, 20 px icons, 44 px rows */
+.drawer-item:not(.drawer-two):not(.drawer-more) { min-height: 44px; font-size: 15.5px; gap: 14px; border-radius: 15px; }
+.drawer-item:not(.drawer-two):not(.drawer-more) > svg { width: 20px; height: 20px; }
+
+/* Notification stacks (owner 2026-11-21, "group the notifications, be more advanced"): a group header with its
+   count, Mark read and Show, the newest alert on a card with two layers behind it while collapsed, and a summary line
+   (severity mix, clients, money in total, time span) that opens the stack. */
+.nstack { display: flex; flex-direction: column; gap: 6px; }
+.nstack-head { display: flex; align-items: center; gap: 6px; padding: 0 6px 0 4px; min-height: 30px; }
+.nstack-title { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nstack-title a { color: inherit; }
+.nstack-title small { font-size: 13px; font-weight: 400; color: var(--label2); }
+.nstack-btn { flex: none; height: 28px; padding: 0 11px; border-radius: 14px; background: var(--fill); font-size: 13px; font-weight: 500; color: var(--label); position: relative; }
+.nstack-btn::after { content: ""; position: absolute; inset: -8px -2px; }
+.nstack-btn:active { opacity: .55; }
+.nstack-card { position: relative; border-radius: 24px; background: var(--cell); z-index: 0; }
+.nstack-card > .mailrow + .mailrow { box-shadow: inset 0 .5px 0 var(--sep); }
+.nstack-many:not(.nstack-open) .nstack-card { margin-bottom: 14px; }
+.nstack-many:not(.nstack-open) .nstack-card::before, .nstack-many:not(.nstack-open) .nstack-card::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: -7px; height: 20px; border-radius: 0 0 20px 20px; background: var(--cell); z-index: -1;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05); filter: brightness(.97); }
+.nstack-many:not(.nstack-open) .nstack-card::after { left: 22px; right: 22px; bottom: -14px; filter: brightness(.93); z-index: -2; }
+.nstack-sum { display: block; width: 100%; text-align: left; padding: 9px 16px 12px 34px; font-size: 13px; line-height: 17px; color: var(--label2); box-shadow: inset 0 .5px 0 var(--sep); border-radius: 0 0 24px 24px; }
+.nstack-sum:active { background: var(--fill); }
+.nstack-open .nstack-card > .mailrow { animation: fadein .22s ease-out both; }
+@media (prefers-color-scheme: dark) {
+  .nstack-many:not(.nstack-open) .nstack-card::before { filter: brightness(.8); }
+  .nstack-many:not(.nstack-open) .nstack-card::after { filter: brightness(.65); }
+}

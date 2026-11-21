@@ -50,13 +50,13 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   /alerts, client360 to /search and /clients/[login], watchlist, open_lots, growth, top10, catches, news, risk_analysis,
   algo_activity, cra_model, cra_analysis, promotion_analysis, housecleaning under /risk, candletl_showcase (cltl),
   pg_markups, manual_level, group_spread, hsb_pov (book) under /liquidity, wd_approvals, wd_check under /withdrawals
-  (plus its gate health), users (users and devices) and build_paths inside Settings. index (Algo Config) stays out.
+  (plus its gate health), users (users and devices) inside Settings. Build paths was removed (owner 2026-11-21). index (Algo Config) stays out.
   Panels follow the portal: Top 10 all eight boards and Client or Broker P&L; Watchlist Up, Down, Flat since watch;
   Book View symbol toxicity and cost per USD 1m notional, Flagged or whole B-book; Open Lots closed history with the
   edge and behaviour quadrant maps and lots against equity (src/components/scatter.tsx); Risk Analysis algo
   behaviour before, during, after and cumulative; CRA Model mode, sign-off (maker can not sign), restore, Try a
   customer; Growth Client or Broker, minimum days, price group chips, momentum; Catches period and source chips;
-  News currency chips, exposure going in, event types; Users New user and Reset password; Build paths edit.
+  News currency chips, exposure going in, event types; Users New user and Reset password.
   Picking what a panel becomes: a ranked list stays an inset list with a bar or value, a two-dimensional table
   becomes a scatter or quadrant grid, a weekday by hour grid a heatmap, a time series a line, a before and after a
   bar triplet, a filter with more than four values horizontal chips, a choice among two to four a segmented control,
@@ -69,8 +69,11 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   src/data/alerts.json, 80 alerts in ten kinds (lib/data.ts ALERT_KINDS): news, algo, wd (pending and decided), tier,
   swing, book, exposure (MachineGun on open lots), level (CLTL changes), growth (30 day scan), system (screener
   checks, device requests, housecleaning). An alert without a client profile carries `href` (a screen, or
-  settings:devices) and `source` (shown as sender). The screen arranges By kind, stacks of three with "N more", newest
-  stack first, or By time as iOS Mail. Kind chips, a Severity pull-down, disabled kinds hidden from list and bell.
+  settings:devices) and `source` (shown as sender). The screen arranges By kind (newest stack first), By client
+  (every alert on one account in one stack, desk sources as their own, busiest first) or By time as iOS Mail. A stack
+  shows its newest alert on a card with two layers behind it and a summary line (N more, severity mix, clients or
+  kinds, money, time span) that opens it, and a header with the count, Mark read and Show N or Show less. Kind chips,
+  a Severity pull-down, disabled kinds hidden from list and bell.
 - Client 360 point of view: Client P&L or Broker P&L flips every P&L figure (chart, calendar, sessions, symbols,
   holding time, trading pattern). Sessions, symbols and holding time draw diverging bars on one shared scale (ui.tsx
   DivBar). Balance and equity are account facts and never flip. The P&L chart zooms: 1M 3M 6M 1Y All, pinch on a phone,
@@ -87,9 +90,9 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   (shell.tsx search-layer): the field and Cancel take the top bar's place, focused inside the tap so the keyboard
   rises at once, client results fill the screen down to the keyboard (--kb), the page beneath is untouched, only a
   chosen client navigates. The menu search field and Cancel are 52 px, the round buttons' height.
-- Settings holds every setting (owner 2026-11-20): Users and roles, Device access and Build paths are panels pushed
+- Settings holds every setting (owner 2026-11-20): Users and roles and Device access are panels pushed
   inside the Settings sheet (src/components/admin/*), with no routes of their own; /account/* redirect to / in
-  router/worker.js. ui.settings may name a panel ("users", "devices", "paths") to open Settings on it. Every Sheet
+  router/worker.js. ui.settings may name a panel ("users", "devices") to open Settings on it. Every Sheet
   renders through a portal at the page root, so a sheet opened from inside another sits on the screen.
 - Sheet bottoms: the list scrolls to the sheet's real bottom edge; a sheet's main action (a .btn.wide or .sheet-actions
   as its last element) rests at the sheet bottom, sticky, the list fading behind it.
@@ -136,7 +139,8 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   sheet clips to its own corners and its list fades out at the bottom as under the header.
 - Challenge credit (owner 2026-11-20, "appear but not annoying"): under the launch mark, at the foot of the side menu
   and in the Morning Digest fine print. Never a banner or a blocking sheet.
-- Side menu lists 3 recents and 5 watchlist clients, then a row that shows the rest.
+- Side menu lists 3 recents and 5 watchlist clients, then a row that shows the rest. Section rows are 44 px with
+  15.5 px labels and 20 px icons (owner 2026-11-21, 15 percent smaller).
 - Growth Detection draws each account's P&L path (distill.py growth_path, from the scan's own net change, fit and
   drawdown) beside the row and large in its sheet.
 - Morning Digest (owner 2026-11-20, "more interactive"): since Last snapshot, 7 days or 30 days (history.json
@@ -155,8 +159,8 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   spring (160/20) by 6 percent wide and 18 percent tall and always settles exactly. Any touch or tap settles a menu a
   lost touchend left half way, and the page tap dispatches menu-close so it closes even when the state already reads closed.
 - Top spacing and bell (owner 2026-11-21): the sticky top bar keeps no padding under itself and gives back the page
-  gap, so the first card sits 14 px under --bar-bottom. The bell keeps its glass circle and its glyph fills it, 34 px
-  in the 46 px circle (owner 2026-11-21, "full to the circle encasing it"), with a small red dot, no count, on the
+  gap, so the first card sits 14 px under --bar-bottom. The bell keeps its glass circle and its glyph fills it,
+  29 px in the 46 px circle (owner 2026-11-21, "full to the circle", then 15 percent smaller), with a small red dot, no count, on the
   glyph's top right corner.
 - Wording (owner 2026-11-21, human-technical-writing and Bloomberg): footers read as terminal definitions, the term
   then its meaning ("T30, client profit over 30 days", "Lift, the gap in points"), active verbs, no instructions, no
@@ -243,7 +247,7 @@ the screen ("Touch and drag", "Select an account" are cut). "Action required",
   current price. P&L comes from price, (price - open) x lots x contract size, with prices from distill.py PRICE.
 - Settings (owner 2026-11-19, the Claude app's Settings sheet; src/components/settings.tsx): opened from the menu
   avatar, the more menu and Account. Account card with Switch user, then Account (Profile, Clearance level, Activity,
-  Notifications, Users and roles, Device access, Build paths), App (Start screen, Point of view, Live prices, Haptic
+  Notifications, Users and roles, Device access), App (Start screen, Point of view, Live prices, Haptic
   feedback), Appearance tiles, Sign out, and an i menu (build, data source, licenses). Every row works.
   Clearance: the portal roles viewer, editor, admin (app-state ROLE_CAN). Confirm checks `need` (default editor), and
   direct actions call guard(): withdrawals, statuses, notes, watchlist and group moves need editor; users and devices
