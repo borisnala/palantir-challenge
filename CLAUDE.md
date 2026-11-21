@@ -155,8 +155,9 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   spring (160/20) by 6 percent wide and 18 percent tall and always settles exactly. Any touch or tap settles a menu a
   lost touchend left half way, and the page tap dispatches menu-close so it closes even when the state already reads closed.
 - Top spacing and bell (owner 2026-11-21): the sticky top bar keeps no padding under itself and gives back the page
-  gap, so the first card sits 14 px under --bar-bottom. The bell keeps its glass circle (owner 2026-11-21, "nobody asked
-  to remove the casing"), its glyph 24 px, a size up from the other round buttons.
+  gap, so the first card sits 14 px under --bar-bottom. The bell keeps its glass circle and its glyph fills it, 34 px
+  in the 46 px circle (owner 2026-11-21, "full to the circle encasing it"), with a small red dot, no count, on the
+  glyph's top right corner.
 - Wording (owner 2026-11-21, human-technical-writing and Bloomberg): footers read as terminal definitions, the term
   then its meaning ("T30, client profit over 30 days", "Lift, the gap in points"), active verbs, no instructions, no
   "is responsible for" or "need attention" phrasing. A figure shown twice on one screen is cut (the Morning Digest

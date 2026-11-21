@@ -75,7 +75,7 @@ export function NavBar({ title, eyebrow, trailing, back }: {
         </button>
         <span className="nav-actions">
           <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
-            <Glass className="glassbtn round"><Bell size={23} strokeWidth={2} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}</Glass>
+            <Glass className="glassbtn round bellcap"><span className="bell-glyph"><Bell strokeWidth={1.7} />{unread.size > 0 && <i className="bell-dot" aria-hidden />}</span></Glass>
           </Link>
           <button className="glassbtn-link" aria-label="More" aria-expanded={menu} onClick={() => { buzz(); setMenu(!menu); }}>
             <Glass className="glassbtn round"><Ellipsis size={22} strokeWidth={2} /></Glass>

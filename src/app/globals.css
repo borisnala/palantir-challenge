@@ -1548,4 +1548,8 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .c360-head { margin-top: 0 !important; }
 
 /* The bell glyph a size up inside its glass circle (owner 2026-11-21, "enlarge the icon a bit") */
-.topbar .glassbtn.round svg.lucide-bell { width: 24px; height: 24px; }
+/* The bell fills its glass circle (owner 2026-11-21, "full to the circle encasing it") and carries a small red dot,
+   not a count, on its top right corner. The count stays in the button's label and on the Notifications screen. */
+.bellcap .bell-glyph { position: relative; display: grid; place-items: center; width: 34px; height: 34px; }
+.topbar .glassbtn.round.bellcap svg { width: 34px; height: 34px; }
+.bell-dot { position: absolute; top: 3px; right: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 2px var(--glass-solid, var(--bg)); }
