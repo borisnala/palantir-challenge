@@ -156,8 +156,8 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 - Sizes and motion (owner 2026-11-21, "ratio are fucked up", "everything moving slow", "the menu sometimes stuck"):
   controls follow the Claude app, --bar-h 46 (round buttons and title capsule, title 15.5 semibold over 12.5),
   --dock-h 48 (bottom capsule and action, 16 px), segmented 34 with 13.5 px labels. Page push and pop 0.3 s, menus
-  0.28 s, the side menu spring 480/42, sheets 460/40. Glass presses swell to 1.06. The segmented lens lifts on a slow
-  spring (70/14) by 6 percent wide and 18 percent tall and always settles exactly. Glass presses swell in 0.3 s and
+  0.28 s, the side menu spring 480/42, sheets 460/40. Glass presses swell to 1.06. The segmented lens grows 6 percent
+  wide and 18 percent tall when lifted. Glass presses swell in 0.3 s and
   release over 1.1 s (owner 2026-11-21, "zoom out not slow enough"): the resting state's transition is the release.
   The side menu never rests half way: any touch or tap settles it, the page tap dispatches menu-close, and a
   watchdog drops a drag with no touch event for 0.8 s and springs the menu to open or closed. It opens only on a
