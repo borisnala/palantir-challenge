@@ -74,8 +74,8 @@ export function NavBar({ title, eyebrow, trailing, back }: {
           <Glass className="titlecap"><h1>{title}</h1>{eyebrow && <p>{eyebrow}</p>}</Glass>
         </button>
         <span className="nav-actions">
-          <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
-            <Glass className="glassbtn round"><Bell size={20} strokeWidth={2} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}</Glass>
+          <Link href="/alerts/" className="bellbtn" aria-label={`Alerts, ${unread.size} unread`} onClick={() => buzz()}>
+            <Bell fill="currentColor" strokeWidth={1.6} />{unread.size > 0 && <b className="navbadge">{unread.size}</b>}
           </Link>
           <button className="glassbtn-link" aria-label="More" aria-expanded={menu} onClick={() => { buzz(); setMenu(!menu); }}>
             <Glass className="glassbtn round"><Ellipsis size={22} strokeWidth={2} /></Glass>
@@ -493,7 +493,7 @@ export function Confirm({ open, title, lines, action, destructive, onCancel, onC
     <Sheet open={open} onClose={onCancel} title={title}>
       <Group footer={ok ? undefined : `Signed in as ${user.name}, ${ROLE_LABEL[user.role]}. This change requires ${ROLE_LABEL[need]} clearance.`}>{lines.map((l, i) => <Row key={i} title={l} chevron={false} />)}</Group>
       {code && ok && (
-        <Group header="Confirmation code" footer="Type the code to unlock the change.">
+        <Group header="Confirmation code" footer="Code required to apply the change.">
           <div className="code-show" aria-label={`Code ${expect ?? ""}`}>{(expect ?? "······").split("").map((ch, i) => <b key={i}>{ch}</b>)}</div>
           <label className="field"><span>Code</span><input value={typed} onChange={(e) => setTyped(e.target.value.toUpperCase().slice(0, 6))} autoCapitalize="characters" autoComplete="off" spellCheck={false} inputMode="text" placeholder="6 characters" aria-label="Confirmation code" className="mono" /></label>
         </Group>

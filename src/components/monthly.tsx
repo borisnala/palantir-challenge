@@ -162,7 +162,7 @@ export function MonthlyHistory({ data, sg }: { data: Monthly; sg: number }) {
       </Group>
 
       <Segmented label="Order" value={sort} onChange={setSort} options={[{ v: "new", label: "Newest" }, { v: "best", label: "Best" }, { v: "worst", label: "Worst" }]} />
-      <Group header={sym ? `By month, ${sym}` : "By month"} footer="Balance is reconstructed from closed deals and balance operations. The latest month shows live equity.">
+      <Group header={sym ? `By month, ${sym}` : "By month"} footer="Balance rebuilt from closed deals and balance operations. Latest month at live equity.">
         {listed.map(({ m, i }) => {
           const f = figs(m, sym);
           return (

@@ -137,14 +137,14 @@ export function Welcome() {
           <Row icon={<Smartphone size={20} strokeWidth={1.8} />} title="The Global Risk Portal, for a phone" subtitle="The desk's portal for B-book risk, liquidity and withdrawals, rebuilt as a native style iPhone app." chevron={false} />
           <Row icon={<Database size={20} strokeWidth={1.8} />} title="Demonstration data" subtitle="Every figure comes from the portal's own demo set, snapshot 13 Nov 2026. Logins 99000001 onward, names Demo Client N. No real client, group or value." chevron={false} />
           <Row icon={<ArrowDownUp size={20} strokeWidth={1.8} />} title="What it shows" subtitle="Who moved overnight, which clients cost the book, the withdrawals waiting for Risk, and each client's full profile in Client 360." chevron={false} />
-          <Row icon={<ShieldCheck size={20} strokeWidth={1.8} />} title="Changes are safe" subtitle="Moves, spreads and users go through a confirmation, some with a typed code. Nothing leaves this phone." chevron={false} />
+          <Row icon={<ShieldCheck size={20} strokeWidth={1.8} />} title="Changes need confirmation" subtitle="Group moves, spreads and users pass a confirmation, some with a typed code. Nothing leaves the device." chevron={false} />
           <Row icon={<Hand size={20} strokeWidth={1.8} />} title="Getting around" subtitle="Swipe from the left edge for the menu, search clients from the bottom bar, the bell for alerts." chevron={false} />
         </Group>
         <button className="btn btn-blue wide" onClick={next}>Continue</button>
       </Sheet>
 
       <Sheet open={shown === "install"} onClose={done} title="Add to Home Screen" tall>
-        <p className="install-why"><b>For the best experience, add Risk Tool to the Home Screen.</b> It then opens full screen like an installed app, without the browser&rsquo;s address bar and toolbars, fitted to your phone&rsquo;s screen.</p>
+        <p className="install-why"><b>Add Risk Tool to the Home Screen.</b> It then opens full screen as an app, without the browser address bar and toolbars.</p>
         <Segmented label="Phone" value={os} onChange={(o) => { setOs(o); setBr(BROWSERS[o][0].v); }} options={[{ v: "ios", label: "iPhone" }, { v: "android", label: "Android" }]} />
         <Segmented label="Browser" value={br} onChange={setBr} options={BROWSERS[os]} />
         <ol className="steps">

@@ -44,7 +44,7 @@ export default function Growth() {
         {pgs.map(([k, n]) => <button key={k} role="radio" aria-checked={pg === k} className={`tchip ${pg === k ? "on" : ""}`} onClick={() => { buzz(); setPg(k); }}>{k} {n}</button>)}
       </div>
 
-      <Group footer="Curve fit measures how linear the profit curve is. High fit on a rising curve means consistent profit.">
+      <Group footer="Curve fit, R squared of the profit curve. A high fit on a rising curve marks consistent profit.">
         {rows.map((r) => (
           <Row key={r.login} onClick={() => { setSel(r); setOpen(true); }} title={r.name ?? `#${r.login}`}
             subtitle={`Fit ${num(r.r_squared, 2)} · ${num(r.active_days)} active days · ${compact(r.slope_per_day, true)} a day`}

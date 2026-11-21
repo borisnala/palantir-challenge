@@ -24,7 +24,7 @@ export default function SearchClients() {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Login, name or group" inputMode="search" aria-label="Search by login, name or group" autoFocus />
         {q && <button onClick={() => setQ("")} aria-label="Clear"><X size={14} strokeWidth={3} /></button>}
       </label>
-      {flagged.length > 0 && <Group header={`On the watchlist · ${flagged.length}`} footer="Amounts are T30, client profit over 30 days.">{flagged.map(row)}</Group>}
+      {flagged.length > 0 && <Group header={`On the watchlist · ${flagged.length}`} footer="T30, client profit over 30 days.">{flagged.map(row)}</Group>}
       {rest.length > 0 && <Group header={`Other clients · ${rest.length}`}>{rest.map(row)}</Group>}
       {match.length === 0 && <Group><Row title={`No client matches “${q}”`} subtitle="Enter a login, for example 99000003." chevron={false} /></Group>}
     </>

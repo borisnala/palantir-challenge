@@ -44,7 +44,7 @@ export default function GroupSpread() {
         {sel && (
           <>
             <Segmented label="Tier" value={tier} onChange={setTier} options={gs.tiers.map((t) => ({ v: t, label: t }))} />
-            <Group header={`Preview, now to ${tier}`} footer="Spread in points. Balance is the extra markup per symbol.">
+            <Group header={`Preview, now to ${tier}`} footer="Spread in points. Balance, extra markup per symbol.">
               {gs.paths.filter((p) => nowOf(sel)[p] && EXP[tier][p]).map((p) => {
                 const a = nowOf(sel)[p], b = EXP[tier][p];
                 return <Row key={p} title={sym(p)} detail={a.sd === b.sd ? `${b.sd}` : <span><span className="muted">{a.sd} to </span><b className={b.sd > a.sd ? "neg" : "pos"}>{b.sd}</b></span>} chevron={false} />;

@@ -132,7 +132,7 @@ function Pages() {
 function NotifyPage() {
   const app = useApp();
   return (
-    <Group footer="Disabled kinds are excluded from the bell and the list.">
+    <Group footer="Disabled kinds stay off the bell and the list.">
       {ALERT_KINDS.map((k) => (
         <Row key={k.k} title={k.label} subtitle={k.sub} chevron={false}>
           <Switch on={app.prefs.notify[k.k]} onChange={() => app.setPref("notify", { ...app.prefs.notify, [k.k]: !app.prefs.notify[k.k] })} label={k.label} />

@@ -55,7 +55,7 @@ export function UsersPanel() {
       </Sheet>
 
       <Sheet open={creating} onClose={() => setCreating(false)} title="New user">
-        <Group footer="Lower case letters, digits, dots and dashes. A temporary password is issued on creation.">
+        <Group footer="Lowercase letters, digits, dots and dashes. Creation issues a temporary password.">
           <label className="field"><span>Username</span><input value={newName} onChange={(e) => setNewName(e.target.value.trim().toLowerCase())} autoCapitalize="none" spellCheck={false} placeholder="demo.analyst2" /></label>
         </Group>
         <Segmented label="Role" value={newRole} onChange={setNewRole} options={[{ v: "viewer", label: "Viewer" }, { v: "editor", label: "Editor" }, { v: "admin", label: "Admin" }]} />

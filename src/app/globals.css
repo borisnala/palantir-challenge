@@ -1541,3 +1541,15 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .calmonth { animation-duration: .3s; animation-delay: calc(var(--i, 0) * 15ms); }
 .action { transition: transform .35s var(--spring-soft), background-color .2s, color .2s; }
 .seg-copy { font-size: 13.5px; }
+
+/* Content starts 14 px under the bar (owner 2026-11-21, "lot of space there, unnecessary"): the sticky bar keeps no
+   padding under itself and gives back the page's section gap, so the first card sits at --bar-bottom + 14. */
+.topbar { padding-bottom: 0; min-height: var(--bar-bottom); margin-bottom: -12px; grid-template-columns: var(--bar-h) 1fr auto; }
+.c360-head { margin-top: 0 !important; }
+
+/* The bell is a bare glyph (owner 2026-11-21, "just make it full, icon only"), filled, with the count on its top
+   right corner. Same 46 pt touch target as the round buttons beside it. */
+.bellbtn { position: relative; width: var(--bar-h); height: var(--bar-h); display: inline-grid; place-items: center; color: var(--label); transition: transform .3s var(--spring-soft); }
+.bellbtn:active { transform: scale(.9); }
+.bellbtn svg { width: 23px; height: 23px; }
+.bellbtn .navbadge { top: 7px; right: 7px; min-width: 17px; height: 17px; padding: 0 4px; box-shadow: 0 0 0 2px var(--bg); }

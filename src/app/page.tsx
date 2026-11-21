@@ -142,7 +142,7 @@ function Board() {
           ))}
         </div>
       </div>
-      <Group header={kind === "all" ? "Largest moves" : KIND[kind].label} footer="By size. Profit and swing rows show the change, others 30 day client P&L.">
+      <Group header={kind === "all" ? "Largest moves" : KIND[kind].label} footer="Sorted by size. Profit and swing rows show the change, other rows 30 day client P&L.">
         {list.slice(0, 8).map((m, i) => <MoveRow key={`${m.kind}-${m.login}-${i}`} m={m} onOpen={setSel} />)}
         {list.length > 8 && <Row onClick={() => setAll(true)} title={<span className="link-blue">Show all {list.length}</span>} chevron={false} />}
       </Group>

@@ -29,7 +29,7 @@ export function BuildPathsPanel() {
   };
   return (
     <>
-      <Group header={missing ? `${missing} missing` : "All found"} footer="Settings file per algorithm. A missing file runs on defaults.">{items.filter((a) => a.slug !== "candletl_home").map(row)}</Group>
+      <Group header={missing ? `${missing} missing` : "All found"} footer="Settings file per algorithm. A missing file falls back to defaults.">{items.filter((a) => a.slug !== "candletl_home").map(row)}</Group>
       <Group header="CandleTL home">{row(items[items.length - 1])}</Group>
 
       <Sheet open={sel !== null && !review} onClose={() => setSel(null)} title={sel?.label ?? "Path"}>

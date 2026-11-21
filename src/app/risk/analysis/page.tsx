@@ -89,7 +89,7 @@ function Behaviour() {
             {r.avg.lots.map((v, i) => <span key={i} className="bcell"><i style={{ background: "var(--blue)", opacity: 0.35 + 0.65 * (v / lotsMax), transform: `scaleY(${Math.max(0.06, v / lotsMax)})` }} />{num(v, 1)}</span>)}</Fragment>))}
         </div>
       </Group>
-      <Group header="Average client P&L, before, during and after" footer="A drop during the move is the protection working. Client P&L, positive when the client profits.">
+      <Group header="Average client P&L, before, during and after" footer="A drop during the move shows the protection working. Positive figures are client profit.">
         <div className="bda"><span /><b>Before</b><b>During</b><b>After</b>
           {rows.map((r) => (<Fragment key={r.tier}><span>{r.tier === "ALL" ? "All" : r.tier}</span>
             {r.avg.pl.map((v, i) => <span key={i} className="bcell"><i style={{ background: v >= 0 ? "var(--red)" : "var(--green)", transform: `scaleY(${Math.max(0.06, Math.abs(v) / plMax)})` }} />{compact(v, true)}</span>)}</Fragment>))}
@@ -117,7 +117,7 @@ export default function RiskAnalysis() {
       <h2 className="sub-head">Protection</h2>
       <Segmented label="Window" value={scope} onChange={setScope} options={[{ v: "default", label: "Since cutoff" }, { v: "all", label: "All moves" }]} />
       <Metrics label="Protection" items={[{ k: "Protected", v: compact(p.totals.protection_usd), tone: "pos" }, { k: "House P&L", v: compact(p.totals.pl_house), tone: p.totals.pl_house >= 0 ? "pos" : "neg" }, { k: "Lots", v: num(p.totals.lots_total, 0) }]} />
-      <Group header="By algorithm" footer="Additional spread earned on the client's trades after the move.">
+      <Group header="By algorithm" footer="Extra spread earned on the client's trades after the move.">
         {p.by_algo.map((x: any) => <Row key={x.algo} title={x.label} subtitle={`${x.moves} moves · ${x.accounts} accounts`} detail={money(x.protection_usd)} chevron={false} />)}
       </Group>
       <Group header="Latest moves">

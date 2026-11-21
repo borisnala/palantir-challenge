@@ -66,7 +66,7 @@ export default function Book() {
             { k: "Accounts", v: `${loss.accounts_with_activity} of ${loss.accounts_in_pool}` },
             { k: "Deals", v: num(loss.deals_counted) },
           ]} />
-          <Group header="Symbol toxicity board" footer="Each bar compares the symbol's share of activity, gray, with its share of book losses, red, or wins, green. Lift is the gap in points.">
+          <Group header="Symbol toxicity board" footer="Gray, share of activity. Red, share of book losses. Green, share of wins. Lift, the gap in points.">
             {loss.board.map((r) => {
               const lossSide = r.side === "broker_loss";
               const share = (lossSide ? r.loss_share_pct : r.profit_share_pct) ?? 0;
@@ -90,7 +90,7 @@ export default function Book() {
             { k: "Notional", v: compact(mm.totals.notional_usd) },
             { k: "Per $1m", v: compact(mm.totals.pnl_per_mm, true), tone: mm.totals.pnl_per_mm >= 0 ? "pos" : "neg" },
           ]} />
-          <Group header="Which clients cost the broker most" footer="Broker P&L per USD 1m of notional traded. Negative means the client costs the book.">
+          <Group header="Which clients cost the broker most" footer="Broker P&L per USD 1m notional traded. Negative, the client costs the book.">
             {[...mm.rows].sort((a, b) => a.pnl_per_mm - b.pnl_per_mm).map((r) => (
               <ClientRow key={r.login} login={r.login} name={nameOf(r.login)} sub={`${r.tier} · ${compact(r.notional_usd)} notional · ${r.deals} deals${r.reliable ? "" : " · partial notional"}`}
                 detail={<span className="stack-r"><Pnl v={r.pnl_per_mm} short /><span className="small">per $1m</span></span>} />

@@ -59,7 +59,7 @@ export default function HouseCleaning() {
         })}
       </Group>
 
-      <Group header="Delete" footer={`Only groups under ${hc.config.delete_allow_prefix.replace(/\\/g, " / ")} can be deleted, ${hc.config.delete_max_rows} at a time, test server only.`}>
+      <Group header="Delete" footer={`Deletion limited to groups under ${hc.config.delete_allow_prefix.replace(/\\/g, " / ")}, ${hc.config.delete_max_rows} at a time, test server only.`}>
         <Row onClick={() => setDry(true)} title={<span className="link">Dry run</span>} subtitle={`${deletable.length} cutlisted ${deletable.length === 1 ? "group matches" : "groups match"}`} />
       </Group>
 

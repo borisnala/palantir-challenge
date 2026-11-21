@@ -46,7 +46,7 @@ export default function Watchlist() {
       </div>
       <Segmented label="Sort by" value={sort} onChange={setSort} options={[{ v: "t30", label: "T30" }, { v: "fpl", label: "Floating" }, { v: "balance", label: "Balance" }]} />
 
-      <Group footer="Up, Down and Flat compare P&L since the account was added. Add accounts from Client 360.">
+      <Group footer="Up, Down and Flat, P&L since the account joined the watchlist. Accounts join from Client 360.">
         {list.length === 0 && <Row title="No accounts on the watchlist" chevron={false} />}
         {list.map((w) => edit ? (
           <Row key={w.login} onClick={() => { if (!guard("editor")) return; toggleWatch(w.login); say(`${w.name} removed`); }} icon={<MinusCircle size={20} strokeWidth={2.4} />} tint="var(--red)"

@@ -103,7 +103,7 @@ export default function Alerts() {
         <Group key={d} header={d}>{list.filter((a) => DAY_OF(a.minutesAgo) === d).map(row)}</Group>
       ))}
       {list.length === 0 && <Group><div className="mailrow"><span className="mailrow-main"><span className="mailrow-sub">No alerts.</span></span></div></Group>}
-      <p className="fine">News profit alerts also go to the desk WhatsApp group. Kinds are switched in Settings.</p>
+      <p className="fine">News profit alerts also post to the desk WhatsApp group. Settings controls each alert kind.</p>
     </>
   );
 }

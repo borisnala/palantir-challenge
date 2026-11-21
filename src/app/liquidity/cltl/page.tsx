@@ -45,7 +45,7 @@ export default function Cltl() {
           </div>
         </Group>
       ))}
-      <p className="caption">The light is the higher of the candle light (M1, M5, daily range) and the liquidity light (spread). Higher lights widen client spreads.</p>
+      <p className="caption">Light, the higher of the candle light (M1, M5, daily range) and the liquidity light (spread). Higher lights widen client spreads.</p>
 
       <Group header="Level changes">
         {cl.events.map((e, i) => (

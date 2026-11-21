@@ -498,7 +498,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 </div>
                 <FloatChart values={live.series} />
               </section>
-              <Group header={`Open positions · ${p.exposure.symbols.length}`} footer="Updated every second. P&L is price change x lots x contract size.">
+              <Group header={`Open positions · ${p.exposure.symbols.length}`} footer="Updated each second. P&L, price change x lots x contract size.">
                 {p.exposure.symbols.map((r, i) => (
                   <Row key={r.symbol} title={<span>{r.symbol} <Chip tone={r.direction === "LONG" ? "green" : "red"}>{r.direction === "LONG" ? "Buy" : "Sell"} {num(r.gross_lots, 2)}</Chip></span>}
                     subtitle={<span className="px"><span>Open {fmt(r.open_price, r.digits)}</span><span className={`px-now ${live.moves[i] > 0 ? "px-up" : live.moves[i] < 0 ? "px-down" : ""}`} key={live.prices[i]}>{fmt(live.prices[i], r.digits)}</span></span>}
@@ -547,7 +547,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
                 <div><span>Win rate</span><b>{pct(p.behaviour.win_rate_pct, 0)}</b></div>
               </div>
             </section>
-            <p className="caption">Compare price is the daily price of the symbol over the same window, scaled to the chart height. Simulated.</p>
+            <p className="caption">Compare price, daily symbol price over the same window, scaled to chart height. Simulated.</p>
 
             <Group header="At a glance">
               <Row onClick={() => setTab("trading")} title="Trades" detail={num(p.behaviour.trade_count)} />
@@ -592,7 +592,7 @@ function Client360Body({ c, p }: { c: Client; p: Profile }) {
               ))}
             </Group>
 
-            <Group header="Top symbols" footer="Percent is the share of total lots. Bars on the session scale.">
+            <Group header="Top symbols" footer="Percent, share of total lots. Bars on the session scale.">
               {p.symbols.map((s) => (
                 <div key={s.symbol} className="barrow">
                   <span className="barrow-top"><b>{s.symbol}</b>{s.pl !== null && s.pl !== undefined && <Pnl v={symPl(s)} />}</span>
