@@ -48,6 +48,7 @@ export function Drawer() {
   const drag = useRef<{ x0: number; y0: number; p0: number; last: number; t: number; v: number; axis: "x" | "y" | null } | null>(null);
   const width = () => panel.current?.offsetWidth || 320;
   const held = useRef<{ y: number; path: string } | null>(null);
+  const lastTouch = useRef(0), still = useRef(0), lastX = useRef(0);
   const [moreW, setMoreW] = useState(false);
 
   const paint = () => {
@@ -137,18 +138,22 @@ export function Drawer() {
     addEventListener("menu-close", close);
     // Watchdog (owner 2026-11-21, "sometimes it is still stuck"): a drag with no touch event for 0.8 s lost its
     // touchend, so it is dropped. Whenever no finger drags, the menu rests exactly open or closed, never in between.
-    let lastTouch = 0;
-    const seen = () => { lastTouch = performance.now(); };
+    const seen = () => { lastTouch.current = performance.now(); };
     addEventListener("touchstart", seen, { passive: true });
     addEventListener("touchmove", seen, { passive: true });
     const dog = setInterval(() => {
-      if (drag.current && performance.now() - lastTouch > 800) drag.current = null;
-      if (drag.current) return;
+      if (drag.current && performance.now() - lastTouch.current > 800) drag.current = null;
+      if (drag.current) { still.current = 0; return; }
       const want = drawer ? 1 : 0;
-      if (x.current.target !== want || Math.abs(x.current.x - want) > 0.001) { x.current.target = want; kick(); }
+      if (Math.abs(x.current.x - want) <= 0.001) { still.current = 0; return; }
+      // Off its resting point: spring there, and if two checks in a row (0.5 s) find it not moving, put it there
+      if (Math.abs(x.current.x - lastX.current) < 0.0005) still.current += 1; else still.current = 0;
+      lastX.current = x.current.x;
+      x.current.target = want;
+      if (still.current >= 2) { x.current.x = want; x.current.v = 0; still.current = 0; paint(); } else kick();
     }, 250);
     return () => { clearInterval(dog); removeEventListener("touchstart", seen); removeEventListener("touchmove", seen); removeEventListener("menu-close", close); removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); removeEventListener("touchcancel", end); };
-  }, [drawer, setDrawer, kick]);
+  }, [drawer, setDrawer, kick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The menu's search finds features (lib/features.ts), never clients: Client 360 has its own search.
   const [typed, setQ] = useState<string | null>(null);

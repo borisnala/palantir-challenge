@@ -310,56 +310,78 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   const track = useRef<HTMLDivElement>(null);
   const thumb = useRef<HTMLSpanElement>(null);
   const copy = useRef<HTMLSpanElement>(null);
-  const sx = useRef(new Spring(-1, 300, 24));
-  const lift = useRef(new Spring(0, 34, 10.5, 0.003)); // the soft sink, about 1.2 s; down() swaps in a firm spring to rise
-  const sink = useRef(0), pressedAt = useRef(0); // a slow, gentle lift and sink (owner 2026-11-21, "slow down the zoom, correct amount")
+  // Three stages of equal length, never overlapping (owner 2026-11-21, "zooming out, moving, zooming in, same load, do
+  // not rush"): the lens rises out of the track, then travels to the new segment, then sinks back, STAGE seconds each
+  // on an ease in and out. A drag rises the same way, follows the finger, then travels to the nearest segment and sinks.
+  const STAGE = 0.4;
+  const iRef = useRef(i);
+  useEffect(() => { iRef.current = i; });
+  const ease = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+  const tl = useRef({ x: -1, v: 0, L: 0, r0: -1, rFrom: 0, m0: -1, mFrom: 0, mTo: 0, s0: -1, sFrom: 1, waitTap: false });
   const drag = useRef<{ off: number; x0: number; last: number; t: number; moved: boolean } | null>(null);
   const skipClick = useRef(false);
   const unit = () => { const el = track.current; return el ? (el.clientWidth - 4) / options.length : 0; };
+  const now = () => performance.now() / 1000;
 
-  const kick = useSpringLoop((dt) => {
-    const d = drag.current;
-    const m1 = d ? false : sx.current.step(dt);
-    const m2 = lift.current.step(dt);
-    if (!m2) { lift.current.x = lift.current.target; lift.current.v = 0; } // settle exactly, the lens never rests half lifted
-    const L = Math.max(0, lift.current.x);
-    const { sx: kx, sy: ky } = stretch(sx.current.v * 1.2, 0.27);
+  const kick = useSpringLoop(() => {
+    const s = tl.current, t = now(), d = drag.current;
+    // Lift: rising, held up, or sinking
+    let L = s.L;
+    if (s.s0 >= 0 && t >= s.s0) L = s.sFrom * (1 - ease((t - s.s0) / STAGE));
+    else if (s.r0 >= 0) L = s.rFrom + (1 - s.rFrom) * ease((t - s.r0) / STAGE);
+    // Position: the finger while dragging, else the travel stage
+    const before = s.x;
+    if (!d && s.m0 >= 0) s.x = t < s.m0 ? s.mFrom : s.mFrom + (s.mTo - s.mFrom) * ease((t - s.m0) / STAGE);
+    s.v = (s.x - before) * 60;
+    s.L = L;
+    const { sx: kx, sy: ky } = stretch(s.v * 0.9, 0.18);
     if (thumb.current) {
-      thumb.current.style.transform = `translateX(${sx.current.x}px) scale(${kx * (1 + 0.06 * L)}, ${ky * (1 + 0.18 * L)})`;
+      thumb.current.style.transform = `translateX(${s.x}px) scale(${kx * (1 + 0.06 * L)}, ${ky * (1 + 0.18 * L)})`;
       thumb.current.style.setProperty("--lift", L.toFixed(3));
       thumb.current.style.zIndex = L > 0.02 ? "2" : "0"; // the fill sits under the labels, the lifted lens over them
     }
-    if (copy.current) copy.current.style.setProperty("--cx", `${-sx.current.x}px`);
-    return m1 || m2 || !!d;
+    if (copy.current) copy.current.style.setProperty("--cx", `${-s.x}px`);
+    const moving = !!d || (s.r0 >= 0 && t < s.r0 + STAGE) || (s.m0 >= 0 && t < s.m0 + STAGE) || (s.s0 >= 0 && t < s.s0 + STAGE) || s.waitTap;
+    if (!moving && s.s0 >= 0 && t >= s.s0 + STAGE) { s.L = 0; s.r0 = -1; s.s0 = -1; s.m0 = -1; }
+    return moving;
   });
+
+  /** Plan the travel to x and the sink after it, each starting once the stage before it has ended. */
+  const travel = (to: number) => {
+    const s = tl.current, t = now();
+    const start = Math.max(t, s.r0 >= 0 ? s.r0 + STAGE : t);
+    s.mFrom = s.x; s.mTo = to; s.m0 = Math.abs(to - s.x) > 0.5 ? start : -1;
+    s.s0 = (s.m0 >= 0 ? s.m0 + STAGE : start); s.sFrom = 1; s.waitTap = false;
+    kick();
+  };
 
   useEffect(() => {
     const el = track.current; if (!el) return;
     const place = (instant: boolean) => {
-      const w = unit();
+      const w = unit(), s = tl.current;
       if (thumb.current) thumb.current.style.width = `${w}px`;
       if (copy.current) copy.current.style.setProperty("--tw", `${el.clientWidth - 4}px`);
       if (drag.current) return;
-      sx.current.target = i * w;
-      if (instant || sx.current.x < 0) { sx.current.x = i * w; sx.current.v = 0; }
-      kick();
+      if (instant || s.x < 0) { s.x = i * w; s.m0 = -1; kick(); return; }
+      if (Math.abs(s.x - i * w) < 0.5 && !s.waitTap) return;
+      if (s.waitTap || s.r0 >= 0) travel(i * w); // a tap: travel after the rise, then sink
+      else { s.mFrom = s.x; s.mTo = i * w; s.m0 = now(); kick(); } // changed from elsewhere: travel only
     };
     place(false);
-    const ro = new ResizeObserver(() => place(true));
+    // Only a real change of width snaps the thumb: a new observer's first call would cut the travel stage short
+    let wide = el.clientWidth;
+    const ro = new ResizeObserver(() => { if (el.clientWidth !== wide) { wide = el.clientWidth; place(true); } });
     ro.observe(el);
     return () => ro.disconnect();
   }, [i, options.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const local = (e: React.PointerEvent) => e.clientX - (track.current?.getBoundingClientRect().left ?? 0) - 2;
   const down = (e: React.PointerEvent) => {
-    const w = unit(), px = local(e);
-    const onThumb = px >= sx.current.x && px <= sx.current.x + w;
-    drag.current = { off: onThumb ? px - sx.current.x : w / 2, x0: px, last: px, t: e.timeStamp, moved: false };
-    // The lens rises quickly and sinks slowly (owner 2026-11-21, "no slower glass release"): a firm spring up, a soft
-    // one down, and a tap holds the lens up for 0.48 s so the rise finishes and the release is seen
-    clearTimeout(sink.current);
-    pressedAt.current = performance.now();
-    lift.current.k = 90; lift.current.c = 17; lift.current.target = 1;
+    const w = unit(), px = local(e), s = tl.current;
+    const onThumb = px >= s.x && px <= s.x + w;
+    drag.current = { off: onThumb ? px - s.x : w / 2, x0: px, last: px, t: e.timeStamp, moved: false };
+    // Stage one: rise from wherever the lens is now
+    s.rFrom = s.L; s.r0 = now(); s.s0 = -1; s.m0 = -1; s.waitTap = false;
     kick();
   };
   const move = (e: React.PointerEvent) => {
@@ -373,27 +395,27 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     if (!d.moved) return;
     let x = px - d.off;
     if (x < 0) x = -Math.sqrt(-x) * 3; else if (x > max) x = max + Math.sqrt(x - max) * 3; // rubber band past the ends
-    // and never past the screen: the lifted lens (14% wider than the thumb) stays 6 px inside either edge
-    const left = track.current?.getBoundingClientRect().left ?? 0, half = w * 0.07 + 6;
+    // and never past the screen: the lifted lens (6% wider than the thumb) stays 6 px inside either edge
+    const left = track.current?.getBoundingClientRect().left ?? 0, half = w * 0.03 + 6;
     x = Math.max(-left - 2 + half, Math.min(innerWidth - left - 2 - w - half, x));
-    const dt = Math.max(1, e.timeStamp - d.t) / 1000;
-    sx.current.v = sx.current.v * 0.4 + ((x - sx.current.x) / dt) * 0.6;
-    sx.current.x = x; d.last = px; d.t = e.timeStamp;
+    tl.current.x = x; d.last = px; d.t = e.timeStamp;
     kick();
   };
   const up = (cancel: boolean) => {
     const d = drag.current; if (!d) return;
     drag.current = null;
-    const held = performance.now() - pressedAt.current;
-    clearTimeout(sink.current);
-    sink.current = window.setTimeout(() => { lift.current.k = 34; lift.current.c = 10.5; lift.current.target = 0; kick(); }, Math.max(0, 480 - held));
     const w = unit();
     if (d.moved && !cancel) {
-      const j = Math.max(0, Math.min(options.length - 1, Math.round(sx.current.x / w)));
+      const j = Math.max(0, Math.min(options.length - 1, Math.round(tl.current.x / w)));
       skipClick.current = true;
-      sx.current.target = j * w;
+      travel(j * w);
       if (j !== i) { buzz(); onChange(options[j].v); }
-    } else sx.current.target = i * w;
+    } else if (cancel) travel(i * w);
+    else {
+      // A tap: the button's click picks the segment and place() plans the travel. If it is the same segment, sink.
+      tl.current.waitTap = true;
+      setTimeout(() => { if (tl.current.waitTap) travel(iRef.current * unit()); }, 60);
+    }
     kick();
   };
 

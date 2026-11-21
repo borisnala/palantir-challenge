@@ -20,21 +20,29 @@ export class Spring {
   }
 }
 
-/** Runs a frame loop while draw(dt) returns true (something still moving). Returns kick() to (re)start it. */
+/** Runs a frame loop while draw(dt) returns true (something still moving). Returns kick() to (re)start it. kick keeps
+ *  one identity for the component's life, and a loop whose frame never came (iOS can drop a requested frame during
+ *  its own gestures) restarts instead of blocking every later kick (owner 2026-11-21, "still stuck"). */
 export function useSpringLoop(draw: (dt: number) => boolean) {
   const raf = useRef(0);
+  const asked = useRef(0);
   const drawRef = useRef(draw);
   useLayoutEffect(() => { drawRef.current = draw; });
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
-  return () => {
-    if (raf.current) return;
-    let last = performance.now();
+  const kick = useRef(() => {
+    const now = performance.now();
+    if (raf.current && now - asked.current < 200) return;
+    if (raf.current) cancelAnimationFrame(raf.current); // the frame asked for never came: ask again
+    let last = now;
     const tick = (t: number) => {
       const dt = Math.min(0.032, Math.max(0.001, (t - last) / 1000)); last = t;
-      raf.current = drawRef.current(dt) ? requestAnimationFrame(tick) : 0;
+      let more = false;
+      try { more = drawRef.current(dt); } finally { asked.current = performance.now(); raf.current = more ? requestAnimationFrame(tick) : 0; }
     };
+    asked.current = now;
     raf.current = requestAnimationFrame(tick);
-  };
+  });
+  return kick.current;
 }
 
 /** Squash and stretch from velocity: fast motion stretches along the motion and thins across it, like a drop. */
