@@ -70,11 +70,12 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   src/data/alerts.json, 80 alerts in ten kinds (lib/data.ts ALERT_KINDS): news, algo, wd (pending and decided), tier,
   swing, book, exposure (MachineGun on open lots), level (CLTL changes), growth (30 day scan), system (screener
   checks, device requests, housecleaning). An alert without a client profile carries `href` (a screen, or
-  settings:devices) and `source` (shown as sender). The screen arranges By kind (newest stack first), By client
-  (every alert on one account in one stack, desk sources as their own, busiest first) or By time as iOS Mail. A stack
-  shows its newest alert on a card with two layers behind it and a summary line (N more, severity mix, clients or
-  kinds, money, time span) that opens it, and a header with the count, Mark read and Show N or Show less. Kind chips,
-  a Severity pull-down, disabled kinds hidden from list and bell.
+  settings:devices) and `source` (shown as sender). The list stays one list by day as iOS Mail, with severity and
+  kind filters (owner 2026-11-21, "not grouping the actual notifications"). The grouping lives in Settings,
+  Notifications (settings.tsx NotifyPage): Allow notifications, Delivery (bell dot, previews full or title only,
+  WhatsApp status), the kinds grouped by area (Client activity, Algorithms and exposure, Liquidity, Withdrawals,
+  System), each kind pushing Allow and a minimum severity with its counts, and Restore defaults. app-state
+  alertShown() applies them to the list, the bell and the unread count.
 - Client 360 point of view: Client P&L or Broker P&L flips every P&L figure (chart, calendar, sessions, symbols,
   holding time, trading pattern). Sessions, symbols and holding time draw diverging bars on one shared scale (ui.tsx
   DivBar). Balance and equity are account facts and never flip. The P&L chart zooms: 1M 3M 6M 1Y All, pinch on a phone,
@@ -136,6 +137,8 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   daily P&L and trades, balance run forward from deposits and never negative.
 - Menu and scroll (owner 2026-11-20, "the page scrolled up again"): the open menu card is one screen tall, so shell.tsx
   holds the page's scroll as --menu-y on main while it is open and restores it on close (unless the path changed).
+  The top bar and its fade, inside main, shift back by the same amount so they stay on the card (owner 2026-11-21).
+  Both search buttons (menu circle, bottom capsule) are --bar-h, 46 pt, as the top bar's buttons.
 - Frame and sheet corners: the iframe sits in .device (the bezel) > .device-screen (radius 44, clip with a mask). A
   sheet clips to its own corners and its list fades out at the bottom as under the header.
 - Challenge credit (owner 2026-11-20, "appear but not annoying"): under the launch mark, at the foot of the side menu

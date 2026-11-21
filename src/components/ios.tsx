@@ -54,7 +54,7 @@ function BackButton({ href, label }: { href: string; label: string }) {
 export function NavBar({ title, eyebrow, trailing, back }: {
   title: string; eyebrow?: string; trailing?: React.ReactNode; back?: { href: string; label: string }; large?: boolean; root?: boolean;
 }) {
-  const { unread, setDrawer, visit, wdRows, pending, say, set } = useApp();
+  const { unread, setDrawer, visit, wdRows, pending, say, set, prefs } = useApp();
   const path = usePathname();
   const [menu, setMenu] = useState(false);
   const slot = useSyncExternalStore(commandSlot.subscribe, commandSlot.get, () => null); // the command bar's action slot
@@ -75,7 +75,7 @@ export function NavBar({ title, eyebrow, trailing, back }: {
         </button>
         <span className="nav-actions">
           <Link href="/alerts/" className="glassbtn-link" aria-label={`Alerts, ${unread.size} unread`}>
-            <Glass className="glassbtn round bellcap"><span className="bell-glyph"><Bell strokeWidth={1.7} />{unread.size > 0 && <i className="bell-dot" aria-hidden />}</span></Glass>
+            <Glass className="glassbtn round bellcap"><span className="bell-glyph"><Bell strokeWidth={1.7} />{unread.size > 0 && prefs.notifyDot && <i className="bell-dot" aria-hidden />}</span></Glass>
           </Link>
           <button className="glassbtn-link" aria-label="More" aria-expanded={menu} onClick={() => { buzz(); setMenu(!menu); }}>
             <Glass className="glassbtn round"><Ellipsis size={22} strokeWidth={2} /></Glass>

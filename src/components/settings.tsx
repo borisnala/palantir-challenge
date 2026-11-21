@@ -8,11 +8,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Activity, Bell, Info, LogOut, MonitorSmartphone, Plus, ShieldCheck, UserRound, Users, Vibrate, ChartCandlestick, Compass, Eye } from "lucide-react";
-import { ROLE_CAN, ROLE_LABEL, ROLE_RANK, USERS, useApp, type Prefs, type Role } from "./app-state";
-import { Confirm, Group, PullDown, Row, Sheet, Switch, useSheetPush } from "./ios";
+import { ROLE_CAN, ROLE_LABEL, ROLE_RANK, USERS, alertShown, useApp, type Prefs, type Role, type Sev } from "./app-state";
+import { Confirm, Group, PullDown, Row, Segmented, Sheet, Switch, useSheetPush } from "./ios";
 import { Monogram } from "./ui";
 import { Glass } from "./liquid";
-import { ALERT_KINDS, when } from "@/lib/data";
+import { ALERTS, ALERT_KINDS, when, type AlertKind } from "@/lib/data";
 import us from "@/data/users.json";
 import { UsersPanel } from "./admin/users";
 import { DevicesPanel } from "./admin/devices";
@@ -125,16 +125,88 @@ function Pages() {
   );
 }
 
+/** Notification settings (owner 2026-11-21, "various and rich notification settings, in groups"): a master switch,
+ *  delivery (bell dot, previews, WhatsApp status), then the alert kinds grouped by desk area. A kind pushes its own
+ *  page with Allow and a minimum severity, and shows how many of today's alerts pass. */
+const AREAS: { title: string; kinds: AlertKind[] }[] = [
+  { title: "Client activity", kinds: ["news", "tier", "swing", "book", "growth"] },
+  { title: "Algorithms and exposure", kinds: ["algo", "exposure"] },
+  { title: "Liquidity", kinds: ["level"] },
+  { title: "Withdrawals", kinds: ["wd"] },
+  { title: "System", kinds: ["system"] },
+];
+const SEV_LABEL: Record<Sev, string> = { info: "All", warn: "Warning and above", critical: "Critical only" };
+
+function KindPage({ k }: { k: AlertKind }) {
+  const app = useApp();
+  const meta = ALERT_KINDS.find((x) => x.k === k)!;
+  const all = ALERTS.filter((a) => a.kind === k);
+  const by = (s: string) => all.filter((a) => a.severity === s).length;
+  const passing = all.filter((a) => alertShown(a, app.prefs)).length;
+  return (
+    <>
+      <Group footer={meta.sub}>
+        <Row title="Allow" chevron={false}>
+          <Switch on={app.prefs.notify[k]} label={`Allow ${meta.label}`} onChange={() => app.setPref("notify", { ...app.prefs.notify, [k]: !app.prefs.notify[k] })} />
+        </Row>
+      </Group>
+      <Group header="Minimum severity" footer={`${passing} of ${all.length} alerts in the current list pass.`}>
+        <div className="seg-row">
+          <Segmented label="Minimum severity" value={app.prefs.notifySev[k]} onChange={(v) => app.setPref("notifySev", { ...app.prefs.notifySev, [k]: v })}
+            options={[{ v: "info", label: "All" }, { v: "warn", label: "Warning" }, { v: "critical", label: "Critical" }]} />
+        </div>
+        <Row title="Critical" detail={<span className="num">{by("critical")}</span>} chevron={false} />
+        <Row title="Warning" detail={<span className="num">{by("warn")}</span>} chevron={false} />
+        <Row title="Info" detail={<span className="num">{by("info")}</span>} chevron={false} />
+      </Group>
+    </>
+  );
+}
+
 function NotifyPage() {
   const app = useApp();
+  const push = useSheetPush();
+  const p = app.prefs;
+  const on = ALERT_KINDS.filter((k) => p.notify[k.k]).length;
+  const passing = ALERTS.filter((a) => alertShown(a, p)).length;
+  const state = (k: AlertKind) => (!p.notify[k] ? "Off" : p.notifySev[k] === "info" ? "On" : SEV_LABEL[p.notifySev[k]]);
+  const reset = () => {
+    app.setPref("notifyOn", true); app.setPref("notifyDot", true); app.setPref("notifyPreview", "full"); app.setPref("notifyWa", true);
+    app.setPref("notify", Object.fromEntries(ALERT_KINDS.map((k) => [k.k, true])) as Record<AlertKind, boolean>);
+    app.setPref("notifySev", Object.fromEntries(ALERT_KINDS.map((k) => [k.k, "info"])) as Record<AlertKind, Sev>);
+    app.say("Notification settings restored");
+  };
   return (
-    <Group footer="Disabled kinds stay off the bell and the list.">
-      {ALERT_KINDS.map((k) => (
-        <Row key={k.k} title={k.label} subtitle={k.sub} chevron={false}>
-          <Switch on={app.prefs.notify[k.k]} onChange={() => app.setPref("notify", { ...app.prefs.notify, [k.k]: !app.prefs.notify[k.k] })} label={k.label} />
+    <>
+      <Group footer={p.notifyOn ? `${passing} of ${ALERTS.length} alerts reach the list and the bell. ${on} of ${ALERT_KINDS.length} kinds on.` : "No alerts reach the list or the bell."}>
+        <Row icon={<Bell size={20} strokeWidth={1.8} />} title="Allow notifications" chevron={false}>
+          <Switch on={p.notifyOn} label="Allow notifications" onChange={() => app.setPref("notifyOn", !p.notifyOn)} />
         </Row>
+      </Group>
+
+      <Group header="Delivery">
+        <Row title="Bell dot" subtitle="Red dot on the bell while alerts are unread" chevron={false}>
+          <Switch on={p.notifyDot} label="Bell dot" onChange={() => app.setPref("notifyDot", !p.notifyDot)} />
+        </Row>
+        <Row title="Previews" chevron={false} detail={<PullDown label="Previews" value={p.notifyPreview} onChange={(v) => app.setPref("notifyPreview", v)} options={[{ v: "full", label: "Full detail" }, { v: "title", label: "Title only" }]} />} />
+        <Row title="WhatsApp status" subtitle="Sent or pending, on news profit alerts" chevron={false}>
+          <Switch on={p.notifyWa} label="WhatsApp status" onChange={() => app.setPref("notifyWa", !p.notifyWa)} />
+        </Row>
+      </Group>
+
+      {AREAS.map((area) => (
+        <Group key={area.title} header={area.title}>
+          {area.kinds.map((k) => {
+            const meta = ALERT_KINDS.find((x) => x.k === k)!;
+            return <Row key={k} title={meta.label} subtitle={meta.sub} detail={<span className={p.notify[k] && p.notifyOn ? "" : "muted"}>{state(k)}</span>} onClick={() => push?.(meta.label, <KindPage k={k} />)} />;
+          })}
+        </Group>
       ))}
-    </Group>
+
+      <Group>
+        <Row onClick={reset} title={<span className="link-blue">Restore defaults</span>} chevron={false} />
+      </Group>
+    </>
   );
 }
 

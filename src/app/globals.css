@@ -1596,3 +1596,13 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .glassbtn-link:active .glassbtn:not(.lg-press), .glassbtn-link:active .titlecap:not(.lg-press) { transform: none; }
 /* The settle spreads over its whole 1.2 s instead of doing most of it in the first third */
 .glassbtn, .titlecap, .searchorb, .pillbtn, .cmd-field, .cmd-key { transition: transform 1.2s cubic-bezier(.45, .05, .25, 1), filter .9s ease-out; }
+
+/* With the menu open the page is held at its scroll by shifting main up (--menu-y). The top bar and its fade live
+   inside main, so they shift back down and stay at the top of the card (owner 2026-11-21, "top bar gone"). */
+.stage-open main.screen > .topbar, .stage-open main.screen > .scroll-edge { translate: 0 calc(-1 * var(--menu-y, 0px)); }
+
+/* Search buttons match the round buttons of the top bar (owner 2026-11-21, "keep aware of the ratio"): the menu's
+   search circle and the bottom search capsule are both 46 pt tall. */
+:root { --dock-h: var(--bar-h); }
+.drawer-head .glassbtn.round { width: var(--bar-h); height: var(--bar-h); }
+.drawer-head .glassbtn.round svg { width: 20px; height: 20px; }

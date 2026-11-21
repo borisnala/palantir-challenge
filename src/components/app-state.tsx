@@ -31,11 +31,24 @@ export interface Prefs {
   pov: "client" | "broker";
   live: boolean;
   notify: Record<AlertKind, boolean>;
+  /** Notification settings (owner 2026-11-21, "various and rich notification settings, in groups") */
+  notifyOn: boolean;
+  notifyDot: boolean;
+  notifyPreview: "full" | "title";
+  notifyWa: boolean;
+  notifySev: Record<AlertKind, Sev>;
 }
-export const DEFAULT_PREFS: Prefs = { theme: "system", haptics: true, start: "/", pov: "client", live: true, notify: { news: true, tier: true, swing: true, book: true, algo: true, wd: true, level: true, exposure: true, growth: true, system: true } };
+export type Sev = "info" | "warn" | "critical";
+const SEV_RANK: Record<string, number> = { info: 0, warn: 1, critical: 2 };
+/** Whether an alert reaches the list and the bell under these settings: notifications on, its kind on, and its
+ *  severity at or above the kind's minimum. */
+export const alertShown = (a: { kind: AlertKind; severity: string }, p: Prefs) => p.notifyOn && p.notify[a.kind] && SEV_RANK[a.severity] >= SEV_RANK[p.notifySev[a.kind] ?? "info"];
+export const DEFAULT_PREFS: Prefs = { theme: "system", haptics: true, start: "/", pov: "client", live: true, notify: { news: true, tier: true, swing: true, book: true, algo: true, wd: true, level: true, exposure: true, growth: true, system: true },
+  notifyOn: true, notifyDot: true, notifyPreview: "full", notifyWa: true,
+  notifySev: { news: "info", tier: "info", swing: "info", book: "info", algo: "info", wd: "info", level: "info", exposure: "info", growth: "info", system: "info" } };
 const PREFS_KEY = "risktool-prefs";
 export function readPrefs(): Prefs {
-  try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); return { ...DEFAULT_PREFS, ...p, notify: { ...DEFAULT_PREFS.notify, ...(p.notify ?? {}) } }; } catch { return DEFAULT_PREFS; }
+  try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); return { ...DEFAULT_PREFS, ...p, notify: { ...DEFAULT_PREFS.notify, ...(p.notify ?? {}) }, notifySev: { ...DEFAULT_PREFS.notifySev, ...(p.notifySev ?? {}) } }; } catch { return DEFAULT_PREFS; }
 }
 /** Applies the theme to the page: data-theme on html and the browser's theme color. */
 export function applyTheme(theme: Prefs["theme"]) {
@@ -155,7 +168,7 @@ export function AppState({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<State>(() => {
     const rows = wd.rows.map((r) => (decisions[r.request_id] ? { ...r, status: decisions[r.request_id], decided_by: user.name } : r)) as WdRow[];
-    const shown = new Set([...unread].filter((id) => { const a = ALERTS.find((x) => x.id === id); return a ? prefs.notify[alertKind(a)] : false; }));
+    const shown = new Set([...unread].filter((id) => { const a = ALERTS.find((x) => x.id === id); return a ? alertShown({ kind: alertKind(a), severity: a.severity }, prefs) : false; }));
     return {
       wdRows: rows,
       pending: rows.filter((r) => r.status === "pending"),
