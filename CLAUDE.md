@@ -160,7 +160,12 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   spring (70/14) by 6 percent wide and 18 percent tall and always settles exactly. Glass presses swell in 0.3 s and
   release over 1.1 s (owner 2026-11-21, "zoom out not slow enough"): the resting state's transition is the release.
   The side menu never rests half way: any touch or tap settles it, the page tap dispatches menu-close, and a
-  watchdog drops a drag with no touch event for 0.8 s and springs the menu to open or closed.
+  watchdog drops a drag with no touch event for 0.8 s and springs the menu to open or closed. It opens only on a
+  deliberate edge swipe (owner 2026-11-21, "it stops at 80 percent"): the touch starts within 20 px of the edge,
+  moves 10 px and 1.5 times more sideways than down, and a touchcancel (iOS Safari's own back swipe) never opens it.
+  The segmented lens rises on a firm spring (260/26), holds at least 0.22 s on a tap, and sinks on a soft one (34/10.5)
+  over about 1.3 s. Unit springs (menu, lens) settle at eps 0.002 to 0.003 (liquid.tsx Spring eps), so they never
+  snap their last tenth.
 - Top spacing and bell (owner 2026-11-21): the sticky top bar keeps no padding under itself and gives back the page
   gap, so the first card sits 14 px under --bar-bottom. The bell keeps its glass circle and its glyph fills it,
   29 px in the 46 px circle (owner 2026-11-21, "full to the circle", then 15 percent smaller), with a small red dot, no count, on the

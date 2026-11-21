@@ -10,11 +10,13 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
 export class Spring {
   x: number; v = 0; target: number;
-  constructor(x: number, public k = 420, public c = 32) { this.x = x; this.target = x; }
+  /** eps is where the spring counts as settled. 0.1 suits pixels; a 0 to 1 value (menu, lens) needs a finer one, or
+   *  its last tenth snaps (owner 2026-11-21, the lens release ended in a jump). */
+  constructor(x: number, public k = 420, public c = 32, public eps = 0.1) { this.x = x; this.target = x; }
   step(dt: number) {
     const f = -this.k * (this.x - this.target) - this.c * this.v;
     this.v += f * dt; this.x += this.v * dt;
-    return Math.abs(this.v) > 0.5 || Math.abs(this.x - this.target) > 0.1;
+    return Math.abs(this.v) > this.eps * 5 || Math.abs(this.x - this.target) > this.eps;
   }
 }
 

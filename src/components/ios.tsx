@@ -311,7 +311,8 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   const thumb = useRef<HTMLSpanElement>(null);
   const copy = useRef<HTMLSpanElement>(null);
   const sx = useRef(new Spring(-1, 300, 24));
-  const lift = useRef(new Spring(0, 70, 14)); // a slow, gentle lift and sink (owner 2026-11-21, "slow down the zoom, correct amount")
+  const lift = useRef(new Spring(0, 34, 10.5, 0.003)); // the soft sink, about 1.2 s; down() swaps in a firm spring to rise
+  const sink = useRef(0), pressedAt = useRef(0); // a slow, gentle lift and sink (owner 2026-11-21, "slow down the zoom, correct amount")
   const drag = useRef<{ off: number; x0: number; last: number; t: number; moved: boolean } | null>(null);
   const skipClick = useRef(false);
   const unit = () => { const el = track.current; return el ? (el.clientWidth - 4) / options.length : 0; };
@@ -354,7 +355,11 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     const w = unit(), px = local(e);
     const onThumb = px >= sx.current.x && px <= sx.current.x + w;
     drag.current = { off: onThumb ? px - sx.current.x : w / 2, x0: px, last: px, t: e.timeStamp, moved: false };
-    lift.current.target = 1;
+    // The lens rises quickly and sinks slowly (owner 2026-11-21, "no slower glass release"): a firm spring up, a soft
+    // one down, and a tap holds the lens up for 0.22 s so the release is seen at all
+    clearTimeout(sink.current);
+    pressedAt.current = performance.now();
+    lift.current.k = 260; lift.current.c = 26; lift.current.target = 1;
     kick();
   };
   const move = (e: React.PointerEvent) => {
@@ -379,7 +384,9 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   const up = (cancel: boolean) => {
     const d = drag.current; if (!d) return;
     drag.current = null;
-    lift.current.target = 0;
+    const held = performance.now() - pressedAt.current;
+    clearTimeout(sink.current);
+    sink.current = window.setTimeout(() => { lift.current.k = 34; lift.current.c = 10.5; lift.current.target = 0; kick(); }, Math.max(0, 220 - held));
     const w = unit();
     if (d.moved && !cancel) {
       const j = Math.max(0, Math.min(options.length - 1, Math.round(sx.current.x / w)));

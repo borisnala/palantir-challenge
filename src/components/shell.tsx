@@ -44,7 +44,7 @@ export function Drawer() {
   const { drawer, setDrawer, recents, pending, unread, watched, user, set } = useApp();
   const path = usePathname();
   const panel = useRef<HTMLElement>(null);
-  const x = useRef(new Spring(0, 480, 42)); // 0 closed, 1 open, a quick critically damped slide
+  const x = useRef(new Spring(0, 480, 42, 0.002)); // 0 closed, 1 open, a quick critically damped slide
   const drag = useRef<{ x0: number; y0: number; p0: number; last: number; t: number; v: number; axis: "x" | "y" | null } | null>(null);
   const width = () => panel.current?.offsetWidth || 320;
   const held = useRef<{ y: number; path: string } | null>(null);
@@ -97,7 +97,7 @@ export function Drawer() {
       const open = x.current.x > 0.5;
       const onPage = (e.target as Element)?.closest?.(".stage-scrim, .drawer");
       if (document.documentElement.classList.contains("gate")) return;
-      if ((!open && t.clientX < 32 && !document.querySelector(".sheet-wrap")) || (open && onPage))
+      if ((!open && t.clientX < 20 && !document.querySelector(".sheet-wrap")) || (open && onPage))
         drag.current = { x0: t.clientX, y0: t.clientY, p0: x.current.x, last: t.clientX, t: e.timeStamp, v: 0, axis: null };
     };
     const move = (e: TouchEvent) => {
@@ -106,8 +106,8 @@ export function Drawer() {
       // Decide once per touch: a mostly vertical move scrolls the menu list, a mostly sideways one moves the menu
       if (!d.axis) {
         const dx = Math.abs(t.clientX - d.x0), dy = Math.abs(t.clientY - d.y0);
-        if (dx < 6 && dy < 6) return;
-        d.axis = dx > dy ? "x" : "y";
+        if (dx < 10 && dy < 10) return;
+        d.axis = dx > dy * 1.5 ? "x" : "y";
       }
       if (d.axis === "y") { drag.current = null; return; }
       d.v = ((t.clientX - d.last) / Math.max(1, e.timeStamp - d.t)) * 1000; d.last = t.clientX; d.t = e.timeStamp;
@@ -118,12 +118,15 @@ export function Drawer() {
       if (e.cancelable) e.preventDefault();
       kick();
     };
-    const end = () => {
+    const end = (e?: Event) => {
       const d = drag.current; if (!d) return;
       drag.current = null;
+      // The system took the touch (iOS Safari's own back swipe from the edge sends touchcancel): put the menu back where
+      // it was, never open it on a gesture the app did not own (owner 2026-11-21, "it stops at 80 percent")
+      if (e?.type === "touchcancel") { x.current.target = drawer ? 1 : 0; kick(); return; }
       // A tap, not a drag: still settle, so a menu left half way by a lost touch never stays there (owner 2026-11-21)
       if (!d.axis) { x.current.target = drawer ? 1 : 0; kick(); return; }
-      const open = d.v > 500 || (d.v > -500 && x.current.x > 0.5);
+      const open = (d.v > 500 && x.current.x > 0.2) || (d.v > -500 && x.current.x > 0.5);
       if (open !== drawer) { buzz(); setDrawer(open); } else { x.current.target = open ? 1 : 0; kick(); }
     };
     addEventListener("touchstart", start, { passive: true });
