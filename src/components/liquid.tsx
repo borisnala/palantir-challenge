@@ -52,13 +52,18 @@ export function LightSource() {
     const root = document.documentElement;
     const ua = navigator.userAgent;
     root.classList.toggle("lg-refract", /Chrome\//.test(ua) && !/iPhone|iPad|CriOS/.test(ua));
-    let pressed: HTMLElement | null = null;
+    // The swell takes its time both ways (owner 2026-11-21, "the zoom out then zooming in shall take time"): a tap
+    // keeps the glass pressed for at least 0.5 s, so the 0.55 s swell finishes before the 1.1 s settle begins
+    let pressed: HTMLElement | null = null, at = 0;
     const press = (e: PointerEvent) => {
       const host = (e.target as Element)?.closest?.(".glassbtn-link, .titlebtn, .pillbtn");
       pressed = (host?.matches(".lg") ? host : host?.querySelector(".lg")) as HTMLElement | null ?? (host?.classList.contains("pillbtn") ? host as HTMLElement : null);
-      pressed?.classList.add("lg-press");
+      pressed?.classList.add("lg-press"); at = performance.now();
     };
-    const release = () => { pressed?.classList.remove("lg-press"); pressed = null; };
+    const release = () => {
+      const el = pressed; pressed = null; if (!el) return;
+      setTimeout(() => el.classList.remove("lg-press"), Math.max(0, 500 - (performance.now() - at)));
+    };
     addEventListener("pointerdown", press, { passive: true });
     addEventListener("pointerup", release, { passive: true });
     addEventListener("pointercancel", release, { passive: true });

@@ -356,10 +356,10 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     const onThumb = px >= sx.current.x && px <= sx.current.x + w;
     drag.current = { off: onThumb ? px - sx.current.x : w / 2, x0: px, last: px, t: e.timeStamp, moved: false };
     // The lens rises quickly and sinks slowly (owner 2026-11-21, "no slower glass release"): a firm spring up, a soft
-    // one down, and a tap holds the lens up for 0.22 s so the release is seen at all
+    // one down, and a tap holds the lens up for 0.48 s so the rise finishes and the release is seen
     clearTimeout(sink.current);
     pressedAt.current = performance.now();
-    lift.current.k = 260; lift.current.c = 26; lift.current.target = 1;
+    lift.current.k = 90; lift.current.c = 17; lift.current.target = 1;
     kick();
   };
   const move = (e: React.PointerEvent) => {
@@ -386,7 +386,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     drag.current = null;
     const held = performance.now() - pressedAt.current;
     clearTimeout(sink.current);
-    sink.current = window.setTimeout(() => { lift.current.k = 34; lift.current.c = 10.5; lift.current.target = 0; kick(); }, Math.max(0, 220 - held));
+    sink.current = window.setTimeout(() => { lift.current.k = 34; lift.current.c = 10.5; lift.current.target = 0; kick(); }, Math.max(0, 480 - held));
     const w = unit();
     if (d.moved && !cancel) {
       const j = Math.max(0, Math.min(options.length - 1, Math.round(sx.current.x / w)));

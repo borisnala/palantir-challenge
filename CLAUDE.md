@@ -157,14 +157,16 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
   controls follow the Claude app, --bar-h 46 (round buttons and title capsule, title 15.5 semibold over 12.5),
   --dock-h 48 (bottom capsule and action, 16 px), segmented 34 with 13.5 px labels. Page push and pop 0.3 s, menus
   0.28 s, the side menu spring 480/42, sheets 460/40. Glass presses swell to 1.06. The segmented lens grows 6 percent
-  wide and 18 percent tall when lifted. Glass presses swell in 0.3 s and
-  release over 1.1 s (owner 2026-11-21, "zoom out not slow enough"): the resting state's transition is the release.
+  wide and 18 percent tall when lifted. Pages move fast, glass moves slow (owner 2026-11-21,
+  "the move between pages quick, the zoom out then zooming in takes time"): a glass press swells to 1.06 over 0.55 s
+  and settles over 1.2 s on an even curve, and liquid.tsx holds lg-press at least 0.5 s so a quick tap shows the whole
+  swell. Only lg-press drives the swell, never :active.
   The side menu never rests half way: any touch or tap settles it, the page tap dispatches menu-close, and a
   watchdog drops a drag with no touch event for 0.8 s and springs the menu to open or closed. It opens only on a
   deliberate edge swipe (owner 2026-11-21, "it stops at 80 percent"): the touch starts within 20 px of the edge,
   moves 10 px and 1.5 times more sideways than down, and a touchcancel (iOS Safari's own back swipe) never opens it.
-  The segmented lens rises on a firm spring (260/26), holds at least 0.22 s on a tap, and sinks on a soft one (34/10.5)
-  over about 1.3 s. Unit springs (menu, lens) settle at eps 0.002 to 0.003 (liquid.tsx Spring eps), so they never
+  The segmented lens rises on a spring of 90/17 (about 0.45 s), holds at least 0.48 s on a tap, and sinks on a soft
+  one (34/10.5) over about 1.3 s. Unit springs (menu, lens) settle at eps 0.002 to 0.003 (liquid.tsx Spring eps), so they never
   snap their last tenth.
 - Top spacing and bell (owner 2026-11-21): the sticky top bar keeps no padding under itself and gives back the page
   gap, so the first card sits 14 px under --bar-bottom. The bell keeps its glass circle and its glyph fills it,

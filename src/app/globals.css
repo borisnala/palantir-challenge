@@ -1589,3 +1589,10 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
    resting state's transition, the press timing the pressed state's. */
 .glassbtn, .titlecap, .searchorb, .pillbtn, .cmd-field, .cmd-key { transition: transform 1.1s cubic-bezier(.19, 1.12, .32, 1), filter .8s ease-out; }
 .glassbtn.lg-press, .titlecap.lg-press, .pillbtn.lg-press, .glassbtn-link:active .glassbtn, .glassbtn-link:active .titlecap { transition: transform .3s cubic-bezier(.2, .9, .3, 1), filter .2s; }
+
+/* Glass grows and settles slowly while pages move fast (owner 2026-11-21): the swell takes 0.55 s, the settle 1.1 s.
+   Only the lg-press class drives it, so a tap that ends early still shows the whole swell (liquid.tsx holds it 0.5 s). */
+.glassbtn.lg-press, .titlecap.lg-press, .pillbtn.lg-press, .cmd-field.lg-press { transform: scale(1.06); transition: transform .55s cubic-bezier(.25, .9, .3, 1.04), filter .4s ease-out; }
+.glassbtn-link:active .glassbtn:not(.lg-press), .glassbtn-link:active .titlecap:not(.lg-press) { transform: none; }
+/* The settle spreads over its whole 1.2 s instead of doing most of it in the first third */
+.glassbtn, .titlecap, .searchorb, .pillbtn, .cmd-field, .cmd-key { transition: transform 1.2s cubic-bezier(.45, .05, .25, 1), filter .9s ease-out; }
