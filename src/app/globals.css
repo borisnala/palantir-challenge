@@ -1508,3 +1508,36 @@ input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-sele
 .sheet-body { -webkit-mask-image: linear-gradient(transparent, #000 18px, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(transparent, #000 18px, #000 calc(100% - 26px), transparent); }
 .sheet-body:has(> .btn.wide:last-child), .sheet-body:has(> .sheet-actions:last-child) { -webkit-mask-image: linear-gradient(transparent, #000 18px); mask-image: linear-gradient(transparent, #000 18px); }
 .mailrow-tt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Control sizes from the Claude app on iPhone (owner 2026-11-21, "ratio are fucked up, smaller than ours"): round
+   buttons and the title capsule 46 pt, the title 15.5 pt semibold over a 12.5 pt line, the bottom capsule and its
+   action 48 pt, segmented controls 34 pt with 13.5 pt labels. */
+:root { --bar-h: 46px; --dock-h: 48px; }
+.topbar .glassbtn.round { width: var(--bar-h); height: var(--bar-h); }
+.topbar .glassbtn.round svg { width: 21px; height: 21px; }
+.topbar .titlecap { height: var(--bar-h); min-height: 0; padding: 0 18px; justify-content: center; gap: 0; }
+.topbar .titlecap > :nth-child(3) { font-size: 15.5px; line-height: 19px; letter-spacing: -0.2px; }
+.topbar .titlecap > :nth-child(4) { font-size: 12.5px; line-height: 15px; }
+.cmd-link, .cmd-field { height: var(--dock-h); }
+.cmd-field { font-size: 16px; border-radius: calc(var(--dock-h) / 2); }
+.cmd-key { height: var(--dock-h); padding: 0 18px; border-radius: calc(var(--dock-h) / 2); font-size: 16px; }
+.segmented { height: 34px; border-radius: 17px; }
+.segmented button { font-size: 13.5px; font-weight: 500; border-radius: 15px; }
+.navbadge { min-width: 17px; height: 17px; font-size: 10.5px; top: -2px; right: -2px; }
+
+/* Motion (owner 2026-11-21, "everything moving slow"): page push and pop 0.3 s, section fade 0.16 s, menus 0.28 s,
+   glass presses swell to 1.06 and settle in 0.45 s, month tiles and level bars pop with a short stagger. */
+::view-transition-group(.vt-push), ::view-transition-group(.vt-pop) { animation-duration: .3s; }
+::view-transition-old(.vt-push) { animation: vt-back .3s cubic-bezier(.32,.72,0,1) both; }
+::view-transition-new(.vt-push) { animation: vt-from-right .3s cubic-bezier(.32,.72,0,1) both; }
+::view-transition-old(.vt-pop) { animation: vt-to-right .3s cubic-bezier(.32,.72,0,1) both; }
+::view-transition-new(.vt-pop) { animation: vt-from-back .3s cubic-bezier(.32,.72,0,1) both; }
+.popmenu { animation: menu-in .28s cubic-bezier(.2,1.1,.3,1) both !important; }
+.popmenu.pulldown.pd-up { animation: menu-in-up .28s cubic-bezier(.2,1.1,.3,1) both !important; }
+.popmenu > * { animation: fadein .2s .06s both; }
+.glassbtn, .titlecap, .searchorb, .pillbtn { transition: transform .45s var(--spring-soft), filter .3s ease-out; }
+.glassbtn.lg-press, .titlecap.lg-press, .pillbtn.lg-press { transform: scale(1.06); transition: transform .25s var(--spring-soft), filter .15s; }
+.glassbtn-link:active .glassbtn, .glassbtn-link:active .titlecap { transform: scale(1.06); }
+.calmonth { animation-duration: .3s; animation-delay: calc(var(--i, 0) * 15ms); }
+.action { transition: transform .35s var(--spring-soft), background-color .2s, color .2s; }
+.seg-copy { font-size: 13.5px; }

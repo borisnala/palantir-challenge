@@ -44,7 +44,7 @@ export function Drawer() {
   const { drawer, setDrawer, recents, pending, unread, watched, user, set } = useApp();
   const path = usePathname();
   const panel = useRef<HTMLElement>(null);
-  const x = useRef(new Spring(0, 320, 32)); // 0 closed, 1 open
+  const x = useRef(new Spring(0, 480, 42)); // 0 closed, 1 open, a quick critically damped slide
   const drag = useRef<{ x0: number; y0: number; p0: number; last: number; t: number; v: number; axis: "x" | "y" | null } | null>(null);
   const width = () => panel.current?.offsetWidth || 320;
   const held = useRef<{ y: number; path: string } | null>(null);
@@ -92,6 +92,8 @@ export function Drawer() {
   useEffect(() => {
     const start = (e: TouchEvent) => {
       const t = e.touches[0];
+      // A drag whose touchend never arrived (iOS can drop it) is dropped here, and the menu settles first
+      if (drag.current) { drag.current = null; x.current.target = drawer ? 1 : 0; kick(); }
       const open = x.current.x > 0.5;
       const onPage = (e.target as Element)?.closest?.(".stage-scrim, .drawer");
       if (document.documentElement.classList.contains("gate")) return;
@@ -119,7 +121,8 @@ export function Drawer() {
     const end = () => {
       const d = drag.current; if (!d) return;
       drag.current = null;
-      if (!d.axis) return; // a tap, not a drag
+      // A tap, not a drag: still settle, so a menu left half way by a lost touch never stays there (owner 2026-11-21)
+      if (!d.axis) { x.current.target = drawer ? 1 : 0; kick(); return; }
       const open = d.v > 500 || (d.v > -500 && x.current.x > 0.5);
       if (open !== drawer) { buzz(); setDrawer(open); } else { x.current.target = open ? 1 : 0; kick(); }
     };
@@ -127,7 +130,9 @@ export function Drawer() {
     addEventListener("touchmove", move, { passive: false });
     addEventListener("touchend", end);
     addEventListener("touchcancel", end); // the system took the touch: settle open or closed, never stay half way
-    return () => { removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); removeEventListener("touchcancel", end); };
+    const close = () => { drag.current = null; x.current.target = 0; kick(); };
+    addEventListener("menu-close", close);
+    return () => { removeEventListener("menu-close", close); removeEventListener("touchstart", start); removeEventListener("touchmove", move); removeEventListener("touchend", end); removeEventListener("touchcancel", end); };
   }, [drawer, setDrawer, kick]);
 
   // The menu's search finds features (lib/features.ts), never clients: Client 360 has its own search.
@@ -236,7 +241,7 @@ export function Drawer() {
 /** The dimmed page while the menu is open. Tapping it closes the menu. */
 export function StageScrim() {
   const { setDrawer } = useApp();
-  return <button className="stage-scrim" aria-label="Close menu" onClick={() => { buzz(); setDrawer(false); }} style={{ opacity: 0, pointerEvents: "none" }} />;
+  return <button className="stage-scrim" aria-label="Close menu" onClick={() => { buzz(); setDrawer(false); dispatchEvent(new Event("menu-close")); }} style={{ opacity: 0, pointerEvents: "none" }} />;
 }
 
 /** The bottom search bar, as iOS 26 Mail, Notes and Safari place it (owner 2026-11-19, "that ain't the Apple way"):

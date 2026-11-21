@@ -148,6 +148,12 @@ The map is built by `scripts/map.sh` at session start (about two seconds) and is
 - Language and overlap audit (2026-11-20): every on-screen string formal desk English, no "you", no usage
   instructions outside the Add to Home Screen steps, portal codes through sentence(), compact() never shows -$0. An
   axis label under a chart's value tag is hidden, as in Stocks. Long notification titles ellipsize in their own span.
+- Sizes and motion (owner 2026-11-21, "ratio are fucked up", "everything moving slow", "the menu sometimes stuck"):
+  controls follow the Claude app, --bar-h 46 (round buttons and title capsule, title 15.5 semibold over 12.5),
+  --dock-h 48 (bottom capsule and action, 16 px), segmented 34 with 13.5 px labels. Page push and pop 0.3 s, menus
+  0.28 s, the side menu spring 480/42, sheets 460/40. Glass presses swell to 1.06. The segmented lens lifts on a slow
+  spring (160/20) by 6 percent wide and 18 percent tall and always settles exactly. Any touch or tap settles a menu a
+  lost touchend left half way, and the page tap dispatches menu-close so it closes even when the state already reads closed.
 - `src/app/`: one folder per screen. Today, Approvals, Clients (list and `[login]` profile), Alerts.
 - `src/app/globals.css`: the whole look. Apple system colors, the SF type ramp, light and dark.
 

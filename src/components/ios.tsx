@@ -213,7 +213,7 @@ export function Sheet({ open, onClose, title, children, trailing, tall }: { open
   if (!open && stack.length) setStack([]);
   const panel = useRef<HTMLDivElement>(null);
   const scrim = useRef<HTMLButtonElement>(null);
-  const y = useRef(new Spring(900, 300, 28));
+  const y = useRef(new Spring(900, 460, 40));
   const drag = useRef<{ y0: number; t0: number; last: number; lt: number } | null>(null);
   const closing = useRef(false);
 
@@ -311,7 +311,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
   const thumb = useRef<HTMLSpanElement>(null);
   const copy = useRef<HTMLSpanElement>(null);
   const sx = useRef(new Spring(-1, 300, 24));
-  const lift = useRef(new Spring(0, 340, 22)); // slower lift and sink, a small overshoot (owner: "way too fast")
+  const lift = useRef(new Spring(0, 160, 20)); // a slow, gentle lift and sink (owner 2026-11-21, "slow down the zoom, correct amount")
   const drag = useRef<{ off: number; x0: number; last: number; t: number; moved: boolean } | null>(null);
   const skipClick = useRef(false);
   const unit = () => { const el = track.current; return el ? (el.clientWidth - 4) / options.length : 0; };
@@ -320,10 +320,11 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     const d = drag.current;
     const m1 = d ? false : sx.current.step(dt);
     const m2 = lift.current.step(dt);
+    if (!m2) { lift.current.x = lift.current.target; lift.current.v = 0; } // settle exactly, the lens never rests half lifted
     const L = Math.max(0, lift.current.x);
     const { sx: kx, sy: ky } = stretch(sx.current.v * 1.2, 0.27);
     if (thumb.current) {
-      thumb.current.style.transform = `translateX(${sx.current.x}px) scale(${kx * (1 + 0.14 * L)}, ${ky * (1 + 0.42 * L)})`;
+      thumb.current.style.transform = `translateX(${sx.current.x}px) scale(${kx * (1 + 0.06 * L)}, ${ky * (1 + 0.18 * L)})`;
       thumb.current.style.setProperty("--lift", L.toFixed(3));
       thumb.current.style.zIndex = L > 0.02 ? "2" : "0"; // the fill sits under the labels, the lifted lens over them
     }
